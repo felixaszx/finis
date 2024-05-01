@@ -7,6 +7,11 @@ int main(int argc, char** argv)
     while (!glfwWindowShouldClose(graphic.window()))
     {
         glfwPollEvents();
+        if (graphic.keys(KEY::ESCAPE).short_release())
+        {
+            std::cout << "Terminated by ESC\n";
+            glfwSetWindowShouldClose(graphic.window(), true);
+        }
     }
     return EXIT_SUCCESS;
 }

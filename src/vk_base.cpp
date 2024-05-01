@@ -72,7 +72,7 @@ Graphics::Graphics(int width, int height, bool debug, const std::string& title)
                            last_key_ = &keys_[key];
                            if (key > 0)
                            {
-                               keys_[key].prev_ = keys_[key].curr_;
+                               keys_[key].prev_.store(keys_[key].curr_);
                                keys_[key].curr_ = static_cast<Action>(action);
                            }
                        });
@@ -282,9 +282,9 @@ vk::Device Object::device()
     return Object::device_;
 }
 
-const std::array<vk::Queue, 3>& Object::queues()
+vk::Queue Object::queues(QueueType type)
 {
-    return Object::queues_;
+    return Object::queues_[type];
 }
 
 GLFWwindow* Object::window()
@@ -302,11 +302,10 @@ vk::PhysicalDevice Object::physical()
     return Object::physical_;
 }
 
-const std::array<uint32_t, 3>& Object::queue_indices()
+uint32_t Object::queue_indices(QueueType type)
 {
-    return Object::queue_indices_;
+    return Object::queue_indices_[type];
 }
-
 
 const KeyCode& Object::keys(KEY key) const
 {

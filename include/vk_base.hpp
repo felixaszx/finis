@@ -69,8 +69,8 @@ class KeyCode
     friend Graphics;
 
   private:
-    mutable Action prev_ = Action::RELEASE;
-    mutable Action curr_ = Action::RELEASE;
+    mutable std::atomic<Action> prev_ = Action::RELEASE;
+    mutable std::atomic<Action> curr_ = Action::RELEASE;
 
   public:
     [[nodiscard]] bool get(Action first, Action second) const { return (prev_ == first) && (curr_ == second); }
@@ -134,8 +134,8 @@ class Object
     static vk::Device device();
     static vk::PhysicalDevice physical();
     static vk::PipelineCache pipeline_cache();
-    static const std::array<vk::Queue, 3>& queues();
-    static const std::array<uint32_t, 3>& queue_indices();
+    static vk::Queue queues(QueueType type);
+    static uint32_t queue_indices(QueueType type);
     static vma::Allocator allocator();
     static GLFWwindow* window();
     [[nodiscard]] const KeyCode& keys(KEY key) const;
