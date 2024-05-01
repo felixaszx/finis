@@ -272,64 +272,64 @@ Graphics::~Graphics()
     glfwTerminate();
 }
 
-vk::Instance Object::instance()
+vk::Instance VkObject::instance()
 {
-    return Object::instance_;
+    return VkObject::instance_;
 }
 
-vk::Device Object::device()
+vk::Device VkObject::device()
 {
-    return Object::device_;
+    return VkObject::device_;
 }
 
-vk::Queue Object::queues(QueueType type)
+vk::Queue VkObject::queues(QueueType type)
 {
-    return Object::queues_[type];
+    return VkObject::queues_[type];
 }
 
-GLFWwindow* Object::window()
+GLFWwindow* VkObject::window()
 {
-    return Object::window_;
+    return VkObject::window_;
 }
 
-vk::SurfaceKHR Object::surface()
+vk::SurfaceKHR VkObject::surface()
 {
-    return Object::surface_;
+    return VkObject::surface_;
 }
 
-vk::PhysicalDevice Object::physical()
+vk::PhysicalDevice VkObject::physical()
 {
-    return Object::physical_;
+    return VkObject::physical_;
 }
 
-uint32_t Object::queue_indices(QueueType type)
+uint32_t VkObject::queue_indices(QueueType type)
 {
-    return Object::queue_indices_[type];
+    return VkObject::queue_indices_[type];
 }
 
-const KeyCode& Object::keys(KEY key) const
+const KeyCode& VkObject::keys(KEY key) const
 {
     return keys_[static_cast<int>(key)];
 }
 
-const KeyCode& Object::last_key() const
+const KeyCode& VkObject::last_key() const
 {
     return *last_key_;
 }
 
-vk::PipelineCache Object::pipeline_cache()
+vk::PipelineCache VkObject::pipeline_cache()
 {
-    return Object::pipeline_cache_;
+    return VkObject::pipeline_cache_;
 }
 
-vk::DebugUtilsMessengerEXT Object::messenger()
+vk::DebugUtilsMessengerEXT VkObject::messenger()
 {
-    return Object::messenger_;
+    return VkObject::messenger_;
 }
 
-vma::Allocator Object::allocator()
+vma::Allocator VkObject::allocator()
 {
-    return Object::allocator_;
+    return VkObject::allocator_;
 }
 
 vk::Fence create_vk_fence(vk::Device device, bool signal)

@@ -96,7 +96,7 @@ static const vk::ColorComponentFlags RGB_COMPONENT = vk::ColorComponentFlagBits:
  * @brief Meta object that contain all vulkan handles
  *
  */
-class Object
+class VkObject
 {
     friend Graphics;
 
@@ -142,7 +142,7 @@ class Object
     [[nodiscard]] const KeyCode& last_key() const;
 };
 
-struct Graphics : public Object
+struct Graphics : public VkObject
 {
     Graphics(int width, int height, bool debug = false, const std::string& title = "");
     ~Graphics();
@@ -154,14 +154,14 @@ vk::Fence create_vk_fence(vk::Device device, bool signal);
 vk::Semaphore create_vk_semaphore(vk::Device device);
 
 struct Fence : public vk::Fence, //
-               private Object
+               private VkObject
 {
     Fence(bool signal = true);
     ~Fence();
 };
 
 struct Semaphore : public vk::Semaphore, //
-                   private Object
+                   private VkObject
 {
     Semaphore();
     ~Semaphore();
