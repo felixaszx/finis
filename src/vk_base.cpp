@@ -307,7 +307,7 @@ GLFWwindow* VkObject::window()
     return VkObject::window_;
 }
 
-ObjectDetails* VkObject::details_ptr()
+const ObjectDetails* VkObject::details_ptr()
 {
     return &VkObject::details_;
 }

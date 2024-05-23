@@ -21,6 +21,9 @@ class ExtensionLoader
 
     [[nodiscard]] const ImageFunctions load_image_funcs(
         const std::string& image_func_getter = "image_func_getter") const;
+
+    [[nodiscard]] const SwapchainFunctions load_swapchain_funcs(
+        const std::string& swapchain_func_getter = "swapchain_func_getter") const;
 };
 
 #endif // INCLUDE_EXT_LOADER_HPP

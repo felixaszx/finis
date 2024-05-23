@@ -1,6 +1,6 @@
 #include "ext_defines.h"
 
-CreateBufferReturn create_vertex_buffer(ObjectDetails* details, //
+CreateBufferReturn create_vertex_buffer(const ObjectDetails* details, //
                                         const VkBufferCreateInfo* create_info,
                                         const VmaAllocationCreateInfo* alloc_info)
 {
@@ -13,7 +13,7 @@ CreateBufferReturn create_vertex_buffer(ObjectDetails* details, //
     return r;
 }
 
-void destory_vertex_buffer(ObjectDetails* details, VkBuffer buffer, VmaAllocation alloc)
+void destory_vertex_buffer(const ObjectDetails* details, VkBuffer buffer, VmaAllocation alloc)
 {
     vmaDestroyBuffer(details->allocator_, buffer, alloc);
 };
@@ -21,7 +21,7 @@ void destory_vertex_buffer(ObjectDetails* details, VkBuffer buffer, VmaAllocatio
 BufferFunctions buffer_func_getter()
 {
     BufferFunctions funcs;
-    funcs.create_buffer = create_vertex_buffer;
-    funcs.destory_buffer = destory_vertex_buffer;
+    funcs.create_buffer_ = create_vertex_buffer;
+    funcs.destory_buffer_ = destory_vertex_buffer;
     return funcs;
 };

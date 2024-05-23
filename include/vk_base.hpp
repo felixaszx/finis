@@ -143,7 +143,7 @@ class VkObject
     static uint32_t queue_indices(QueueType type);
     static vma::Allocator allocator();
     static GLFWwindow* window();
-    static ObjectDetails* details_ptr();
+    static const ObjectDetails* details_ptr();
     [[nodiscard]] const KeyCode& keys(KEY key) const;
     [[nodiscard]] const KeyCode& last_key() const;
 };

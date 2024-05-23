@@ -2,7 +2,6 @@
 #define INCLUDE_IMAGE_HPP
 
 #include "vk_base.hpp"
-#include "ext_defines.h"
 
 /**
  * @brief
@@ -10,7 +9,7 @@
  * @tparam TypeID: each TypeID share same extension functions
  */
 template <uint32_t TypeID>
-class Image : public VkObject, //
+class Image : private VkObject, //
               public vk::Image
 {
   private:
@@ -25,9 +24,38 @@ class Image : public VkObject, //
 
     Image(const Image&) = delete;
     Image(const vk::ImageCreateInfo& buffer_info, //
-          vma::AllocationCreateInfo& alloc_info,  //
-          vma::Pool pool = nullptr);
+          vma::AllocationCreateInfo& alloc_info);
     ~Image();
+
+    [[nodiscard]] bool valid() const;
 };
+
+template <uint32_t TypeID>
+inline Image<TypeID>::Image(const vk::ImageCreateInfo& image_info, //
+                            vma::AllocationCreateInfo& alloc_info)
+{
+    CreateImageReturn r = funcs_.create_image_(details_ptr(), //
+                                               &static_cast<const VkImageCreateInfo&>(image_info),
+                                               &static_cast<const VmaAllocationCreateInfo&>(alloc_info));
+    static_cast<vk::Image&>(*this) = r.image_;
+    memory_ = r.memory_;
+    allocation_ = r.alloc_;
+    size_ = r.size_;
+}
+
+template <uint32_t TypeID>
+inline Image<TypeID>::~Image()
+{
+    if (valid())
+    {
+        funcs_.destory_image_(details_ptr(), *this, allocation_);
+    }
+}
+
+template <uint32_t TypeID>
+inline bool Image<TypeID>::valid() const
+{
+    return static_cast<vk::Image>(*this);
+}
 
 #endif // INCLUDE_IMAGE_HPP

@@ -2,7 +2,6 @@
 #define INCLUDE_BUFFER_HPP
 
 #include "vk_base.hpp"
-#include "ext_defines.h"
 
 /**
  * @brief
@@ -10,7 +9,7 @@
  * @tparam TypeID: each TypeID share same extension functions
  */
 template <uint32_t TypeID>
-class Buffer : public VkObject, //
+class Buffer : private VkObject, //
                public vk::Buffer
 {
   private:
@@ -26,8 +25,7 @@ class Buffer : public VkObject, //
 
     Buffer(const Buffer&) = delete;
     Buffer(const vk::BufferCreateInfo& buffer_info, //
-           vma::AllocationCreateInfo& alloc_info,   //
-           vma::Pool pool = nullptr);
+           vma::AllocationCreateInfo& alloc_info);
     ~Buffer();
 
     void map_memory();
@@ -49,13 +47,12 @@ inline void Buffer<TypeID>::load_funcs(const BufferFunctions& funcs)
 
 template <uint32_t TypeID>
 inline Buffer<TypeID>::Buffer(const vk::BufferCreateInfo& buffer_info, //
-                              vma::AllocationCreateInfo& alloc_info,   //
-                              vma::Pool pool)
+                              vma::AllocationCreateInfo& alloc_info)
     : size_(buffer_info.size)
 {
-    CreateBufferReturn r = funcs_.create_buffer(details_ptr(), //
-                                                &static_cast<const VkBufferCreateInfo&>(buffer_info),
-                                                &static_cast<const VmaAllocationCreateInfo&>(alloc_info));
+    CreateBufferReturn r = funcs_.create_buffer_(details_ptr(), //
+                                                 &static_cast<const VkBufferCreateInfo&>(buffer_info),
+                                                 &static_cast<const VmaAllocationCreateInfo&>(alloc_info));
     static_cast<vk::Buffer&>(*this) = r.buffer_;
     memory_ = r.memory_;
     allocation_ = r.alloc_;
@@ -67,7 +64,7 @@ inline Buffer<TypeID>::~Buffer()
     if (valid())
     {
         unmap_memory();
-        funcs_.destory_buffer(details_ptr(), *this, allocation_);
+        funcs_.destory_buffer_(details_ptr(), *this, allocation_);
     }
 }
 

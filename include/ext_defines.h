@@ -44,23 +44,40 @@ typedef struct
 
 typedef struct
 {
-    CreateBufferReturn (*create_buffer)(ObjectDetails* details, //
-                                        const VkBufferCreateInfo* create_info,
-                                        const VmaAllocationCreateInfo* alloc_info);
-    void (*destory_buffer)(ObjectDetails* details, VkBuffer buffer, VmaAllocation alloc);
+    CreateBufferReturn (*create_buffer_)(const ObjectDetails* details, //
+                                         const VkBufferCreateInfo* create_info,
+                                         const VmaAllocationCreateInfo* alloc_info);
+    void (*destory_buffer_)(const ObjectDetails* details, VkBuffer buffer, VmaAllocation alloc);
 } BufferFunctions;
 
 typedef struct
 {
-    VkImage buffer_;
+    VkDeviceSize size_;
+    VkImage image_;
     VmaAllocation alloc_;
     VkDeviceMemory memory_;
 } CreateImageReturn;
 
 typedef struct
 {
-    CreateBufferReturn (*create_image)(ObjectDetails* details);
-    void (*destory_image)(ObjectDetails* details);
+    CreateImageReturn (*create_image_)(const ObjectDetails* details,        //
+                                       const VkImageCreateInfo* image_info, //
+                                       const VmaAllocationCreateInfo* alloc_info);
+    void (*destory_image_)(const ObjectDetails* details, VkImage image, VmaAllocation alloc);
 } ImageFunctions;
+
+typedef struct
+{
+    VkImage image_;
+    VkImageView view_;
+} SwapchainAquireNextImageReturn;
+
+typedef struct
+{
+    VkSwapchainKHR (*create_swapchain_)(const ObjectDetails* details, VkExtent2D extent);
+    void (*destroy_swapchain_)(const ObjectDetails* details, VkSwapchainKHR swapchain);
+    SwapchainAquireNextImageReturn (*aquire_next_image_)(const ObjectDetails* details, VkSemaphore sem, VkFence fence,
+                                                         uint64_t timeout);
+} SwapchainFunctions;
 
 #endif // INCLUDE_EXT_DEFINES_H

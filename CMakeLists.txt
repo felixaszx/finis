@@ -14,7 +14,7 @@ find_package(Vulkan REQUIRED)
 find_package(Assimp REQUIRED)
 file(GLOB_RECURSE SRC src/*.cpp)
 
-add_library(finis_base SHARED src/vk_base.cpp src/ext_loader.cpp)
+add_library(finis_base SHARED ${SRC})
 target_include_directories(finis_base PUBLIC ${CMAKE_SOURCE_DIR}/include)
 target_link_libraries(finis_base PUBLIC glfw)
 target_link_libraries(finis_base PUBLIC Vulkan::Vulkan)
