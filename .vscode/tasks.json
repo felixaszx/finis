@@ -84,6 +84,8 @@
             "dependsOn": [
                 "CMake: configure",
                 "CMake: build"
+                //,"add dlls info",
+                //"copy dlls"
             ],
             "problemMatcher": [],
             "group": {

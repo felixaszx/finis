@@ -26,8 +26,19 @@
 
 #include "vma/vk_mem_alloc.hpp"
 #include "key_code.hpp"
+#include "ext_defines.h"
 
 #define bit_shift_left(bits) (1 << bits)
+
+#define TRY_FUNC \
+    try          \
+    {
+#define CATCH_BEGIN            \
+    }                          \
+    catch (std::exception & e) \
+    {                          \
+        std::cerr << e.what();
+#define CATCH_END }
 
 namespace glms
 {
@@ -100,14 +111,6 @@ class VkObject
 {
     friend Graphics;
 
-  public:
-    enum QueueType
-    {
-        GRAPHICS = 0,
-        COMPUTE = 1,
-        TRANSFER = 2
-    };
-
   private:
     static const uint32_t ALL_REGISTERED_KEY_COUNT = 350;
     inline static std::array<KeyCode, ALL_REGISTERED_KEY_COUNT> keys_{};
@@ -127,6 +130,8 @@ class VkObject
     inline static vma::Allocator allocator_{};
     inline static GLFWwindow* window_{};
 
+    inline static ObjectDetails details_;
+
   public:
     static vk::Instance instance();
     static vk::SurfaceKHR surface();
@@ -138,6 +143,7 @@ class VkObject
     static uint32_t queue_indices(QueueType type);
     static vma::Allocator allocator();
     static GLFWwindow* window();
+    static ObjectDetails* details_ptr();
     [[nodiscard]] const KeyCode& keys(KEY key) const;
     [[nodiscard]] const KeyCode& last_key() const;
 };

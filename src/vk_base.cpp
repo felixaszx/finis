@@ -250,6 +250,21 @@ Graphics::Graphics(int width, int height, bool debug, const std::string& title)
 
     vk::PipelineCacheCreateInfo pc_info{};
     pipeline_cache_ = device_.createPipelineCache(pc_info);
+
+    details_.instance_ = instance_;
+    details_.surface_ = surface_;
+    details_.messenger_ = messenger_;
+    details_.device_ = device_;
+    details_.physical_ = physical_;
+    details_.pipeline_cache_ = pipeline_cache_;
+    for (int i = 0; i < 3; i++)
+    {
+        details_.queues_[i] = queues_[i];
+        details_.queue_indices_[i] = queue_indices_[i];
+    }
+
+    details_.allocator_ = allocator_;
+    details_.window_ = window_;
 }
 
 Graphics::~Graphics()
@@ -290,6 +305,11 @@ vk::Queue VkObject::queues(QueueType type)
 GLFWwindow* VkObject::window()
 {
     return VkObject::window_;
+}
+
+ObjectDetails* VkObject::details_ptr()
+{
+    return &VkObject::details_;
 }
 
 vk::SurfaceKHR VkObject::surface()

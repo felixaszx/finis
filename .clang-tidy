@@ -11,7 +11,9 @@ Checks: "
         -cppcoreguidelines-pro-bounds-constant-array-index,
         -cppcoreguidelines-pro-type-cstyle-cast,
         -cppcoreguidelines-avoid-magic-numbers,
-        -cppcoreguidelines-narrowing-conversions
+        -cppcoreguidelines-narrowing-conversions,
+        -modernize-deprecated-headers,
+        -modernize-use-using
         "
 WarningsAsErrors: ''
 HeaderFilterRegex: ''

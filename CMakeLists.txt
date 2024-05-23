@@ -12,13 +12,21 @@ set(CMAKE_STATIC_LIBRARY_PREFIX "")
 find_package(glfw3 REQUIRED)
 find_package(Vulkan REQUIRED)
 find_package(Assimp REQUIRED)
-
 file(GLOB_RECURSE SRC src/*.cpp)
-add_executable(finis main.cpp ${SRC})
 
+add_library(finis_base SHARED src/vk_base.cpp src/ext_loader.cpp)
+target_include_directories(finis_base PUBLIC ${CMAKE_SOURCE_DIR}/include)
+target_link_libraries(finis_base PUBLIC glfw)
+target_link_libraries(finis_base PUBLIC Vulkan::Vulkan)
+target_link_libraries(finis_base PUBLIC assimp)
+target_link_libraries(finis_base PUBLIC shaderc_shared)
+TARGET_LINK_LIBRARIES(finis_base PUBLIC boost_filesystem-mt.dll boost_system-mt.dll)
+
+add_library(finis_test SHARED test.c)
+target_include_directories(finis_test PUBLIC ${CMAKE_SOURCE_DIR}/include)
+target_link_libraries(finis_test PUBLIC finis_base)
+
+add_executable(finis main.cpp)
 target_include_directories(finis PUBLIC ${CMAKE_SOURCE_DIR}/include)
+target_link_libraries(finis PUBLIC finis_base)
 
-target_link_libraries(finis PUBLIC glfw)
-target_link_libraries(finis PUBLIC Vulkan::Vulkan)
-target_link_libraries(finis PUBLIC assimp)
-target_link_libraries(finis PUBLIC shaderc_shared)
