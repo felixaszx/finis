@@ -26,13 +26,14 @@
 
 #include "vma/vk_mem_alloc.hpp"
 #include "key_code.hpp"
-#include "ext_defines.h"
+#include "extensions/defines.h"
 
 #define bit_shift_left(bits) (1 << bits)
 
 #define TRY_FUNC \
     try          \
     {
+
 #define CATCH_BEGIN            \
     }                          \
     catch (std::exception & e) \

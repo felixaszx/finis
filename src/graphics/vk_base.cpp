@@ -1,5 +1,5 @@
 #define VMA_IMPLEMENTATION
-#include "vk_base.hpp"
+#include "graphics/vk_base.hpp"
 
 #include <array>
 #include <iostream>

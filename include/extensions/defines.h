@@ -106,6 +106,7 @@ typedef struct PassChain
     bool get_swapchain_img; // always idx (image_count_ - 1)
 } PassChain;
 
+// This extension will connect to Graphics system and Scene management system
 typedef struct
 {
     uint32_t image_count_;

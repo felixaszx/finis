@@ -3,8 +3,7 @@
 
 #include <string>
 #include <boost/dll.hpp>
-#include "vk_base.hpp"
-#include "ext_defines.h"
+#include "defines.h"
 
 // the loading extension must be wirtten as a function
 class ExtensionLoader

@@ -1,4 +1,4 @@
-#include "ext_loader.hpp"
+#include "extensions/loader.hpp"
 
 ExtensionLoader::ExtensionLoader(const std::string& dl_name)
     : dl_(dl_name)

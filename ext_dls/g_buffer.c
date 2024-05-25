@@ -1,4 +1,4 @@
-#include "ext_defines.h"
+#include "extensions/defines.h"
 
 const ObjectDetails* details = NULL;
 PassChain* this_pass = NULL;
@@ -72,6 +72,8 @@ void clear()
     {
         vkDestroyImageView(details->device_, image_views[i], NULL);
         vmaDestroyImage(details->allocator_, images[i], image_alloc[i]);
+        images[i] = NULL;
+        image_views[i] = NULL;
     }
 }
 

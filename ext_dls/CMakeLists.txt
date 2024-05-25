@@ -1,0 +1,16 @@
+set(CMAKE_CXX_EXTENSIONS off)
+set(CMAKE_C_EXTENSIONS off)
+set(CMAKE_CXX_STANDARD 20)
+set(CMAKE_C_STANDARD 17)
+
+set(CMAKE_SHARED_LIBRARY_PREFIX "")
+set(CMAKE_STATIC_LIBRARY_PREFIX "")
+set(CMAKE_RUNTIME_OUTPUT_DIRECTORY ${CMAKE_SOURCE_DIR}/exe)
+
+file(GLOB_RECURSE SCRIPTS *.c)
+foreach(SCRIPT_FILE ${SCRIPTS})
+    get_filename_component(SCRIPT_NAME ${SCRIPT_FILE} NAME_WLE)
+    add_library(${SCRIPT_NAME} SHARED ${SCRIPT_FILE})
+    target_include_directories(${SCRIPT_NAME} PUBLIC ${CMAKE_SOURCE_DIR}/include)
+    target_link_libraries(${SCRIPT_NAME} PUBLIC finis_graphics)
+endforeach()

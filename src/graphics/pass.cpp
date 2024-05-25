@@ -1,4 +1,4 @@
-#include "pass.hpp"
+#include "graphics/pass.hpp"
 
 Pass::Pass(const PassFunctions& funcs)
     : funcs_(funcs)

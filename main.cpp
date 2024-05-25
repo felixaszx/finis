@@ -1,9 +1,10 @@
 #include <iostream>
-#include "vk_base.hpp"
-#include "ext_loader.hpp"
-#include "resources.hpp"
-#include "swapchain.hpp"
-#include "pass.hpp"
+#include "graphics/vk_base.hpp"
+#include "graphics/resources.hpp"
+#include "graphics/swapchain.hpp"
+#include "graphics/pass.hpp"
+
+#include "extensions/loader.hpp"
 
 int main(int argc, char** argv)
 {
@@ -31,8 +32,11 @@ int main(int argc, char** argv)
     Semaphore sem_aquired;
     Semaphore submit;
 
+    CpuTimer timer;
+
     while (!glfwWindowShouldClose(g.window()))
     {
+        timer.start();
         glfwPollEvents();
         p.setup();
 
@@ -62,6 +66,7 @@ int main(int argc, char** argv)
         sc.present({submit});
 
         p.finish();
+        timer.finish();
     }
     g.device().waitIdle();
 
