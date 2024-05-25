@@ -5,6 +5,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
+#include <stdbool.h>
 
 #define GLFW_INCLUDE_VULKAN
 #include <GLFW/glfw3.h>
@@ -13,9 +14,9 @@
 
 enum QueueType
 {
-    GRAPHICS = 0,
-    COMPUTE = 1,
-    TRANSFER = 2
+    GRAPHICS_QUEUE_IDX = 0,
+    COMPUTE_QUEUE_IDX = 1,
+    TRANSFER_QUEUE_IDX = 2
 };
 
 typedef struct
@@ -79,5 +80,40 @@ typedef struct
     SwapchainAquireNextImageReturn (*aquire_next_image_)(const ObjectDetails* details, VkSemaphore sem, VkFence fence,
                                                          uint64_t timeout);
 } SwapchainFunctions;
+
+enum AtchmIdx
+{
+    DEPTH_ATCHM_IDX = 0,
+    STENCIL_ATCHM_IDX = 1
+};
+
+typedef struct PassChain
+{
+    uint32_t chain_id_;
+    uint32_t image_count_;
+    struct PassChain* prev_;
+    struct PassChain* next_;
+
+    // setup function must setup following info
+    VkRect2D render_area_;
+    uint32_t layer_count_;
+
+    VkImage* images_;
+    VkImageView* image_views_;
+    VkRenderingAttachmentInfoKHR* atchm_info_;
+    bool depth_atchm_;      // always idx 0
+    bool stencil_atchm_;    // always idx 1
+    bool get_swapchain_img; // always idx (image_count_ - 1)
+} PassChain;
+
+typedef struct
+{
+    uint32_t image_count_;
+    void (*init_)(const ObjectDetails* details, PassChain* this_pass);
+    void (*clear_)();
+    void (*setup_)();
+    void (*render_)(VkCommandBuffer cmd);
+    void (*finish_)();
+} PassFunctions;
 
 #endif // INCLUDE_EXT_DEFINES_H

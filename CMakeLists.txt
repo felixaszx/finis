@@ -22,11 +22,16 @@ target_link_libraries(finis_base PUBLIC assimp)
 target_link_libraries(finis_base PUBLIC shaderc_shared)
 TARGET_LINK_LIBRARIES(finis_base PUBLIC boost_filesystem-mt.dll boost_system-mt.dll)
 
-add_library(finis_test SHARED test.c)
-target_include_directories(finis_test PUBLIC ${CMAKE_SOURCE_DIR}/include)
-target_link_libraries(finis_test PUBLIC finis_base)
 
 add_executable(finis main.cpp)
 target_include_directories(finis PUBLIC ${CMAKE_SOURCE_DIR}/include)
 target_link_libraries(finis PUBLIC finis_base)
 
+# DLLs
+file(GLOB_RECURSE SCRIPTS exts/*.c)
+foreach(SCRIPT_FILE ${SCRIPTS})
+    get_filename_component(SCRIPT_NAME ${SCRIPT_FILE} NAME_WLE)
+    add_library(${SCRIPT_NAME} SHARED ${SCRIPT_FILE})
+    target_include_directories(${SCRIPT_NAME} PUBLIC ${CMAKE_SOURCE_DIR}/include)
+    target_link_libraries(${SCRIPT_NAME} PUBLIC finis_base)
+endforeach()

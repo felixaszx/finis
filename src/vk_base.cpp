@@ -143,21 +143,21 @@ Graphics::Graphics(int width, int height, bool debug, const std::string& title)
         if (queue_properties[index].queueFlags & vk::QueueFlagBits::eGraphics)
         {
             queue_count++;
-            queue_indices_[GRAPHICS] = index;
+            queue_indices_[GRAPHICS_QUEUE_IDX] = index;
             break;
         }
     }
-    queue_indices_[COMPUTE] = queue_indices_[GRAPHICS];
-    queue_indices_[TRANSFER] = queue_indices_[GRAPHICS];
+    queue_indices_[COMPUTE_QUEUE_IDX] = queue_indices_[GRAPHICS_QUEUE_IDX];
+    queue_indices_[TRANSFER_QUEUE_IDX] = queue_indices_[GRAPHICS_QUEUE_IDX];
 
     for (uint32_t index = 0; index < queue_properties.size(); index++)
     {
         if (queue_properties[index].queueFlags & vk::QueueFlagBits::eCompute &&  //
             queue_properties[index].queueFlags & vk::QueueFlagBits::eTransfer && //
-            index != queue_indices_[GRAPHICS])
+            index != queue_indices_[GRAPHICS_QUEUE_IDX])
         {
             queue_count++;
-            queue_indices_[COMPUTE] = index;
+            queue_indices_[COMPUTE_QUEUE_IDX] = index;
             break;
         }
     }
@@ -165,11 +165,11 @@ Graphics::Graphics(int width, int height, bool debug, const std::string& title)
     for (uint32_t index = 0; index < queue_properties.size(); index++)
     {
         if (queue_properties[index].queueFlags & vk::QueueFlagBits::eTransfer && //
-            index != queue_indices_[GRAPHICS] &&                                 //
-            index != queue_indices_[COMPUTE])
+            index != queue_indices_[GRAPHICS_QUEUE_IDX] &&                                 //
+            index != queue_indices_[COMPUTE_QUEUE_IDX])
         {
             queue_count++;
-            queue_indices_[TRANSFER] = index;
+            queue_indices_[TRANSFER_QUEUE_IDX] = index;
             break;
         }
     }
@@ -350,6 +350,45 @@ vk::DebugUtilsMessengerEXT VkObject::messenger()
 vma::Allocator VkObject::allocator()
 {
     return VkObject::allocator_;
+}
+
+CpuTimer::CpuTimer()
+    : begin_(init_),
+      end_(init_)
+{
+    init_ = std::chrono::high_resolution_clock::now();
+}
+
+float CpuTimer::since_init_second()
+{
+    return std::chrono::duration<float, std::chrono::seconds::period> //
+        (std::chrono::high_resolution_clock::now() - init_).count();
+}
+
+uint32_t CpuTimer::since_init_ms()
+{
+    return std::chrono::duration_cast<std::chrono::milliseconds> //
+        (std::chrono::high_resolution_clock::now() - init_).count();
+}
+
+void CpuTimer::start()
+{
+    begin_ = std::chrono::high_resolution_clock::now();
+}
+
+void CpuTimer::finish()
+{
+    end_ = std::chrono::high_resolution_clock::now();
+}
+
+float CpuTimer::get_duration_second()
+{
+    return std::chrono::duration<float, std::chrono::seconds::period>(end_ - begin_).count();
+}
+
+uint32_t CpuTimer::get_duration_ms()
+{
+    return std::chrono::duration_cast<std::chrono::milliseconds>(end_ - begin_).count();
 }
 
 vk::Fence create_vk_fence(vk::Device device, bool signal)

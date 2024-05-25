@@ -156,6 +156,25 @@ struct Graphics : public VkObject
     static bool ready();
 };
 
+class CpuTimer
+{
+  private:
+    std::chrono::system_clock::time_point init_;
+    std::chrono::system_clock::time_point begin_;
+    std::chrono::system_clock::time_point end_;
+
+  public:
+    CpuTimer();
+    float since_init_second();
+    uint32_t since_init_ms();
+
+    void start();
+    void finish();
+
+    float get_duration_second();
+    uint32_t get_duration_ms();
+};
+
 vk::Fence create_vk_fence(vk::Device device, bool signal);
 vk::Semaphore create_vk_semaphore(vk::Device device);
 

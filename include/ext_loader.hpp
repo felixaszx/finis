@@ -24,6 +24,10 @@ class ExtensionLoader
 
     [[nodiscard]] const SwapchainFunctions load_swapchain_funcs(
         const std::string& swapchain_func_getter = "swapchain_func_getter") const;
+
+    // Pass extension should contain states.
+    [[nodiscard]] const PassFunctions load_pass_funcs( //
+        const std::string& pass_func_getter = "pass_func_getter") const;
 };
 
 #endif // INCLUDE_EXT_LOADER_HPP

@@ -25,3 +25,8 @@ const SwapchainFunctions ExtensionLoader::load_swapchain_funcs(const std::string
 
     return dl_.get<SwapchainFunctions()>(swapchain_func_getter)();
 }
+
+const PassFunctions ExtensionLoader::load_pass_funcs(const std::string& pass_func_getter) const
+{
+    return dl_.get<PassFunctions()>(pass_func_getter)();
+}

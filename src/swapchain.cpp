@@ -71,6 +71,41 @@ void Swapchain::create(const vk::Extent2D& extent)
         create_info.subresourceRange.layerCount = 1;
         views_[i] = device().createImageView(create_info);
     }
+
+    vk::CommandPoolCreateInfo pool_info{};
+    pool_info.queueFamilyIndex = queue_indices(GRAPHICS_QUEUE_IDX);
+    vk::CommandPool cmd_pool = device().createCommandPool(pool_info);
+
+    vk::CommandBufferAllocateInfo alloc_info{};
+    alloc_info.commandPool = cmd_pool;
+    alloc_info.level = vk::CommandBufferLevel::ePrimary;
+    alloc_info.commandBufferCount = 1;
+    vk::CommandBuffer cmd = device().allocateCommandBuffers(alloc_info)[0];
+
+    vk::CommandBufferBeginInfo begin{};
+    begin.flags = vk::CommandBufferUsageFlagBits::eOneTimeSubmit;
+    cmd.begin(begin);
+    for (auto image : images_)
+    {
+        vk::ImageMemoryBarrier barrier{};
+        barrier.image = image;
+        barrier.newLayout = vk::ImageLayout::ePresentSrcKHR;
+        barrier.subresourceRange.aspectMask = vk::ImageAspectFlagBits::eColor;
+        barrier.subresourceRange.baseMipLevel = 0;
+        barrier.subresourceRange.levelCount = 1;
+        barrier.subresourceRange.baseArrayLayer = 0;
+        barrier.subresourceRange.layerCount = 1;
+
+        cmd.pipelineBarrier(vk::PipelineStageFlagBits::eTopOfPipe, vk::PipelineStageFlagBits::eBottomOfPipe, //
+                            {}, {}, {}, barrier);
+    }
+    cmd.end();
+
+    vk::SubmitInfo submit{};
+    submit.setCommandBuffers(cmd);
+    queues(GRAPHICS_QUEUE_IDX).submit(submit);
+    queues(GRAPHICS_QUEUE_IDX).waitIdle();
+    device().destroyCommandPool(cmd_pool);
 }
 
 void Swapchain::destory()
@@ -85,5 +120,17 @@ void Swapchain::destory()
 
 uint32_t Swapchain::aquire_next_image(vk::Semaphore sem, vk::Fence fence, uint64_t timeout)
 {
-    return device().acquireNextImageKHR(*this, timeout, sem, fence).value;
+    curr_idx_ = device().acquireNextImageKHR(*this, timeout, sem, fence).value;
+    return curr_idx_;
+}
+
+vk::Result Swapchain::present(const std::vector<vk::Semaphore>& wait_sems)
+{
+    vk::PresentInfoKHR present_info{};
+    present_info.setWaitSemaphores(wait_sems);
+    present_info.swapchainCount = 1;
+    present_info.pSwapchains = this;
+    present_info.pImageIndices = &curr_idx_;
+
+    return queues(GRAPHICS_QUEUE_IDX).presentKHR(present_info);
 }

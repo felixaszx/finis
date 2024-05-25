@@ -9,8 +9,9 @@
  * @tparam TypeID: each TypeID share same extension functions
  */
 template <uint32_t TypeID>
-class Image : private VkObject, //
-              public vk::Image
+class Image : public vk::Image, //
+              private VkObject
+
 {
   private:
     inline static ImageFunctions funcs_ = {};

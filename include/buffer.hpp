@@ -9,8 +9,9 @@
  * @tparam TypeID: each TypeID share same extension functions
  */
 template <uint32_t TypeID>
-class Buffer : private VkObject, //
-               public vk::Buffer
+class Buffer : public vk::Buffer, //
+               private VkObject
+
 {
   private:
     inline static BufferFunctions funcs_ = {};
