@@ -3,11 +3,28 @@
 #include "graphics/resources.hpp"
 #include "graphics/swapchain.hpp"
 #include "graphics/pass.hpp"
+#include "scene/tree.hpp"
 
 #include "extensions/loader.hpp"
 
 int main(int argc, char** argv)
 {
+    SceneNode root;
+    SceneNode l1;
+    SceneNode l2;
+    SceneNode l3;
+    SceneNode l4;
+    l1.set_parent(&root);
+    l2.set_parent(&root);
+    l3.set_parent(&l1);
+    l4.set_parent(&l1);
+
+    l1.translate({1, 0, 0});
+    l2.translate({2, 0, 0});
+    l3.translate({3, 0, 0});
+    l4.translate({4, 0, 0});
+    root.traverse_breath_first([](SceneNode& node) { std::cout << node.get_world_position()[0] << '\n'; });
+    /*
     Graphics g(1920, 1080, true);
     ExtensionLoader test_ext("exe/test.dll");
     ExtensionLoader pass_ext("exe/g_buffer.dll");
@@ -16,6 +33,15 @@ int main(int argc, char** argv)
     sc.create();
 
     Pass p(pass_ext.load_pass_funcs());
+
+    PassGroup pg;
+    pg.register_pass(test_ext.load_pass_funcs());
+    pg.register_pass(test_ext.load_pass_funcs());
+    pg.register_pass(test_ext.load_pass_funcs());
+
+    Pass* p1 = pg.get_pass(0);
+    Pass* p2 = pg.get_pass(1);
+    Pass* p3 = pg.get_pass(2);
 
     vk::CommandPoolCreateInfo pool_info{};
     pool_info.queueFamilyIndex = g.queue_indices(GRAPHICS_QUEUE_IDX);
@@ -42,8 +68,7 @@ int main(int argc, char** argv)
 
         TRY_FUNC
         auto r = g.device().waitForFences(frame_fence, true, UINT64_MAX);
-        CATCH_BEGIN
-        CATCH_END
+        CATCH_FUNC
 
         g.device().resetFences(frame_fence);
         sc.aquire_next_image(sem_aquired, nullptr);
@@ -72,5 +97,7 @@ int main(int argc, char** argv)
 
     g.device().destroyCommandPool(cmd_pool);
     sc.destory();
+    */
+
     return EXIT_SUCCESS;
 }

@@ -62,3 +62,24 @@ void Pass::finish()
 {
     funcs_.finish_();
 }
+Pass& PassGroup::register_pass(const PassFunctions& funcs)
+{
+    Pass& follow = passes_.emplace_back(funcs);
+    follow.chain_info_.chain_id_ = passes_.size() - 1;
+    if (passes_.size() > 1)
+    {
+        passes_[passes_.size() - 2].chain_info_.next_ = &follow.chain_info_;
+        follow.chain_info_.prev_ = &passes_[passes_.size() - 2].chain_info_;
+        follow.chain_info_.shared_info_ = &passes_[passes_.size() - 2].chain_info_.shared_info_;
+    }
+    return follow;
+}
+
+Pass* PassGroup::get_pass(uint32_t id)
+{
+    if (id < passes_.size())
+    {
+        return &passes_[id];
+    }
+    return nullptr;
+}

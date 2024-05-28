@@ -90,6 +90,7 @@ enum AtchmIdx
 typedef struct PassChain
 {
     uint32_t chain_id_;
+
     uint32_t image_count_;
     struct PassChain* prev_;
     struct PassChain* next_;
@@ -97,6 +98,7 @@ typedef struct PassChain
     // setup function must setup following info
     VkRect2D render_area_;
     uint32_t layer_count_;
+    void* shared_info_; // lifetime manage by extension
 
     VkImage* images_;
     VkImageView* image_views_;
@@ -116,5 +118,23 @@ typedef struct
     void (*render_)(VkCommandBuffer cmd);
     void (*finish_)();
 } PassFunctions;
+
+typedef float GlmFloat;
+typedef struct
+{
+    // all array of 3 floats, they are not relative, but absolute
+    GlmFloat position_[3];
+    GlmFloat rotation_[3];
+    GlmFloat scale_[3];
+    GlmFloat up_[3];
+
+    GlmFloat right_[3];
+    GlmFloat front_[3];
+} WorldTransform;
+
+typedef struct
+{
+    void* shared_info_; // lifetime manage by extension
+} SceneNodeFuncs;
 
 #endif // INCLUDE_EXT_DEFINES_H

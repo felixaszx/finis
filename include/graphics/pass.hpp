@@ -22,4 +22,14 @@ class Pass : private VkObject
     void finish();
 };
 
+class PassGroup
+{
+  private:
+    std::vector<Pass> passes_ = {};
+
+  public:
+    Pass& register_pass(const PassFunctions& funcs);
+    Pass* get_pass(uint32_t id);
+};
+
 #endif // INCLUDE_PASS_HPP
