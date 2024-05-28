@@ -10,10 +10,26 @@
 #include "glms.hpp"
 #include "extensions/defines.h"
 
+class SceneNode;
+struct SceneManager
+{
+    friend class SceneNode;
+
+  private:
+    void* shared_info_ = nullptr;
+    const ObjectDetails* details_ = nullptr;
+    SceneManagerStates states_ = {};
+
+  public:
+    SceneManager(const SceneManagerStates& states, const ObjectDetails* details = nullptr);
+    ~SceneManager();
+};
+
 class SceneNode
 {
   private:
     SceneNode* parent_ = nullptr;
+    SceneManager* manager_ = nullptr;
     std::set<SceneNode*> children_ = {};
 
     glm::vec<3, GlmFloat> position_ = {0, 0, 0}; // always relative
@@ -25,6 +41,8 @@ class SceneNode
     inline static const glm::vec<3, GlmFloat> UP_ = {0, 1, 0};
 
     std::string name_ = "";
+
+    SceneNode(SceneManager& manager, SceneNode* parent = nullptr);
     ~SceneNode();
 
     SceneNode* get_parent();

@@ -67,20 +67,6 @@ typedef struct
     void (*destory_image_)(const ObjectDetails* details, VkImage image, VmaAllocation alloc);
 } ImageFunctions;
 
-typedef struct
-{
-    VkImage image_;
-    VkImageView view_;
-} SwapchainAquireNextImageReturn;
-
-typedef struct
-{
-    VkSwapchainKHR (*create_swapchain_)(const ObjectDetails* details, VkExtent2D extent);
-    void (*destroy_swapchain_)(const ObjectDetails* details, VkSwapchainKHR swapchain);
-    SwapchainAquireNextImageReturn (*aquire_next_image_)(const ObjectDetails* details, VkSemaphore sem, VkFence fence,
-                                                         uint64_t timeout);
-} SwapchainFunctions;
-
 enum AtchmIdx
 {
     DEPTH_ATCHM_IDX = 0,
@@ -117,7 +103,7 @@ typedef struct
     void (*setup_)();
     void (*render_)(VkCommandBuffer cmd);
     void (*finish_)();
-} PassFunctions;
+} PassStates;
 
 typedef float GlmFloat;
 typedef struct
@@ -134,7 +120,16 @@ typedef struct
 
 typedef struct
 {
-    void* shared_info_; // lifetime manage by extension
-} SceneNodeFuncs;
+    void (*init_)(const ObjectDetails* details, void** shared_data_ptr);
+    void (*clear_)();
+} SceneManagerStates;
+
+typedef struct SceneNodeFunctions
+{
+    struct SceneNodeFunctions* parent_;
+
+    void (*set_render_info_)(const ObjectDetails* details, struct SceneNodeFunctions* res);
+    void (*set_physic_info_)(); // tbc
+} SceneNodeFunctions;
 
 #endif // INCLUDE_EXT_DEFINES_H

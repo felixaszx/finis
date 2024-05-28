@@ -20,13 +20,11 @@ const ImageFunctions ExtensionLoader::load_image_funcs(const std::string& image_
     return dl_.get<ImageFunctions()>(image_func_getter)();
 }
 
-const SwapchainFunctions ExtensionLoader::load_swapchain_funcs(const std::string& swapchain_func_getter) const
+const PassStates ExtensionLoader::load_pass_states(const std::string& pass_state_getter) const
 {
-
-    return dl_.get<SwapchainFunctions()>(swapchain_func_getter)();
+    return dl_.get<PassStates()>(pass_state_getter)();
 }
-
-const PassFunctions ExtensionLoader::load_pass_funcs(const std::string& pass_func_getter) const
+const SceneManagerStates ExtensionLoader::load_scene_manager_states(const std::string& scene_manager_state_getter) const
 {
-    return dl_.get<PassFunctions()>(pass_func_getter)();
+    return dl_.get<SceneManagerStates()>(scene_manager_state_getter)();
 }

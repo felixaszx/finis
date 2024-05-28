@@ -1,5 +1,23 @@
 #include "scene/tree.hpp"
 
+SceneManager::SceneManager(const SceneManagerStates& funcs, const ObjectDetails* details)
+    : states_(funcs),
+      details_(details)
+{
+    states_.init_(details, &shared_info_);
+}
+
+SceneManager::~SceneManager()
+{
+    states_.clear_();
+}
+
+SceneNode::SceneNode(SceneManager& manager, SceneNode* parent)
+    : parent_(parent),
+      manager_(&manager)
+{
+}
+
 SceneNode::~SceneNode()
 {
     for (SceneNode* child : children_)

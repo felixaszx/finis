@@ -9,22 +9,7 @@
 
 int main(int argc, char** argv)
 {
-    SceneNode root;
-    SceneNode l1;
-    SceneNode l2;
-    SceneNode l3;
-    SceneNode l4;
-    l1.set_parent(&root);
-    l2.set_parent(&root);
-    l3.set_parent(&l1);
-    l4.set_parent(&l1);
 
-    l1.translate({1, 0, 0});
-    l2.translate({2, 0, 0});
-    l3.translate({3, 0, 0});
-    l4.translate({4, 0, 0});
-    root.traverse_breath_first([](SceneNode& node) { std::cout << node.get_world_position()[0] << '\n'; });
-    /*
     Graphics g(1920, 1080, true);
     ExtensionLoader test_ext("exe/test.dll");
     ExtensionLoader pass_ext("exe/g_buffer.dll");
@@ -32,12 +17,12 @@ int main(int argc, char** argv)
     Swapchain sc;
     sc.create();
 
-    Pass p(pass_ext.load_pass_funcs());
+    Pass p(pass_ext.load_pass_states());
 
     PassGroup pg;
-    pg.register_pass(test_ext.load_pass_funcs());
-    pg.register_pass(test_ext.load_pass_funcs());
-    pg.register_pass(test_ext.load_pass_funcs());
+    pg.register_pass(test_ext.load_pass_states());
+    pg.register_pass(test_ext.load_pass_states());
+    pg.register_pass(test_ext.load_pass_states());
 
     Pass* p1 = pg.get_pass(0);
     Pass* p2 = pg.get_pass(1);
@@ -97,7 +82,6 @@ int main(int argc, char** argv)
 
     g.device().destroyCommandPool(cmd_pool);
     sc.destory();
-    */
 
     return EXIT_SUCCESS;
 }

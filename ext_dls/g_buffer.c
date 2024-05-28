@@ -101,9 +101,9 @@ void finish()
 {
 }
 
-PassFunctions pass_func_getter()
+PassStates pass_func_getter()
 {
-    PassFunctions r;
+    PassStates r;
     r.image_count_ = 4;
     r.init_ = init_;
     r.clear_ = clear;

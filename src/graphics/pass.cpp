@@ -1,28 +1,28 @@
 #include "graphics/pass.hpp"
 
-Pass::Pass(const PassFunctions& funcs)
-    : funcs_(funcs)
+Pass::Pass(const PassStates& states)
+    : states_(states)
 {
-    images_.resize(funcs.image_count_);
-    image_views_.resize(funcs.image_count_);
-    atchm_infos_.resize(funcs.image_count_, vk::RenderingAttachmentInfo{});
+    images_.resize(states.image_count_);
+    image_views_.resize(states.image_count_);
+    atchm_infos_.resize(states.image_count_, vk::RenderingAttachmentInfo{});
 
-    chain_info_.image_count_ = funcs.image_count_;
+    chain_info_.image_count_ = states.image_count_;
     chain_info_.images_ = (VkImage*)images_.data();
     chain_info_.image_views_ = (VkImageView*)image_views_.data();
     chain_info_.atchm_info_ = (VkRenderingAttachmentInfo*)atchm_infos_.data();
 
-    funcs.init_(details_ptr(), &chain_info_);
+    states.init_(details_ptr(), &chain_info_);
 }
 
 Pass::~Pass()
 {
-    funcs_.clear_();
+    states_.clear_();
 }
 
 void Pass::setup()
 {
-    funcs_.setup_();
+    states_.setup_();
     for (uint32_t i = 0; i < images_.size(); i++)
     {
         atchm_infos_[i].imageView = image_views_[i];
@@ -54,17 +54,17 @@ void Pass::render(vk::CommandBuffer cmd)
     }
 
     cmd.beginRendering(render_info);
-    funcs_.render_(cmd);
+    states_.render_(cmd);
     cmd.endRendering();
 }
 
 void Pass::finish()
 {
-    funcs_.finish_();
+    states_.finish_();
 }
-Pass& PassGroup::register_pass(const PassFunctions& funcs)
+Pass& PassGroup::register_pass(const PassStates& states)
 {
-    Pass& follow = passes_.emplace_back(funcs);
+    Pass& follow = passes_.emplace_back(states);
     follow.chain_info_.chain_id_ = passes_.size() - 1;
     if (passes_.size() > 1)
     {
