@@ -15,26 +15,14 @@
 #include "glms.hpp"
 #include "vma/vk_mem_alloc.hpp"
 #include "key_code.hpp"
-#include "extensions/defines.h"
+#include "extensions/cpp_defines.hpp"
 
-#define bit_shift_left(bits) (1 << bits)
-
-#define TRY_FUNC \
-    try          \
-    {
-
-#define CATCH_BEGIN            \
-    }                          \
-    catch (std::exception & e) \
-    {                          \
-        std::cerr << e.what();
-#define CATCH_END }
-#define CATCH_FUNC             \
-    }                          \
-    catch (std::exception & e) \
-    {                          \
-        std::cerr << e.what(); \
-    }
+enum QueueType
+{
+    GRAPHICS_QUEUE_IDX = 0,
+    COMPUTE_QUEUE_IDX = 1,
+    TRANSFER_QUEUE_IDX = 2
+};
 
 struct Graphics;
 enum class Action
@@ -106,8 +94,6 @@ class VkObject
     inline static vma::Allocator allocator_{};
     inline static GLFWwindow* window_{};
 
-    inline static ObjectDetails details_;
-
   public:
     static vk::Instance instance();
     static vk::SurfaceKHR surface();
@@ -119,7 +105,6 @@ class VkObject
     static uint32_t queue_indices(QueueType type);
     static vma::Allocator allocator();
     static GLFWwindow* window();
-    static const ObjectDetails* details_ptr();
     [[nodiscard]] const KeyCode& keys(KEY key) const;
     [[nodiscard]] const KeyCode& last_key() const;
 };
@@ -130,6 +115,7 @@ struct Graphics : public VkObject
     ~Graphics();
 
     static bool ready();
+    static bool running();
 };
 
 class CpuTimer

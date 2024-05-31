@@ -58,8 +58,19 @@ bool Graphics::ready()
     return window_ && allocator_ && device_;
 }
 
+bool Graphics::running()
+{
+    glfwPollEvents();
+    return !glfwWindowShouldClose(window_);
+}
+
 Graphics::Graphics(int width, int height, bool debug, const std::string& title)
 {
+    if (window_)
+    {
+        return;
+    }
+
     glfwInit();
     glfwWindowHint(GLFW_CLIENT_API, GLFW_NO_API);
     glfwWindowHint(GLFW_RESIZABLE, GLFW_FALSE);
@@ -165,7 +176,7 @@ Graphics::Graphics(int width, int height, bool debug, const std::string& title)
     for (uint32_t index = 0; index < queue_properties.size(); index++)
     {
         if (queue_properties[index].queueFlags & vk::QueueFlagBits::eTransfer && //
-            index != queue_indices_[GRAPHICS_QUEUE_IDX] &&                                 //
+            index != queue_indices_[GRAPHICS_QUEUE_IDX] &&                       //
             index != queue_indices_[COMPUTE_QUEUE_IDX])
         {
             queue_count++;
@@ -250,25 +261,15 @@ Graphics::Graphics(int width, int height, bool debug, const std::string& title)
 
     vk::PipelineCacheCreateInfo pc_info{};
     pipeline_cache_ = device_.createPipelineCache(pc_info);
-
-    details_.instance_ = instance_;
-    details_.surface_ = surface_;
-    details_.messenger_ = messenger_;
-    details_.device_ = device_;
-    details_.physical_ = physical_;
-    details_.pipeline_cache_ = pipeline_cache_;
-    for (int i = 0; i < 3; i++)
-    {
-        details_.queues_[i] = queues_[i];
-        details_.queue_indices_[i] = queue_indices_[i];
-    }
-
-    details_.allocator_ = allocator_;
-    details_.window_ = window_;
 }
 
 Graphics::~Graphics()
 {
+    if (!window_)
+    {
+        return;
+    }
+
     device_.waitIdle();
     device_.destroyPipelineCache(pipeline_cache_);
     instance_.destroySurfaceKHR(surface_);
@@ -285,6 +286,7 @@ Graphics::~Graphics()
     instance_.destroy();
     glfwDestroyWindow(window_);
     glfwTerminate();
+    window_ = nullptr;
 }
 
 vk::Instance VkObject::instance()
@@ -305,11 +307,6 @@ vk::Queue VkObject::queues(QueueType type)
 GLFWwindow* VkObject::window()
 {
     return VkObject::window_;
-}
-
-const ObjectDetails* VkObject::details_ptr()
-{
-    return &VkObject::details_;
 }
 
 vk::SurfaceKHR VkObject::surface()

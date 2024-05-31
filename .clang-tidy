@@ -15,7 +15,8 @@ Checks: "
         -modernize-deprecated-headers,
         -modernize-use-using,
         -modernize-avoid-c-arrays,
-        -cppcoreguidelines-avoid-c-arrays
+        -cppcoreguidelines-avoid-c-arrays,
+        -cppcoreguidelines-owning-memory
         "
 WarningsAsErrors: ''
 HeaderFilterRegex: ''
