@@ -15,7 +15,7 @@
 #include "glms.hpp"
 #include "vma/vk_mem_alloc.hpp"
 #include "key_code.hpp"
-#include "extensions/cpp_defines.hpp"
+#include "tools.hpp"
 
 enum QueueType
 {
@@ -34,9 +34,10 @@ enum class Action
 
 enum class ModKey
 {
-    SHIFT,
-    CTRL,
-    ALT,
+    NONE = 0,
+    SHIFT = GLFW_MOD_SHIFT,
+    CTRL = GLFW_MOD_CONTROL,
+    ALT = GLFW_MOD_ALT,
 };
 
 class KeyCode
@@ -44,10 +45,12 @@ class KeyCode
     friend Graphics;
 
   private:
+    mutable std::atomic<ModKey> mod_ = ModKey::NONE;
     mutable std::atomic<Action> prev_ = Action::RELEASE;
     mutable std::atomic<Action> curr_ = Action::RELEASE;
 
   public:
+    [[nodiscard]] ModKey mod() const { return mod_; }
     [[nodiscard]] bool get(Action first, Action second) const { return (prev_ == first) && (curr_ == second); }
     [[nodiscard]] bool holding() const { return get(Action::HOLD, Action::HOLD); }
     [[nodiscard]] bool just_hold() const { return get(Action::PRESS, Action::HOLD); }

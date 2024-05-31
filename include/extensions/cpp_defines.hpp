@@ -2,7 +2,10 @@
 #define EXTENSIONS_CPP_DEFINES_HPP
 
 #include <memory>
+#include <concepts>
 #include <boost/config.hpp>
+
+#include "tools.hpp"
 
 #define LOARDER_FUNC_NAME "load_extension"
 #define EXTENSION_API     extern "C" BOOST_SYMBOL_EXPORT
@@ -13,29 +16,34 @@
         ext->id_ = path;                                      \
         return ext;                                           \
     }
-#define bit_shift_left(bits) (1 << bits)
-#define TRY_FUNC \
-    try          \
-    {
-
-#define CATCH_BEGIN            \
-    }                          \
-    catch (std::exception & e) \
-    {                          \
-        std::cerr << e.what();
-#define CATCH_END }
-#define CATCH_FUNC             \
-    }                          \
-    catch (std::exception & e) \
-    {                          \
-        std::cerr << e.what(); \
-    }
 
 struct Extension
 {
     std::string id_ = "";
-    std::string usage_ = "";
+    std::string description_ = "";
     virtual ~Extension() = default;
+
+    enum Usage : uint64_t
+    {
+        // system usage
+        SYSTEM_testing,
+        SYSTEM_graphics
+    };
+    Usage usage_ = Usage::SYSTEM_testing;
+
+    enum Component : uint64_t
+    {
+        // SYSTEM_testing
+        TESTING_none = 0,
+
+        // SYSTEM_graphics
+        GRAPHICS_mouse_callback = bit_shift_left(0),
+
+        // GAME_script
+        SCRIPT_frame_update = bit_shift_left(0),
+        SCRIPT_fix_update = bit_shift_left(1)
+    };
+    Component component_ = Component::TESTING_none;
 };
 
 #endif // EXTENSIONS_CPP_DEFINES_HPP

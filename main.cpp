@@ -1,7 +1,7 @@
 #include <iostream>
 #include "graphics/vk_base.hpp"
 #include "graphics/swapchain.hpp"
-
+#include "scene/scene.hpp"
 #include "extensions/loader.hpp"
 
 int main(int argc, char** argv)
@@ -12,8 +12,6 @@ int main(int argc, char** argv)
 
     ExtensionLoader test_ext("exe/test2.dll");
     auto ext = test_ext.load_extension();
-    std::cout << ext->id_;
-
     while (g.running())
     {
     }

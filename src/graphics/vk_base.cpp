@@ -85,6 +85,7 @@ Graphics::Graphics(int width, int height, bool debug, const std::string& title)
                            {
                                keys_[key].prev_.store(keys_[key].curr_);
                                keys_[key].curr_ = static_cast<Action>(action);
+                               keys_[key].mod_ = static_cast<ModKey>(mods);
                            }
                        });
 
