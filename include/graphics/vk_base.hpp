@@ -93,6 +93,7 @@ class VkObject
 
     inline static std::array<vk::Queue, 3> queues_{};
     inline static std::array<uint32_t, 3> queue_indices_{};
+    inline static vk::CommandPool one_time_pool_{};
 
     inline static vma::Allocator allocator_{};
     inline static GLFWwindow* window_{};
@@ -107,6 +108,8 @@ class VkObject
     static vk::Queue queues(QueueType type);
     static uint32_t queue_indices(QueueType type);
     static vma::Allocator allocator();
+    static vk::CommandBuffer one_time_buffer();
+    static void submit_one_time_buffer(vk::CommandBuffer cmd);
     static GLFWwindow* window();
     [[nodiscard]] const KeyCode& keys(KEY key) const;
     [[nodiscard]] const KeyCode& last_key() const;

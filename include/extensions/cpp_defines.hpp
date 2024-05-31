@@ -9,12 +9,12 @@
 
 #define LOARDER_FUNC_NAME "load_extension"
 #define EXTENSION_API     extern "C" BOOST_SYMBOL_EXPORT
-#define EXPORT_EXTENSION(Type)                                \
-    EXTENSION_API Extension* load_extension(const char* path) \
-    {                                                         \
-        Type* ext = new Type;                                 \
-        ext->id_ = path;                                      \
-        return ext;                                           \
+#define EXPORT_EXTENSION(Type)                \
+    EXTENSION_API Extension* load_extension() \
+    {                                         \
+        Type* ext = new Type;                 \
+        ext->id_ = std::to_string(size_t(ext));       \
+        return ext;                           \
     }
 
 struct Extension

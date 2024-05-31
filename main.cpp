@@ -1,6 +1,7 @@
 #include <iostream>
 #include "graphics/vk_base.hpp"
 #include "graphics/swapchain.hpp"
+#include "graphics/texture.hpp"
 #include "scene/scene.hpp"
 #include "extensions/loader.hpp"
 
@@ -10,8 +11,9 @@ int main(int argc, char** argv)
     Swapchain swapchain;
     swapchain.create();
 
-    ExtensionLoader test_ext("exe/test2.dll");
-    auto ext = test_ext.load_extension();
+    TextureMgr texture_mgr;
+    Texture tt = texture_mgr.load_texture("res/textures/elysia.png");
+
     while (g.running())
     {
     }

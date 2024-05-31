@@ -12,7 +12,6 @@ const bool ExtensionLoader::valid() const
 
 std::unique_ptr<Extension> ExtensionLoader::load_extension()
 {
-    std::unique_ptr<Extension> ext(
-        dl_.get<Extension*(const char* path)>("load_extension")(dl_.location().generic_string().c_str()));
+    std::unique_ptr<Extension> ext(dl_.get<Extension*()>("load_extension")());
     return ext;
 }

@@ -262,6 +262,10 @@ Graphics::Graphics(int width, int height, bool debug, const std::string& title)
 
     vk::PipelineCacheCreateInfo pc_info{};
     pipeline_cache_ = device_.createPipelineCache(pc_info);
+
+    vk::CommandPoolCreateInfo pool_info{};
+    pool_info.queueFamilyIndex = queue_indices_[GRAPHICS_QUEUE_IDX];
+    one_time_pool_ = device().createCommandPool(pool_info);
 }
 
 Graphics::~Graphics()
@@ -348,6 +352,27 @@ vk::DebugUtilsMessengerEXT VkObject::messenger()
 vma::Allocator VkObject::allocator()
 {
     return VkObject::allocator_;
+}
+
+vk::CommandBuffer VkObject::one_time_buffer()
+{
+    vk::CommandBuffer cmd{};
+    vk::CommandBufferAllocateInfo alloc_info{};
+    alloc_info.commandPool = one_time_pool_;
+    alloc_info.commandBufferCount = 1;
+    alloc_info.level = vk::CommandBufferLevel::ePrimary;
+    return device().allocateCommandBuffers(alloc_info)[0];
+}
+
+void VkObject::submit_one_time_buffer(vk::CommandBuffer cmd)
+{
+    vk::SubmitInfo submit_info{};
+    submit_info.commandBufferCount = 1;
+    submit_info.pCommandBuffers = &cmd;
+
+    queues_[GRAPHICS_QUEUE_IDX].submit(submit_info);
+    queues_[GRAPHICS_QUEUE_IDX].waitIdle();
+    device().freeCommandBuffers(one_time_pool_, cmd);
 }
 
 CpuTimer::CpuTimer()
