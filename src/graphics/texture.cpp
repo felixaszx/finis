@@ -8,11 +8,38 @@ Texture::operator vk::DescriptorImageInfo()
     vk::DescriptorImageInfo info{};
     info.imageView = image_view_;
     info.imageLayout = vk::ImageLayout::eShaderReadOnlyOptimal;
+    info.sampler = sampler_;
     return info;
+}
+
+TextureMgr::TextureMgr(uint32_t max_textures)
+    : max_textures_(max_textures)
+{
+    textures_.reserve(max_textures);
+
+    vk::SamplerCreateInfo sampelr_info{};
+    sampelr_info.anisotropyEnable = true;
+    sampelr_info.maxAnisotropy = 4;
+    sampelr_info.borderColor = vk::BorderColor::eFloatOpaqueBlack;
+    sampelr_info.maxLod = 1000.0f;
+    sampelr_info.mipmapMode = vk::SamplerMipmapMode::eLinear;
+    sampelr_info.magFilter = vk::Filter::eLinear;
+    sampelr_info.minFilter = vk::Filter::eLinear;
+    sampler_ = device().createSampler(sampelr_info);
+}
+
+TextureMgr::~TextureMgr()
+{
+    device().destroySampler(sampler_);
 }
 
 Texture TextureMgr::load_texture(const std::string& file_path, bool mip_mapping)
 {
+    if (textures_.contains(file_path))
+    {
+        return textures_[file_path];
+    }
+
     stbi_set_flip_vertically_on_load(true);
     TextureStorage& storage = textures_[file_path];
     int w = 0, h = 0, chan = 0;
@@ -25,7 +52,7 @@ Texture TextureMgr::load_texture(const std::string& file_path, bool mip_mapping)
     storage.levels_ = mip_mapping ? std::floor(std::log2(std::max(w, h))) + 1 : 1;
 
     vk::BufferCreateInfo buffer_info{};
-    buffer_info.size = w * h * chan;
+    buffer_info.size = w * h * STBI_rgb_alpha;
     buffer_info.usage = vk::BufferUsageFlagBits::eTransferSrc;
     vma::AllocationCreateInfo alloc_info{};
     alloc_info.usage = vma::MemoryUsage::eAutoPreferHost;
@@ -85,7 +112,7 @@ Texture TextureMgr::load_texture(const std::string& file_path, bool mip_mapping)
     region.imageSubresource.layerCount = 1;
     region.imageExtent = storage.extent_;
 
-    vk::CommandBuffer cmd = one_time_buffer();
+    vk::CommandBuffer cmd = one_time_cmd();
     begin_cmd(cmd, vk::CommandBufferUsageFlagBits::eOneTimeSubmit);
     cmd.pipelineBarrier(vk::PipelineStageFlagBits::eTopOfPipe, vk::PipelineStageFlagBits::eTransfer, //
                         {}, {}, {}, barrier);
@@ -140,9 +167,10 @@ Texture TextureMgr::load_texture(const std::string& file_path, bool mip_mapping)
     cmd.pipelineBarrier(vk::PipelineStageFlagBits::eTransfer, vk::PipelineStageFlagBits::eFragmentShader, //
                         {}, {}, {}, barrier);
     cmd.end();
-    submit_one_time_buffer(cmd);
+    submit_one_time_cmd(cmd);
     allocator().destroyBuffer(staging, staging);
 
+    storage.sampler_ = sampler_;
     return {storage};
 }
 
@@ -153,5 +181,6 @@ void TextureMgr::remove_texture(const std::string& file_path)
 
 TextureStorage::~TextureStorage()
 {
+    device().destroyImageView(image_view_);
     allocator().destroyImage(image_, allocation_);
 }

@@ -4,7 +4,7 @@
 #include <unordered_map>
 
 #include "vk_base.hpp"
-#include "extensions/cpp_defines.hpp"
+#include "tools.hpp"
 
 // forward declarations
 class TextureMgr;
@@ -14,6 +14,8 @@ class Texture
   protected:
     vk::Image image_{};
     vk::ImageView image_view_{};
+    vk::Sampler sampler_{};
+
     uint32_t levels_ = 1;
     vk::Extent3D extent_{0, 0, 1};
 
@@ -39,9 +41,15 @@ class TextureStorage : public Texture, //
 class TextureMgr : private VkObject
 {
   private:
+    uint32_t max_textures_;
+    vk::Sampler sampler_{};
+    vk::DescriptorPool descriptor_pool_{};
     std::unordered_map<std::string, TextureStorage> textures_;
 
   public:
+    TextureMgr(uint32_t max_textures = 100);
+    ~TextureMgr();
+
     [[nodiscard]] Texture load_texture(const std::string& file_path, bool mip_mapping = true);
     void remove_texture(const std::string& file_path);
 };

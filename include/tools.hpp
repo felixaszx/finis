@@ -81,4 +81,10 @@ inline void begin_cmd(const vk::CommandBuffer& cmd,           //
     cmd.begin(begin_info);
 }
 
+template <typename C>
+void free_container_memory(C& container)
+{
+    C().swap(container);
+}
+
 #endif // INCLUDE_TOOLS_HPP

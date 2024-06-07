@@ -108,8 +108,8 @@ class VkObject
     static vk::Queue queues(QueueType type);
     static uint32_t queue_indices(QueueType type);
     static vma::Allocator allocator();
-    static vk::CommandBuffer one_time_buffer();
-    static void submit_one_time_buffer(vk::CommandBuffer cmd);
+    static vk::CommandBuffer one_time_cmd();
+    static void submit_one_time_cmd(vk::CommandBuffer cmd);
     static GLFWwindow* window();
     [[nodiscard]] const KeyCode& keys(KEY key) const;
     [[nodiscard]] const KeyCode& last_key() const;
@@ -137,7 +137,7 @@ class CpuTimer
     uint32_t since_init_ms();
 
     void start();
-    void finish();
+    void end();
 
     float get_duration_second();
     uint32_t get_duration_ms();
@@ -151,6 +151,8 @@ struct Fence : public vk::Fence, //
 {
     Fence(bool signal = true);
     ~Fence();
+
+    vk::Result wait(uint64_t max_time = std::numeric_limits<uint64_t>::max());
 };
 
 struct Semaphore : public vk::Semaphore, //

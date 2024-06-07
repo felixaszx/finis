@@ -276,6 +276,7 @@ Graphics::~Graphics()
     }
 
     device_.waitIdle();
+    device().destroyCommandPool(one_time_pool_);
     device_.destroyPipelineCache(pipeline_cache_);
     instance_.destroySurfaceKHR(surface_);
 
@@ -354,7 +355,7 @@ vma::Allocator VkObject::allocator()
     return VkObject::allocator_;
 }
 
-vk::CommandBuffer VkObject::one_time_buffer()
+vk::CommandBuffer VkObject::one_time_cmd()
 {
     vk::CommandBuffer cmd{};
     vk::CommandBufferAllocateInfo alloc_info{};
@@ -364,7 +365,7 @@ vk::CommandBuffer VkObject::one_time_buffer()
     return device().allocateCommandBuffers(alloc_info)[0];
 }
 
-void VkObject::submit_one_time_buffer(vk::CommandBuffer cmd)
+void VkObject::submit_one_time_cmd(vk::CommandBuffer cmd)
 {
     vk::SubmitInfo submit_info{};
     submit_info.commandBufferCount = 1;
@@ -399,7 +400,7 @@ void CpuTimer::start()
     begin_ = std::chrono::high_resolution_clock::now();
 }
 
-void CpuTimer::finish()
+void CpuTimer::end()
 {
     end_ = std::chrono::high_resolution_clock::now();
 }
@@ -438,6 +439,11 @@ Fence::Fence(bool signal)
 Fence::~Fence()
 {
     device().destroyFence(*this);
+}
+
+vk::Result Fence::wait(uint64_t max_time)
+{
+    return device().waitForFences(*this, true, max_time);
 }
 
 Semaphore::Semaphore()
