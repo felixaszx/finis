@@ -5,7 +5,6 @@
 #include <string>
 
 #include <vulkan/vulkan.hpp>
-#include "vma/vk_mem_alloc.hpp"
 
 #define bit_shift_left(bits) (1 << bits)
 #define TRY_FUNC \
@@ -56,20 +55,6 @@ T max_of_all(const std::vector<T>& datas)
 
     return max;
 }
-
-template <typename T>
-struct BufferAllocation : public vk::Buffer, //
-                          public vma::Allocation
-{
-    BufferAllocation(const T& result) { sset(*this, result.first, result.second); }
-};
-
-template <typename T>
-struct ImageAllocation : public vk::Image, //
-                         public vma::Allocation
-{
-    ImageAllocation(const T& result) { sset(*this, result.first, result.second); }
-};
 
 inline void begin_cmd(const vk::CommandBuffer& cmd,           //
                       vk::CommandBufferUsageFlags flags = {}, //
