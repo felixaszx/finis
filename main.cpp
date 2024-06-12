@@ -8,22 +8,8 @@
 #include "scene/scene.hpp"
 #include "extensions/loader.hpp"
 
-#include "fastgltf/core.hpp"
-#include "fastgltf/types.hpp"
-namespace fgltf = fastgltf;
-
 int main(int argc, char** argv)
 {
-    fgltf::Parser parser;
-    fgltf::GltfDataBuffer gltf_buffer;
-    gltf_buffer.FromPath("res/models/sponza_gltf/sponza.glb");
-
-    auto asset = parser.loadGltf(gltf_buffer, "res/models/sponza_gltf", fgltf::Options::GenerateMeshIndices);
-    for (auto& image : asset->images)
-    {
-        std::cout << image.name << "\n";
-    }
-
     Graphics g(1920, 1080, true);
     Swapchain swapchain;
     swapchain.create();

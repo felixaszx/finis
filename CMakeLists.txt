@@ -12,11 +12,8 @@ add_subdirectory(src/graphics)
 add_subdirectory(src/extensions)
 add_subdirectory(src/scene)
 
-add_subdirectory(fastgltf)
-
 add_executable(finis main.cpp)
 target_include_directories(finis PUBLIC ${CMAKE_SOURCE_DIR}/include)
-target_include_directories(finis PUBLIC ${CMAKE_SOURCE_DIR}/fastgltf/include)
 target_link_libraries(finis PUBLIC finis_graphics)
 target_link_libraries(finis PUBLIC finis_extension)
 target_link_libraries(finis PUBLIC finis_scene)
