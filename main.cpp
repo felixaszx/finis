@@ -4,7 +4,6 @@
 #include "graphics/swapchain.hpp"
 #include "graphics/texture.hpp"
 #include "graphics/buffer.hpp"
-#include "graphics/mesh.hpp"
 
 #include "scene/scene.hpp"
 #include "extensions/loader.hpp"
@@ -15,9 +14,6 @@ int main(int argc, char** argv)
     Swapchain swapchain;
     swapchain.create();
 
-    ExtensionLoader model_loader_dll("exe/model_loader.dll");
-    std::unique_ptr<Extension> model_loader = model_loader_dll.load_extension();
-    Model cube("res/models/sponza/sponza.obj", model_loader);
     CpuTimer timer;
 
     Fence frame_fence;
@@ -59,6 +55,7 @@ int main(int argc, char** argv)
         swapchain.present({submit_sem});
         timer.start();
     }
+
     g.device().waitIdle();
     g.device().destroyCommandPool(main_pool);
     swapchain.destory();

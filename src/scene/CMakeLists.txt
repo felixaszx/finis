@@ -8,3 +8,5 @@ set(CMAKE_RUNTIME_OUTPUT_DIRECTORY ${CMAKE_SOURCE_DIR}/exe)
 file(GLOB_RECURSE GRAPHICS_SRC *.cpp)
 add_library(finis_scene SHARED ${GRAPHICS_SRC})
 target_include_directories(finis_scene PUBLIC ${CMAKE_SOURCE_DIR}/include)
+
+target_link_libraries(finis_scene PUBLIC finis_extension)

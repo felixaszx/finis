@@ -212,20 +212,20 @@ Graphics::Graphics(int width, int height, bool debug, const std::string& title)
     feature.imageCubeArray = true;
     feature.multiDrawIndirect = true;
     feature.shaderSampledImageArrayDynamicIndexing = true;
-    vk::PhysicalDeviceVulkan11Features feature11{};
-    feature11.multiview = true;
-    feature11.shaderDrawParameters = true;
-    vk::PhysicalDeviceVulkan12Features feature12{};
-    feature12.runtimeDescriptorArray = true;
-    vk::PhysicalDeviceVulkan13Features feature13{};
-    feature13.dynamicRendering = true;
-    feature13.synchronization2 = true;
+    vk::PhysicalDeviceVulkan11Features feature1_1{};
+    feature1_1.multiview = true;
+    feature1_1.shaderDrawParameters = true;
+    vk::PhysicalDeviceVulkan12Features feature1_2{};
+    feature1_2.runtimeDescriptorArray = true;
+    vk::PhysicalDeviceVulkan13Features feature1_3{};
+    feature1_3.dynamicRendering = true;
+    feature1_3.synchronization2 = true;
 
     vk::PhysicalDeviceFeatures2 feature2{};
     feature2.setFeatures(feature);
-    feature2.pNext = &feature11;
-    feature11.pNext = &feature12;
-    feature12.pNext = &feature13;
+    feature2.pNext = &feature1_1;
+    feature1_1.pNext = &feature1_2;
+    feature1_2.pNext = &feature1_3;
 
     std::vector<const char*> device_ext_names = {VK_KHR_SWAPCHAIN_EXTENSION_NAME};
     std::vector<const char*> device_layer_names;

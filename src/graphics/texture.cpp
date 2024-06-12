@@ -3,7 +3,7 @@
 #define STB_IMAGE_IMPLEMENTATION
 #include <stb/stb_image.h>
 
-Texture::operator vk::DescriptorImageInfo()
+Texture::operator vk::DescriptorImageInfo() const
 {
     vk::DescriptorImageInfo info{};
     info.imageView = image_view_;
@@ -12,11 +12,8 @@ Texture::operator vk::DescriptorImageInfo()
     return info;
 }
 
-TextureMgr::TextureMgr(uint32_t max_textures)
-    : max_textures_(max_textures)
+TextureMgr::TextureMgr()
 {
-    textures_.reserve(max_textures);
-
     vk::SamplerCreateInfo sampelr_info{};
     sampelr_info.anisotropyEnable = true;
     sampelr_info.maxAnisotropy = 4;
@@ -172,6 +169,11 @@ Texture TextureMgr::load_texture(const std::string& file_path, bool mip_mapping)
 
     storage.sampler_ = sampler_;
     return {storage};
+}
+
+const std::unordered_map<std::string, TextureStorage>& TextureMgr::textures() const
+{
+    return textures_;
 }
 
 void TextureMgr::remove_texture(const std::string& file_path)
