@@ -36,3 +36,4 @@ build/*.obj
 exe/
 build/
 .cache/
+res/models/

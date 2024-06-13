@@ -5,16 +5,18 @@
 #include <boost/dll.hpp>
 #include "cpp_defines.hpp"
 
-// the loading extension must be wirtten as a function
-class ExtensionLoader
-{
-  private:
-    boost::dll::shared_library dl_;
+namespace fi
+{ // the loading extension must be wirtten as a function
+    class ExtensionLoader
+    {
+      private:
+        boost::dll::shared_library dl_;
 
-  public:
-    ExtensionLoader(const std::string& dl_name);
-    [[nodiscard]] const bool valid() const;
-    [[nodiscard]] std::unique_ptr<Extension> load_extension();
-};
+      public:
+        ExtensionLoader(const std::string& dl_name);
+        [[nodiscard]] const bool valid() const;
+        [[nodiscard]] std::unique_ptr<Extension> load_extension();
+    };
+}; // namespace fi
 
 #endif // INCLUDE_EXT_LOADER_HPP

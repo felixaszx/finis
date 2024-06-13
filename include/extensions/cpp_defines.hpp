@@ -18,19 +18,15 @@
         return ext;                             \
     }
 
-struct MeshMemory;
-struct MeshGroup;
-struct GraphicPipelie;
-
-struct SceneNode;
-struct Scene;
-
-struct Extension
+namespace fi
 {
-  public:
-    std::string id_ = "";
-    std::string description_ = "";
-    virtual ~Extension() = default;
-};
+    struct Extension
+    {
+      public:
+        std::string id_ = "";
+        std::string description_ = "";
+        virtual ~Extension() = default;
+    };
+}; // namespace fi
 
 #endif // EXTENSIONS_CPP_DEFINES_HPP

@@ -1,5 +1,7 @@
 #include "extensions/loader.hpp"
 
+using namespace fi;
+
 ExtensionLoader::ExtensionLoader(const std::string& dl_name)
     : dl_(dl_name)
 {
