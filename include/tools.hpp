@@ -3,6 +3,7 @@
 
 #include <vector>
 #include <string>
+#include <memory>
 
 #include <vulkan/vulkan.hpp>
 
@@ -23,10 +24,11 @@
     {                          \
         std::cerr << e.what(); \
     }
-#define casts(type, value) static_cast<type>(value)
-#define castr(type, value) reinterpret_cast<type>(value)
-#define castc(type, value) const_cast<type>(value)
-#define castf(type, value) (type)(value)
+#define casts(type, value)   static_cast<type>(value)
+#define castr(type, value)   reinterpret_cast<type>(value)
+#define castc(type, value)   const_cast<type>(value)
+#define castf(type, value)   (type)(value)
+#define sizeof_arr(std_arr) std_arr.size() * sizeof(std_arr[0])
 
 template <typename T, typename Q>
 void sset(T& dst, const Q& src)
@@ -70,6 +72,12 @@ template <typename C>
 void free_container_memory(C& container)
 {
     C().swap(container);
+}
+
+template <typename Obj, typename... Param>
+constexpr void make_unique2(std::unique_ptr<Obj>& unique_ptr, Param... param)
+{
+    unique_ptr = std::make_unique<Obj>(param...);
 }
 
 #endif // INCLUDE_TOOLS_HPP

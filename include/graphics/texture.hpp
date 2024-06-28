@@ -17,6 +17,7 @@ namespace fi
         vk::Extent3D extent_{0, 0, 1};
 
       public:
+        std::string name_ = "";
         vk::Sampler sampler_{};
 
         operator vk::Image() const { return image_; }
@@ -25,7 +26,7 @@ namespace fi
     };
 
     class ImageStorage : public Image, //
-                           private GraphicsObject
+                         private GraphicsObject
     {
         friend ImageMgr;
 
@@ -40,13 +41,17 @@ namespace fi
     class ImageMgr : private GraphicsObject
     {
       private:
-        std::unordered_map<std::filesystem::path, ImageStorage> images_;
+        std::unordered_map<std::string, ImageStorage> images_;
 
       public:
+        ImageMgr();
         ~ImageMgr();
 
-        [[nodiscard]] Image load_image(const std::filesystem::path& file_path, bool mip_mapping = true);
-        void remove_image(const std::filesystem::path& file_path);
+        [[nodiscard]] fi::Image& load_image(const std::string& name,
+                                            const gltf::StaticVector<std::uint8_t>& bytes, //
+                                            size_t begin, size_t length, bool mip_mapping = true);
+        [[nodiscard]] fi::Image& get_image(const std::string& name);
+        void remove_image(const std::string& file_path);
         uint32_t size() { return images_.size(); }
     };
 }; // namespace fi

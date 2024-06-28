@@ -33,9 +33,8 @@ void fi::BufferBase::unmap_memory()
     }
 }
 
-void fi::BufferBase::flush_cache(std::byte* memory, vk::DeviceSize offset, vk::DeviceSize size)
+void fi::BufferBase::flush_cache(vk::DeviceSize offset, vk::DeviceSize size)
 {
-    memcpy(mapping_ + offset, memory, size);
     allocator().flushAllocation(*this, offset, size);
 }
 

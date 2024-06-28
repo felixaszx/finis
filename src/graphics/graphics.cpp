@@ -292,6 +292,8 @@ void fi::GraphicsObject::submit_one_time_cmd(vk::CommandBuffer cmd)
     vk::SubmitInfo submit{};
     submit.setCommandBuffers(cmd);
     queues_[GRAPHICS].submit(submit);
+    queues_[GRAPHICS].waitIdle();
+    device().freeCommandBuffers(one_time_submit_pool_, cmd);
 }
 
 vk::Fence fi::create_vk_fence(vk::Device device, bool signal)

@@ -13,24 +13,44 @@ fi::Image::operator vk::DescriptorImageInfo() const
     return info;
 }
 
+fi::ImageMgr::ImageMgr()
+{
+    if (images_.contains("res/textures/blank.png"))
+    {
+        return;
+    }
+
+    std::ifstream buffer;
+    buffer.open("res/textures/blank.png", std::ios::binary);
+    buffer.seekg(0, std::ios::end);
+    size_t file_size = buffer.tellg();
+    buffer.seekg(0, std::ios::beg);
+
+    gltf::StaticVector<std::uint8_t> bytes(file_size);
+    buffer.read(castf(char*, bytes.data()), file_size);
+    Image tmp = load_image("res/textures/blank.png", bytes, 0, file_size);
+}
+
 fi::ImageMgr::~ImageMgr()
 {
 }
 
-fi::Image fi::ImageMgr::load_image(const std::filesystem::path& file_path, bool mip_mapping)
+fi::Image& fi::ImageMgr::load_image(const std::string& name, const gltf::StaticVector<std::uint8_t>& bytes,
+                                    size_t begin, size_t length, bool mip_mapping)
 {
-    if (images_.contains(file_path))
+    if (images_.contains(name))
     {
-        return images_[file_path];
+        return images_[name];
     }
 
     stbi_set_flip_vertically_on_load(true);
-    fi::ImageStorage& storage = images_[file_path];
+    fi::ImageStorage& storage = images_[name];
+    storage.name_ = name;
     int w = 0, h = 0, chan = 0;
-    stbi_uc* pixels = stbi_load(file_path.generic_string().c_str(), &w, &h, &chan, STBI_rgb_alpha);
+    stbi_uc* pixels = stbi_load_from_memory(bytes.data() + begin, length, &w, &h, &chan, STBI_rgb_alpha);
     if (pixels == nullptr)
     {
-        throw std::runtime_error(std::format("{} texture can not be loaded", file_path.generic_string()));
+        throw std::runtime_error(std::format("{} texture can not be loaded", name));
     }
     storage.extent_ = vk::Extent3D(w, h, 1);
     storage.levels_ = mip_mapping ? std::floor(std::log2(std::max(w, h))) + 1 : 1;
@@ -153,10 +173,21 @@ fi::Image fi::ImageMgr::load_image(const std::filesystem::path& file_path, bool 
     cmd.end();
     submit_one_time_cmd(cmd);
     allocator().destroyBuffer(staging.first, staging.second);
-    return {storage};
+
+    return storage;
 }
 
-void fi::ImageMgr::remove_image(const std::filesystem::path& file_path)
+fi::Image& fi::ImageMgr::get_image(const std::string& name)
+{
+    auto result = images_.find(name);
+    if (result != images_.end())
+    {
+        return result->second;
+    }
+    return images_["res/textures/blank.png"];
+}
+
+void fi::ImageMgr::remove_image(const std::string& file_path)
 {
     images_.erase(file_path);
 }

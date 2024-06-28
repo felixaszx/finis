@@ -20,7 +20,7 @@ namespace glms
     }
 
     template <typename G, typename T>
-    void assign_value(G glm_types, T arr)
+    void assign_value(G& glm_types, const T& arr)
     {
         for (int i = 0; i < glm_types.length(); i++)
         {

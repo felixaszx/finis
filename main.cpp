@@ -16,7 +16,8 @@ int main(int argc, char** argv)
 
     ImageMgr image_mgr;
     GltfLoader gltf_loader;
-    auto scenes = gltf_loader.from_file("res/models/san_miguel_gltf/san_miguel.glb", image_mgr);
+    auto scenes = gltf_loader.from_file("res/models/sponza_gltf/sponza.glb", image_mgr);
+
 
     while (g.update())
     {

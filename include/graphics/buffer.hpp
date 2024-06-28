@@ -21,7 +21,7 @@ namespace fi
 
         std::byte* map_memory();
         void unmap_memory();
-        void flush_cache(std::byte* memory, vk::DeviceSize offset = 0, vk::DeviceSize size = VK_WHOLE_SIZE);
+        void flush_cache(vk::DeviceSize offset = 0, vk::DeviceSize size = VK_WHOLE_SIZE);
         void invilidate_cache(vk::DeviceSize offset = 0, vk::DeviceSize size = VK_WHOLE_SIZE);
         [[nodiscard]] bool valid() const;
         [[nodiscard]] std::byte* mapping() const;
