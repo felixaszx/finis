@@ -4,7 +4,7 @@
 #define STB_IMAGE_IMPLEMENTATION
 #include <stb/stb_image.h>
 
-fi::Image::operator vk::DescriptorImageInfo() const
+fi::Texture::operator vk::DescriptorImageInfo() const
 {
     vk::DescriptorImageInfo info{};
     info.imageView = image_view_;
@@ -13,7 +13,7 @@ fi::Image::operator vk::DescriptorImageInfo() const
     return info;
 }
 
-fi::ImageMgr::ImageMgr()
+fi::TextureMgr::TextureMgr()
 {
     if (images_.contains("res/textures/blank.png"))
     {
@@ -28,15 +28,15 @@ fi::ImageMgr::ImageMgr()
 
     gltf::StaticVector<std::uint8_t> bytes(file_size);
     buffer.read(castf(char*, bytes.data()), file_size);
-    Image tmp = load_image("res/textures/blank.png", bytes, 0, file_size);
+    Texture tmp = load_texture("res/textures/blank.png", bytes, 0, file_size);
 }
 
-fi::ImageMgr::~ImageMgr()
+fi::TextureMgr::~TextureMgr()
 {
 }
 
-fi::Image& fi::ImageMgr::load_image(const std::string& name, const gltf::StaticVector<std::uint8_t>& bytes,
-                                    size_t begin, size_t length, bool mip_mapping)
+fi::Texture& fi::TextureMgr::load_texture(const std::string& name, const gltf::StaticVector<std::uint8_t>& bytes,
+                                          size_t begin, size_t length, bool mip_mapping)
 {
     if (images_.contains(name))
     {
@@ -44,7 +44,7 @@ fi::Image& fi::ImageMgr::load_image(const std::string& name, const gltf::StaticV
     }
 
     stbi_set_flip_vertically_on_load(true);
-    fi::ImageStorage& storage = images_[name];
+    fi::TextureStorage& storage = images_[name];
     storage.name_ = name;
     int w = 0, h = 0, chan = 0;
     stbi_uc* pixels = stbi_load_from_memory(bytes.data() + begin, length, &w, &h, &chan, STBI_rgb_alpha);
@@ -177,7 +177,7 @@ fi::Image& fi::ImageMgr::load_image(const std::string& name, const gltf::StaticV
     return storage;
 }
 
-fi::Image& fi::ImageMgr::get_image(const std::string& name)
+fi::Texture& fi::TextureMgr::get_texture(const std::string& name)
 {
     auto result = images_.find(name);
     if (result != images_.end())
@@ -187,12 +187,12 @@ fi::Image& fi::ImageMgr::get_image(const std::string& name)
     return images_["res/textures/blank.png"];
 }
 
-void fi::ImageMgr::remove_image(const std::string& file_path)
+void fi::TextureMgr::remove_image(const std::string& file_path)
 {
     images_.erase(file_path);
 }
 
-fi::ImageStorage::~ImageStorage()
+fi::TextureStorage::~TextureStorage()
 {
     device().destroyImageView(image_view_);
     allocator().destroyImage(image_, allocation_);

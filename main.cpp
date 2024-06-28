@@ -14,8 +14,11 @@ int main(int argc, char** argv)
     Swapchain sc;
     sc.create();
 
-    ImageMgr image_mgr;
-
+    TextureMgr texture_mgr;
+    PipelineMgr pipeline_mgr;
+    RenderMgr render_mgr;
+    auto r_arr = render_mgr.upload_res("res/models/sponza_gltf/sponza.glb", texture_mgr);
+    render_mgr.lock_and_prepared();
 
     while (g.update())
     {

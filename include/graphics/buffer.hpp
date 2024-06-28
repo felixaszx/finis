@@ -17,6 +17,9 @@ namespace fi
         void create_buffer(const vk::BufferCreateInfo& buffer_info, const vma::AllocationCreateInfo& alloc_info);
 
       public:
+        struct EmptyExtraInfo
+        {
+        };
         ~BufferBase();
 
         std::byte* map_memory();
@@ -42,15 +45,16 @@ namespace fi
         SRC = bit_shift_left(1)
     };
 
-    template <BufferConfigFunc... CF>
-    struct Buffer : public BufferBase
+    template <typename ExtraInfo, BufferConfigFunc... CF>
+    struct Buffer : public BufferBase, //
+                    public ExtraInfo
     {
       public:
         Buffer(vk::DeviceSize size, uint32_t transfer_flag = {});
     };
 
-    template <BufferConfigFunc... CF>
-    inline Buffer<CF...>::Buffer(vk::DeviceSize size, uint32_t transfer_flag)
+    template <typename ExtraInfo, BufferConfigFunc... CF>
+    inline Buffer<ExtraInfo, CF...>::Buffer(vk::DeviceSize size, uint32_t transfer_flag)
     {
         vk::BufferCreateInfo buffer_info{};
         vma::AllocationCreateInfo alloc_info{};

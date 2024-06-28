@@ -5,9 +5,9 @@
 
 namespace fi
 { // forward declarations
-    class ImageMgr;
+    class TextureMgr;
 
-    class Image
+    class Texture
     {
       protected:
         vk::Image image_{};
@@ -25,32 +25,32 @@ namespace fi
         operator vk::DescriptorImageInfo() const;
     };
 
-    class ImageStorage : public Image, //
+    class TextureStorage : public Texture, //
                          private GraphicsObject
     {
-        friend ImageMgr;
+        friend TextureMgr;
 
       private:
         vma::Allocation allocation_{};
 
       public:
-        ImageStorage() = default;
-        ~ImageStorage();
+        TextureStorage() = default;
+        ~TextureStorage();
     };
 
-    class ImageMgr : private GraphicsObject
+    class TextureMgr : private GraphicsObject
     {
       private:
-        std::unordered_map<std::string, ImageStorage> images_;
+        std::unordered_map<std::string, TextureStorage> images_;
 
       public:
-        ImageMgr();
-        ~ImageMgr();
+        TextureMgr();
+        ~TextureMgr();
 
-        [[nodiscard]] fi::Image& load_image(const std::string& name,
+        [[nodiscard]] fi::Texture& load_texture(const std::string& name,
                                             const gltf::StaticVector<std::uint8_t>& bytes, //
                                             size_t begin, size_t length, bool mip_mapping = true);
-        [[nodiscard]] fi::Image& get_image(const std::string& name);
+        [[nodiscard]] fi::Texture& get_texture(const std::string& name);
         void remove_image(const std::string& file_path);
         uint32_t size() { return images_.size(); }
     };
