@@ -134,7 +134,6 @@ fi::Graphics::Graphics(int width, int height, bool debug, const std::string& tit
     feature.fillModeNonSolid = true;
     feature.geometryShader = true;
     feature.fillModeNonSolid = true;
-    feature.tessellationShader = true;
     feature.sampleRateShading = true;
     feature.imageCubeArray = true;
     feature.multiDrawIndirect = true;
