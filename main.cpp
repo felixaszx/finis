@@ -144,26 +144,22 @@ int main(int argc, char** argv)
 
         cmds[0].reset();
         begin_cmd(cmds[0]);
-        if (!glfwGetKey(g.window(), GLFW_KEY_R))
-        {
-            cmds[0].beginRendering(rendering);
-            render_mgr.draw({sponza.first},
-                            [&](vk::Buffer vtx_buffer, uint32_t vtx_buffer_binding,
-                                const RenderMgr::VtxIdxBufferExtra& offsets, vk::DescriptorSet set)
-                            {
-                                pipeline_mgr.bind_pipeline(cmds[0], pipeline);
-                                pipeline_mgr.bind_descriptor_sets(cmds[0], set);
-                                cmds[0].pushConstants(p_layout, vk::ShaderStageFlagBits::eVertex, 0, sizeof(push),
-                                                      &push);
-                                cmds[0].setViewport(0, vk::Viewport(0, 0, 1920, 1080, 0, 1));
-                                cmds[0].setScissor(0, vk::Rect2D({}, {1920, 1080}));
-                                cmds[0].bindVertexBuffers(0, vtx_buffer, {offsets.vtx_offset_});
-                                cmds[0].bindIndexBuffer(vtx_buffer, offsets.idx_offset_, vk::IndexType::eUint32);
-                                cmds[0].drawIndexedIndirect(vtx_buffer, offsets.draw_call_offset_, sponza.second,
-                                                            sizeof(vk::DrawIndexedIndirectCommand));
-                            });
-            cmds[0].endRendering();
-        }
+        cmds[0].beginRendering(rendering);
+        render_mgr.draw({sponza.first},
+                        [&](vk::Buffer vtx_buffer, uint32_t vtx_buffer_binding,
+                            const RenderMgr::VtxIdxBufferExtra& offsets, vk::DescriptorSet set)
+                        {
+                            pipeline_mgr.bind_pipeline(cmds[0], pipeline);
+                            pipeline_mgr.bind_descriptor_sets(cmds[0], set);
+                            cmds[0].pushConstants(p_layout, vk::ShaderStageFlagBits::eVertex, 0, sizeof(push), &push);
+                            cmds[0].setViewport(0, vk::Viewport(0, 0, 1920, 1080, 0, 1));
+                            cmds[0].setScissor(0, vk::Rect2D({}, {1920, 1080}));
+                            cmds[0].bindVertexBuffers(0, vtx_buffer, {offsets.vtx_offset_});
+                            cmds[0].bindIndexBuffer(vtx_buffer, offsets.idx_offset_, vk::IndexType::eUint32);
+                            cmds[0].drawIndexedIndirect(vtx_buffer, offsets.draw_call_offset_, sponza.second,
+                                                        sizeof(vk::DrawIndexedIndirectCommand));
+                        });
+        cmds[0].endRendering();
         cmds[0].end();
 
         std::vector<vk::PipelineStageFlags> waiting_stages = {vk::PipelineStageFlagBits::eColorAttachmentOutput};
