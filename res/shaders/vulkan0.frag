@@ -11,6 +11,13 @@ struct Material
     float roughtness_;
     uint color_texture_idx_;
     uint metalic_roughtness_texture_idx_;
+
+    // occlusion  map
+    uint has_occlusion_map_;
+    uint occlusion_map_idx_;
+
+    // alpha
+    float alpha_value;
 };
 
 // Datas
@@ -25,7 +32,7 @@ layout(location = 0) in struct
 } FRAG_DATA;
 layout(location = 3) in flat int MESH_IDX;
 
-layout(set = 0, binding = 0) uniform sampler2D textures[];
+layout(set = 0, binding = 0) uniform sampler2D textures_arr[];
 layout(std430, set = 0, binding = 1) readonly buffer MATERIALS_
 {
     Material data_[];
@@ -41,6 +48,10 @@ MATERIAL_IDXS;
 
 void main()
 {
-    POSITION = texture(textures[MATERIALS.data_[MATERIAL_IDXS.mat_idx_[MESH_IDX]].color_texture_idx_], //
-                       FRAG_DATA.tex_coord_);
+    Material mat = MATERIALS.data_[MATERIAL_IDXS.mat_idx_[MESH_IDX]];
+    if (mat.has_occlusion_map_ == 1 && texture(textures_arr[mat.occlusion_map_idx_], FRAG_DATA.tex_coord_).x == 0)
+    {
+        discard;
+    }
+    POSITION = texture(textures_arr[mat.color_texture_idx_], FRAG_DATA.tex_coord_);
 }

@@ -11,11 +11,19 @@ namespace fi
 {
     struct alignas(16) Material
     {
-        glm::vec4 color_factor_ = {1, 1, 1, 1}; // alignment
+        // pbr_data
+        glm::vec4 color_factor_ = {1, 1, 1, 1};
         float metalic_ = 1.0f;
         float roughtness_ = 1.0f;
-        uint32_t color_texture_idx_{};
-        uint32_t metalic_roughtness_{}; // alignment
+        uint32_t color_texture_idx_ = 0;
+        uint32_t metalic_roughtness_ = 0;
+
+        // occlusion  map
+        uint32_t has_occlusion_map_ = 0;
+        uint32_t occlusion_map_idx_ = 0;
+
+        // alpha
+        float alpha_value = 1.0f;
     };
 
     struct Renderable

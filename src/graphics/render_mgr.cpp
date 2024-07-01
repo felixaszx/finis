@@ -131,6 +131,13 @@ std::pair<fi::RenderMgr::DataIdx, size_t> fi::RenderMgr::upload_res(const std::f
         p_mat.metalic_roughtness_ = a_mat.pbrData.metallicRoughnessTexture //
                                         ? a_mat.pbrData.metallicRoughnessTexture->textureIndex
                                         : 0;
+
+        // occlusion map
+        if (a_mat.occlusionTexture)
+        {
+            p_mat.has_occlusion_map_ = 1;
+            p_mat.occlusion_map_idx_ = a_mat.occlusionTexture->textureIndex;
+        }
     }
 
     std::vector<uint32_t>& mat_idxs = mat_idxs_.emplace_back();
