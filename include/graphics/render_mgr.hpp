@@ -23,7 +23,7 @@ namespace fi
         uint32_t occlusion_map_idx_ = 0;
 
         // alpha
-        float alpha_value = 1.0f;
+        float alpha_value_ = 0;
     };
 
     struct Renderable
