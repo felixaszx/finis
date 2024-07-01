@@ -24,7 +24,7 @@ namespace fi
 
         uint32_t aquire_next_image(vk::Semaphore sem = nullptr, vk::Fence fence = nullptr,
                                    uint64_t timeout = std::numeric_limits<uint64_t>::max());
-        vk::Result present(const std::vector<vk::Semaphore>& wait_sems);
+        vk::Result present(const vk::ArrayProxyNoTemporaries<const vk::Semaphore> & wait_sems);
     };
 }; // namespace fi
 

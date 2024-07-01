@@ -9,7 +9,7 @@
 
 namespace fi
 {
-    struct Material
+    struct alignas(16) Material
     {
         glm::vec4 color_factor_ = {1, 1, 1, 1}; // alignment
         float metalic_ = 1.0f;
@@ -31,11 +31,14 @@ namespace fi
 
         Material* mat_ = nullptr;
         vk::DrawIndexedIndirectCommand* draw_call_ = nullptr;
+
+        static std::vector<vk::VertexInputBindingDescription> vtx_bindings();
+        static std::vector<vk::VertexInputAttributeDescription> vtx_attributes();
     };
 
     class RenderMgr : private GraphicsObject
     {
-      private:
+      public:
         struct VtxIdxBufferExtra
         {
             // vertex buffer
@@ -46,24 +49,27 @@ namespace fi
 
             // storage buffer
             vk::DeviceSize mat_offset_ = 0;
+            vk::DeviceSize mat_idx_offset_ = 0;
             vk::DeviceSize bone_offset_ = 0;
 
             // indirect draw buffer
             vk::DeviceSize draw_call_offset_ = 0;
         };
 
+      private:
         bool locked_ = false;
         gltf::Parser parser_;
         vk::DescriptorPool pool_;
 
         // access below via Renderable::data_idx_
-        std::vector<vk::Sampler> sampelers_{};                              // not for access
-        std::vector<std::vector<Material>> materials_{};                    // read only
-        std::vector<std::vector<vk::DescriptorImageInfo>> texture_infos_{}; // read only
+        std::vector<std::vector<uint32_t>> mat_idxs_{};
         std::vector<std::vector<vk::DrawIndexedIndirectCommand>> draw_calls_{};
         std::vector<Buffer<VtxIdxBufferExtra, vertex, index, storage, indirect>> device_buffers_{};
 
         // texture storage
+        std::vector<vk::Sampler> sampelers_{};                              // not for access
+        std::vector<std::vector<Material>> materials_{};                    // read only
+        std::vector<std::vector<vk::DescriptorImageInfo>> texture_infos_{}; // read only
         std::vector<vk::DescriptorSetLayout> texture_set_layouts_{};
         std::vector<vk::DescriptorSet> texture_sets_{};
 
@@ -75,9 +81,10 @@ namespace fi
         Renderable get_renderable(DataIdx data_idx, size_t renderable_idx);
         std::pair<DataIdx, size_t> upload_res(const std::filesystem::path& path, TextureMgr& texture_mgr);
         void lock_and_prepared();
-        void draw(const std::vector<DataIdx>& draws,
-                  const std::function<void(vk::Buffer device_buffer, const VtxIdxBufferExtra&,
-                                           vk::DescriptorSet texture_set)>& draw_func);
+        void draw(
+            const std::vector<DataIdx>& draws,
+            const std::function<void(vk::Buffer device_buffer, uint32_t vtx_buffer_binding,
+                                     const VtxIdxBufferExtra& offsets, vk::DescriptorSet texture_set)>& draw_func);
     };
 
 }; // namespace fi

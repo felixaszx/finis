@@ -43,7 +43,6 @@ fi::Texture& fi::TextureMgr::load_texture(const std::string& name, const gltf::S
         return images_[name];
     }
 
-    stbi_set_flip_vertically_on_load(true);
     fi::TextureStorage& storage = images_[name];
     storage.name_ = name;
     int w = 0, h = 0, chan = 0;

@@ -124,7 +124,7 @@ uint32_t fi::Swapchain::aquire_next_image(vk::Semaphore sem, vk::Fence fence, ui
     return curr_idx_;
 }
 
-vk::Result fi::Swapchain::present(const std::vector<vk::Semaphore>& wait_sems)
+vk::Result fi::Swapchain::present(const vk::ArrayProxyNoTemporaries<const vk::Semaphore>& wait_sems)
 {
     vk::PresentInfoKHR present_info{};
     present_info.setWaitSemaphores(wait_sems);

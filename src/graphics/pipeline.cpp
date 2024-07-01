@@ -74,31 +74,28 @@ void fi::ShaderModule::reset()
     this->pName = "main";
 }
 
-fi::CombinedPipeline fi::PipelineMgr::build_pipeline(size_t layout_idx, const vk::GraphicsPipelineCreateInfo& info)
+fi::CombinedPipeline fi::PipelineMgr::build_pipeline(const vk::GraphicsPipelineCreateInfo& info)
 {
     CombinedPipeline pipeline{};
     pipeline.type_ = vk::PipelineBindPoint::eGraphics;
-    sset(pipeline, device().createGraphicsPipelines(pipeline_cache(), info).value[0], layouts_[layout_idx]);
+    sset(pipeline, device().createGraphicsPipelines(pipeline_cache(), info).value[0], info.layout);
     pipelines_.push_back(pipeline);
     return pipeline;
 }
 
-fi::CombinedPipeline fi::PipelineMgr::build_pipeline(size_t layout_idx, const vk::ComputePipelineCreateInfo& info)
+fi::CombinedPipeline fi::PipelineMgr::build_pipeline(const vk::ComputePipelineCreateInfo& info)
 {
     CombinedPipeline pipeline{};
     pipeline.type_ = vk::PipelineBindPoint::eCompute;
-    sset(pipeline, device().createComputePipelines(pipeline_cache(), info).value[0], layouts_[layout_idx]);
+    sset(pipeline, device().createComputePipelines(pipeline_cache(), info).value[0], info.layout);
     pipelines_.push_back(pipeline);
     return pipeline;
 }
 
 void fi::PipelineMgr::bind_pipeline(vk::CommandBuffer cmd, const CombinedPipeline& pipeline)
 {
-    if (prev_ != pipeline)
-    {
-        cmd.bindPipeline(pipeline.type_, pipeline);
-        prev_ = pipeline;
-    }
+    cmd.bindPipeline(pipeline.type_, pipeline);
+    prev_ = pipeline;
 }
 
 void fi::PipelineMgr::bind_descriptor_sets(vk::CommandBuffer cmd, const vk::ArrayProxy<const vk::DescriptorSet>& sets,
@@ -107,8 +104,8 @@ void fi::PipelineMgr::bind_descriptor_sets(vk::CommandBuffer cmd, const vk::Arra
     cmd.bindDescriptorSets(prev_.type_, prev_, first_set, sets, dynamic_offsets);
 }
 
-size_t fi::PipelineMgr::build_pipeline_layout(const vk::PipelineLayoutCreateInfo& info)
+vk::PipelineLayout fi::PipelineMgr::build_pipeline_layout(const vk::PipelineLayoutCreateInfo& info)
 {
     layouts_.push_back(device().createPipelineLayout(info));
-    return layouts_.size() - 1;
+    return layouts_.back();
 }

@@ -16,9 +16,6 @@ struct Material
 // Datas
 
 layout(location = 0) out vec4 POSITION;
-layout(location = 1) out vec4 NORMAL;
-layout(location = 2) out vec4 COLOR;
-layout(location = 3) out vec4 METALIC_ROUGHTNESS;
 
 layout(location = 0) in struct
 {
@@ -26,7 +23,7 @@ layout(location = 0) in struct
     vec3 normal_;
     vec2 tex_coord_;
 } FRAG_DATA;
-layout(location = 3) in flat int MAT_IDX;
+layout(location = 3) in flat int MESH_IDX;
 
 layout(set = 0, binding = 0) uniform sampler2D textures[];
 layout(std430, set = 0, binding = 1) readonly buffer MATERIALS_
@@ -34,10 +31,16 @@ layout(std430, set = 0, binding = 1) readonly buffer MATERIALS_
     Material data_[];
 }
 MATERIALS;
+layout(std430, set = 0, binding = 2) readonly buffer MATERIAL_IDXS_
+{
+    uint mat_idx_[];
+}
+MATERIAL_IDXS;
 
 // Code
 
 void main()
 {
-    MATERIALS.data_[MAT_IDX];
+    POSITION = texture(textures[MATERIALS.data_[MATERIAL_IDXS.mat_idx_[MESH_IDX]].color_texture_idx_], //
+                       FRAG_DATA.tex_coord_);
 }

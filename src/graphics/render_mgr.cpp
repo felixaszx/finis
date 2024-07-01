@@ -117,11 +117,27 @@ std::pair<fi::RenderMgr::DataIdx, size_t> fi::RenderMgr::upload_res(const std::f
     }
 
     std::vector<Material>& materials = materials_.emplace_back();
+    materials.reserve(asset->materials.size());
+    for (auto& a_mat : asset->materials)
+    {
+        Material& p_mat = materials.emplace_back();
+        // basic pbr texture
+        glms::assign_value(p_mat.color_factor_, a_mat.pbrData.baseColorFactor);
+        p_mat.color_texture_idx_ = a_mat.pbrData.baseColorTexture //
+                                       ? a_mat.pbrData.baseColorTexture->textureIndex
+                                       : 0;
+        p_mat.metalic_ = a_mat.pbrData.metallicFactor;
+        p_mat.roughtness_ = a_mat.pbrData.roughnessFactor;
+        p_mat.metalic_roughtness_ = a_mat.pbrData.metallicRoughnessTexture //
+                                        ? a_mat.pbrData.metallicRoughnessTexture->textureIndex
+                                        : 0;
+    }
+
+    std::vector<uint32_t>& mat_idxs = mat_idxs_.emplace_back();
     std::vector<vk::DrawIndexedIndirectCommand>& draw_calls = draw_calls_.emplace_back();
 
     std::vector<Renderable::Vertex> vtxs;
     std::vector<uint32_t> indices;
-
     size_t old_vtx_count = 0;
     size_t old_idx_size = 0;
     for (auto& mesh : asset->meshes)
@@ -165,28 +181,23 @@ std::pair<fi::RenderMgr::DataIdx, size_t> fi::RenderMgr::upload_res(const std::f
                     { glms::assign_value(vtxs[old_vtx_count + vtx_idx].tex_coord_, tex_coord); });
             }
 
-            Material& p_mat = materials.emplace_back();
-            auto& a_mat = asset->materials[p.materialIndex.value_or(0)];
-
-            // basic pbr texture
-            glms::assign_value(p_mat.color_factor_, a_mat.pbrData.baseColorFactor);
-            p_mat.color_texture_idx_ = a_mat.pbrData.baseColorTexture //
-                                           ? a_mat.pbrData.baseColorTexture->textureIndex
-                                           : 0;
-            p_mat.metalic_ = a_mat.pbrData.metallicFactor;
-            p_mat.roughtness_ = a_mat.pbrData.roughnessFactor;
-            p_mat.metalic_roughtness_ = a_mat.pbrData.metallicRoughnessTexture //
-                                            ? a_mat.pbrData.metallicRoughnessTexture->textureIndex
-                                            : 0;
+            mat_idxs.push_back(p.materialIndex.value_or(0));
             old_vtx_count = vtxs.size();
             // tbd
         }
     }
+    while (mat_idxs.size() % 16)
+    {
+        mat_idxs.push_back(0);
+    }
 
-    vk::DeviceSize mat_buffer_padding = 16 - (sizeof_arr(vtxs) + sizeof_arr(indices)) % 16;
+    uint32_t mat_buffer_padding = (sizeof_arr(vtxs) + sizeof_arr(indices)) % 16;
+    mat_buffer_padding = mat_buffer_padding ? 16 - mat_buffer_padding : 0;
+
     auto& buffer = device_buffers_.emplace_back(sizeof_arr(vtxs)                                 //
                                                     + sizeof_arr(indices)                        //
                                                     + mat_buffer_padding + sizeof_arr(materials) //
+                                                    + sizeof_arr(mat_idxs)                       //
                                                     + sizeof_arr(draw_calls),
                                                 DST);
     Buffer<BufferBase::EmptyExtraInfo, seq_write> staging(buffer.size(), SRC);
@@ -194,11 +205,13 @@ std::pair<fi::RenderMgr::DataIdx, size_t> fi::RenderMgr::upload_res(const std::f
     buffer.vtx_offset_ = 0;
     buffer.idx_offset_ = sizeof_arr(vtxs);
     buffer.mat_offset_ = buffer.idx_offset_ + sizeof_arr(indices) + mat_buffer_padding;
-    buffer.draw_call_offset_ = buffer.mat_offset_ + sizeof(materials);
+    buffer.mat_idx_offset_ = buffer.mat_offset_ + sizeof_arr(materials);
+    buffer.draw_call_offset_ = buffer.mat_idx_offset_ + sizeof_arr(mat_idxs);
 
     memcpy(staging.mapping() + buffer.vtx_offset_, vtxs.data(), sizeof_arr(vtxs));
     memcpy(staging.mapping() + buffer.idx_offset_, indices.data(), sizeof_arr(indices));
     memcpy(staging.mapping() + buffer.mat_offset_, materials.data(), sizeof_arr(materials));
+    memcpy(staging.mapping() + buffer.mat_idx_offset_, mat_idxs.data(), sizeof_arr(mat_idxs));
     memcpy(staging.mapping() + buffer.draw_call_offset_, draw_calls.data(), sizeof_arr(draw_calls));
 
     vk::CommandBuffer cmd = one_time_submit_cmd();
@@ -209,18 +222,17 @@ std::pair<fi::RenderMgr::DataIdx, size_t> fi::RenderMgr::upload_res(const std::f
     return {device_buffers_.size() - 1, draw_calls.size()};
 }
 
-void fi::RenderMgr::draw(const std::vector<DataIdx>& draws,
-                         const std::function<void(vk::Buffer device_buffer, const VtxIdxBufferExtra& offsets,
-                                                  vk::DescriptorSet texture_set)>& draw_func)
+void fi::RenderMgr::draw(
+    const std::vector<DataIdx>& draws,
+    const std::function<void(vk::Buffer device_buffer, uint32_t vtx_buffer_binding, const VtxIdxBufferExtra& offsets,
+                             vk::DescriptorSet texture_set)>& draw_func)
 {
-    if (!locked_)
+    if (locked_)
     {
-        return;
-    }
-
-    for (auto data_idx : draws)
-    {
-        draw_func(device_buffers_[data_idx], device_buffers_[data_idx], texture_sets_[data_idx]);
+        for (auto data_idx : draws)
+        {
+            draw_func(device_buffers_[data_idx], 0, device_buffers_[data_idx], texture_sets_[data_idx]);
+        }
     }
 }
 
@@ -234,7 +246,7 @@ void fi::RenderMgr::lock_and_prepared()
     locked_ = true;
     texture_set_layouts_.reserve(texture_infos_.size());
 
-    std::array<vk::DescriptorSetLayoutBinding, 2> bindings = {};
+    std::array<vk::DescriptorSetLayoutBinding, 3> bindings = {};
     bindings[0].binding = 0;
     bindings[0].descriptorType = vk::DescriptorType::eCombinedImageSampler;
     bindings[0].stageFlags = vk::ShaderStageFlagBits::eFragment;
@@ -244,10 +256,15 @@ void fi::RenderMgr::lock_and_prepared()
     bindings[1].descriptorType = vk::DescriptorType::eStorageBuffer;
     bindings[1].stageFlags = vk::ShaderStageFlagBits::eFragment;
 
+    bindings[2].binding = 2;
+    bindings[2].descriptorCount = 1;
+    bindings[2].descriptorType = vk::DescriptorType::eStorageBuffer;
+    bindings[2].stageFlags = vk::ShaderStageFlagBits::eFragment;
+
     std::array<vk::DescriptorPoolSize, 2> sizes{};
     sizes[0].type = vk::DescriptorType::eCombinedImageSampler;
     sizes[1].type = vk::DescriptorType::eStorageBuffer;
-    sizes[1].descriptorCount = materials_.size();
+    sizes[1].descriptorCount = materials_.size() + mat_idxs_.size();
     for (auto& infos : texture_infos_)
     {
         bindings[0].descriptorCount = infos.size();
@@ -279,14 +296,24 @@ void fi::RenderMgr::lock_and_prepared()
         vk::DescriptorBufferInfo ssbo_info{};
         ssbo_info.buffer = device_buffers_[i];
         ssbo_info.offset = device_buffers_[i].mat_offset_;
-        ssbo_info.range = sizeof(materials_[i]);
+        ssbo_info.range = sizeof_arr(materials_[i]);
         vk::WriteDescriptorSet write_ssbo{};
         write_ssbo.dstSet = texture_sets_[i];
         write_ssbo.dstBinding = 1;
         write_ssbo.descriptorType = vk::DescriptorType::eStorageBuffer;
         write_ssbo.setBufferInfo(ssbo_info);
 
-        device().updateDescriptorSets({write_textures, write_ssbo}, {});
+        vk::DescriptorBufferInfo ssbo_info1{};
+        ssbo_info1.buffer = device_buffers_[i];
+        ssbo_info1.offset = device_buffers_[i].mat_idx_offset_;
+        ssbo_info1.range = sizeof_arr(mat_idxs_[i]);
+        vk::WriteDescriptorSet write_ssbo1{};
+        write_ssbo1.dstSet = texture_sets_[i];
+        write_ssbo1.dstBinding = 2;
+        write_ssbo1.descriptorType = vk::DescriptorType::eStorageBuffer;
+        write_ssbo1.setBufferInfo(ssbo_info1);
+
+        device().updateDescriptorSets({write_textures, write_ssbo, write_ssbo1}, {});
     }
 }
 
@@ -296,4 +323,35 @@ fi::Renderable fi::RenderMgr::get_renderable(DataIdx data_idx, size_t renderable
     rr.draw_call_ = &draw_calls_[data_idx][renderable_idx];
     rr.mat_ = &materials_[data_idx][renderable_idx];
     return rr;
+}
+
+std::vector<vk::VertexInputBindingDescription> fi::Renderable::vtx_bindings()
+{
+    std::vector<vk::VertexInputBindingDescription> bindings(1);
+
+    for (size_t i = 0; i < bindings.size(); i++)
+    {
+        bindings[i].binding = i;
+        bindings[i].inputRate = vk::VertexInputRate::eVertex;
+        bindings[i].stride = sizeof(Renderable::Vertex);
+    }
+
+    return bindings;
+}
+
+std::vector<vk::VertexInputAttributeDescription> fi::Renderable::vtx_attributes()
+{
+    std::vector<vk::VertexInputAttributeDescription> attributes(3);
+    for (size_t i = 0; i < attributes.size(); i++)
+    {
+        attributes[i].binding = 0;
+        attributes[i].format = vk::Format::eR32G32B32Sfloat;
+        attributes[i].location = i;
+    }
+    attributes[2].format = vk::Format::eR32G32Sfloat;
+
+    attributes[0].offset = offsetof(Renderable::Vertex, position_);
+    attributes[1].offset = offsetof(Renderable::Vertex, normal_);
+    attributes[2].offset = offsetof(Renderable::Vertex, tex_coord_);
+    return attributes;
 }

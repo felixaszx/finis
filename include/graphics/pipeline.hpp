@@ -7,6 +7,7 @@
 #include <shaderc/shaderc.hpp>
 
 #include "graphics.hpp"
+#include "tools.hpp"
 
 namespace fi
 {
@@ -35,7 +36,7 @@ namespace fi
     {
         vk::PipelineBindPoint type_{};
 
-        bool operator==(const vk::Pipeline& target) { return *this == target; }
+        bool operator==(const vk::Pipeline& target) { return casts(vk::Pipeline, *this) == target; }
     };
 
     class PipelineMgr : private GraphicsObject
@@ -48,9 +49,9 @@ namespace fi
         std::vector<vk::Pipeline> pipelines_{};
 
       public:
-        size_t build_pipeline_layout(const vk::PipelineLayoutCreateInfo& info);
-        CombinedPipeline build_pipeline(size_t layout_idx, const vk::GraphicsPipelineCreateInfo& info);
-        CombinedPipeline build_pipeline(size_t layout_idx, const vk::ComputePipelineCreateInfo& info);
+        vk::PipelineLayout build_pipeline_layout(const vk::PipelineLayoutCreateInfo& info);
+        fi::CombinedPipeline build_pipeline(const vk::GraphicsPipelineCreateInfo& info);
+        fi::CombinedPipeline build_pipeline(const vk::ComputePipelineCreateInfo& info);
 
         void bind_pipeline(vk::CommandBuffer cmd, const CombinedPipeline& pipeline);
         void bind_descriptor_sets(vk::CommandBuffer cmd, const vk::ArrayProxy<const vk::DescriptorSet>& sets,
