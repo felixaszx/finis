@@ -49,7 +49,7 @@ MATERIAL_IDXS;
 void main()
 {
     Material mat = MATERIALS.data_[MATERIAL_IDXS.mat_idx_[MESH_IDX]];
-    if (mat.has_occlusion_map_ == 1 && texture(textures_arr[mat.occlusion_map_idx_], FRAG_DATA.tex_coord_).x == 0)
+    if (mat.has_occlusion_map_ == 1)
     {
         discard;
     }
