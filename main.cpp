@@ -17,7 +17,8 @@ int main(int argc, char** argv)
     TextureMgr texture_mgr;
     PipelineMgr pipeline_mgr;
     RenderMgr render_mgr;
-    auto r_arr = render_mgr.upload_res("res/models/sponza_gltf/sponza.glb", texture_mgr);
+    auto sponza = render_mgr.upload_res("res/models/sponza_gltf/sponza.glb", texture_mgr);
+    auto san_miguel = render_mgr.upload_res("res/models/san_miguel_gltf/san_miguel.glb", texture_mgr);
     render_mgr.lock_and_prepared();
 
     while (g.update())

@@ -75,7 +75,7 @@ void free_container_memory(C& container)
 }
 
 template <typename Obj, typename... Param>
-constexpr void make_unique2(std::unique_ptr<Obj>& unique_ptr, Param... param)
+inline constexpr void make_unique2(std::unique_ptr<Obj>& unique_ptr, Param... param)
 {
     unique_ptr = std::make_unique<Obj>(param...);
 }

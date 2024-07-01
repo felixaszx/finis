@@ -11,11 +11,11 @@ namespace fi
 {
     struct Material
     {
-        glm::vec4 color_factor_ = {1, 1, 1, 1};
+        glm::vec4 color_factor_ = {1, 1, 1, 1}; // alignment
         float metalic_ = 1.0f;
         float roughtness_ = 1.0f;
         uint32_t color_texture_idx_{};
-        uint32_t metalic_roughtness_{};
+        uint32_t metalic_roughtness_{}; // alignment
     };
 
     struct Renderable
@@ -29,10 +29,8 @@ namespace fi
             glm::vec4 bone_weights_{}; // 4
         };
 
-        const Material* mat_ = nullptr;
-
-        uint32_t vtx_count_ = 0;
-        size_t data_idx_ = 0;
+        Material* mat_ = nullptr;
+        vk::DrawIndexedIndirectCommand* draw_call_ = nullptr;
     };
 
     class RenderMgr : private GraphicsObject
@@ -40,10 +38,18 @@ namespace fi
       private:
         struct VtxIdxBufferExtra
         {
+            // vertex buffer
             vk::DeviceSize vtx_offset_ = 0;
+
+            // index buffer
             vk::DeviceSize idx_offset_ = 0;
+
+            // storage buffer
             vk::DeviceSize mat_offset_ = 0;
             vk::DeviceSize bone_offset_ = 0;
+
+            // indirect draw buffer
+            vk::DeviceSize draw_call_offset_ = 0;
         };
 
         bool locked_ = false;
@@ -54,23 +60,24 @@ namespace fi
         std::vector<vk::Sampler> sampelers_{};                              // not for access
         std::vector<std::vector<Material>> materials_{};                    // read only
         std::vector<std::vector<vk::DescriptorImageInfo>> texture_infos_{}; // read only
+        std::vector<std::vector<vk::DrawIndexedIndirectCommand>> draw_calls_{};
+        std::vector<Buffer<VtxIdxBufferExtra, vertex, index, storage, indirect>> device_buffers_{};
 
+        // texture storage
         std::vector<vk::DescriptorSetLayout> texture_set_layouts_{};
         std::vector<vk::DescriptorSet> texture_sets_{};
-        std::vector<std::vector<vk::DrawIndexedIndirectCommand>> draw_calls_{};
-        std::vector<Buffer<VtxIdxBufferExtra, vertex, index, storage>> device_buffers_{};
-        std::vector<Buffer<BufferBase::EmptyExtraInfo, indirect, seq_write>> host_buffers_{};
 
       public:
+        using DataIdx = size_t;
         ~RenderMgr();
 
         [[nodiscard]] std::vector<vk::DescriptorSetLayout> texture_set_layouts() const;
-        std::vector<Renderable> upload_res(const std::filesystem::path& path, TextureMgr& texture_mgr);
+        Renderable get_renderable(DataIdx data_idx, size_t renderable_idx);
+        std::pair<DataIdx, size_t> upload_res(const std::filesystem::path& path, TextureMgr& texture_mgr);
         void lock_and_prepared();
-        void draw(vk::CommandBuffer cmd,                      //
-                  const std::vector<Renderable>& renderables, //
-                  const std::function<void(vk::DescriptorSet texture_set)>&
-                      prepare); // all renderables most have the same Renderable::data_idx_
+        void draw(const std::vector<DataIdx>& draws,
+                  const std::function<void(vk::Buffer device_buffer, const VtxIdxBufferExtra&,
+                                           vk::DescriptorSet texture_set)>& draw_func);
     };
 
 }; // namespace fi

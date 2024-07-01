@@ -51,6 +51,7 @@ namespace fi
     {
       public:
         Buffer(vk::DeviceSize size, uint32_t transfer_flag = {});
+        Buffer(Buffer&& target) noexcept;
     };
 
     template <typename ExtraInfo, BufferConfigFunc... CF>
@@ -72,6 +73,13 @@ namespace fi
         alloc_info.usage = vma::MemoryUsage::eAutoPreferDevice;
         (CF(buffer_info, alloc_info), ...);
         create_buffer(buffer_info, alloc_info);
+    }
+
+    template <typename ExtraInfo, BufferConfigFunc... CF>
+    inline Buffer<ExtraInfo, CF...>::Buffer(Buffer&& target) noexcept
+    {
+        memcpy(this, &target, sizeof(Buffer<ExtraInfo, CF...>));
+        casts(vk::Buffer&, target) = nullptr;
     }
 }; // namespace fi
 

@@ -39,4 +39,5 @@ MATERIALS;
 
 void main()
 {
+    MATERIALS.data_[MAT_IDX];
 }

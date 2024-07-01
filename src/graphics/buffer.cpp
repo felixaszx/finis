@@ -11,8 +11,11 @@ void fi::BufferBase::create_buffer(const vk::BufferCreateInfo& buffer_info, cons
 
 fi::BufferBase::~BufferBase()
 {
-    unmap_memory();
-    allocator().destroyBuffer(*this, *this);
+    if (casts(vk::Buffer, *this))
+    {
+        unmap_memory();
+        allocator().destroyBuffer(*this, *this);
+    }
 }
 
 std::byte* fi::BufferBase::map_memory()
