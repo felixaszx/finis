@@ -166,5 +166,7 @@ int main(int argc, char** argv)
     }
     g.device().waitIdle();
     sc.destory();
+
+    int* a = new int;
     return EXIT_SUCCESS;
 }
