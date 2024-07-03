@@ -80,6 +80,8 @@ namespace fi
     class AnimationMgr;
     class RenderMgr : private GraphicsObject
     {
+        friend AnimationMgr;
+
       public:
         struct VtxIdxBufferExtra
         {

@@ -20,7 +20,6 @@ namespace fi
         {
             for (auto& animation : asset->animations)
             {
-                std::cout << animation.name << std::endl;
             }
         }
     };

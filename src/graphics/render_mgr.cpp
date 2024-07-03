@@ -278,7 +278,7 @@ std::pair<fi::RenderMgr::DataIdx, size_t> fi::RenderMgr::upload_res(const std::f
     }
     while (mat_idxs.size() % 16)
     {
-        mat_idxs.push_back(0);
+        mat_idxs.push_back(~0);
     }
 
     uint32_t mat_buffer_padding = (sizeof_arr(vtxs) + sizeof_arr(indices)) % 16;
