@@ -12,18 +12,51 @@ namespace fi
     struct alignas(16) Material
     {
         // pbr_data
-        glm::vec4 color_factor_ = {1, 1, 1, 1};
+        glm::vec4 color_factor_ = {1, 1, 1, 1}; // alignment
         float metalic_ = 1.0f;
         float roughtness_ = 1.0f;
         uint32_t color_texture_idx_ = 0;
-        uint32_t metalic_roughtness_ = 0;
+        uint32_t metalic_roughtness_ = ~0; // alignment
+
+        // emissive
+        glm::vec4 combined_emissive_factor_ = {0, 0, 0, 1}; // [3] = emissive strength // alignment
+        uint32_t emissive_map_idx_ = ~0;
 
         // occlusion  map
-        uint32_t has_occlusion_map_ = 0;
-        uint32_t occlusion_map_idx_ = 0;
+        uint32_t occlusion_map_idx_ = ~0;
 
         // alpha
         float alpha_value_ = 0;
+
+        // normal
+        float normal_scale_ = 0; // alignment
+        uint32_t normal_map_idx_ = ~0;
+
+        // anistropy
+        float anistropy_rotation_ = 0;
+        float anistropy_strength_ = 0;
+        uint32_t anistropy_map_idx_ = ~0; // alginment
+
+        // specular
+        glm::vec4 combined_spec_factor_ = {1, 1, 1, 1}; // [3] = specular strength // alginment
+        uint32_t spec_color_map_idx_ = ~0;
+        uint32_t spec_map_idx_ = ~0;
+
+        // transmission
+        float transmission_factor_ = 0;
+        uint32_t transmission_map_idx_ = ~0; // alignment
+
+        // volume
+        glm::vec4 combined_attenuation_ = {
+            1, 1, 1,                                 //
+            std::numeric_limits<float>::infinity()}; // [3] = attenuation distance // alignment
+        float thickness_factor_ = 0;
+        uint32_t thickness_map_idx_ = ~0;
+
+        // sheen
+        uint32_t sheen_color_map_idx_ = ~0;
+        uint32_t sheen_roughtness_map_idx_ = ~0;               // alginment
+        glm::vec4 combined_sheen_color_factor_ = {0, 0, 0, 0}; // [3] = sheen roughtness factor
     };
 
     struct Renderable
@@ -44,6 +77,7 @@ namespace fi
         static std::vector<vk::VertexInputAttributeDescription> vtx_attributes();
     };
 
+    class AnimationMgr;
     class RenderMgr : private GraphicsObject
     {
       public:
@@ -87,7 +121,9 @@ namespace fi
 
         [[nodiscard]] std::vector<vk::DescriptorSetLayout> texture_set_layouts() const;
         Renderable get_renderable(DataIdx data_idx, size_t renderable_idx);
-        std::pair<DataIdx, size_t> upload_res(const std::filesystem::path& path, TextureMgr& texture_mgr);
+        std::pair<fi::RenderMgr::DataIdx, size_t> upload_res(const std::filesystem::path& path, //
+                                                             TextureMgr& texture_mgr, AnimationMgr& animation_mgr,
+                                                             gltf::Expected<gltf::GltfDataBuffer>& gltf_file);
         void lock_and_prepared();
         void draw(
             const std::vector<DataIdx>& draws,

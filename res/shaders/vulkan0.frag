@@ -5,19 +5,50 @@
 
 struct Material
 {
-    // pbr datas
-    vec4 color_factor_;
+    // pbr_data
+    vec4 color_factor_; // alignment
     float metalic_;
     float roughtness_;
     uint color_texture_idx_;
-    uint metalic_roughtness_texture_idx_;
+    uint metalic_roughtness_; // alignment
+
+    // emissive
+    vec4 combined_emissive_factor; // [3] = emissive strength // alignment
+    uint emissive_map_idx_;
 
     // occlusion  map
-    uint has_occlusion_map_;
     uint occlusion_map_idx_;
 
     // alpha
-    float alpha_value;
+    float alpha_value_;
+
+    // normal
+    float normal_scale_; // alignment
+    uint normal_map_idx_;
+
+    // anistropy
+    float anistropy_rotation_;
+    float anistropy_strength_;
+    uint anistropy_map_idx_; // alginment
+
+    // specular
+    vec4 combined_spec_factor_; // [3] = specular strength // alginment
+    uint spec_color_map_idx_;
+    uint spec_map_idx_;
+
+    // transmission
+    float transmission_factor_;
+    uint transmission_map_idx_; // alignment
+
+    // volume
+    vec4 combined_attenuation_; // [3] = attenuation distance // alignment
+    float thickness_factor_;
+    uint thickness_map_idx_;
+
+    // sheen
+    uint sheen_color_map_idx_;
+    uint sheen_roughtness_map_idx_;         // alginment
+    vec4 combined_sheen_color_factor_; // [3] = sheen roughtness factor
 };
 
 // Datas
@@ -49,9 +80,5 @@ MATERIAL_IDXS;
 void main()
 {
     Material mat = MATERIALS.data_[MATERIAL_IDXS.mat_idx_[MESH_IDX]];
-    if (mat.has_occlusion_map_ == 1)
-    {
-        discard;
-    }
     POSITION = texture(textures_arr[mat.color_texture_idx_], FRAG_DATA.tex_coord_);
 }

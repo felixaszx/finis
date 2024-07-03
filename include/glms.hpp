@@ -12,9 +12,9 @@
 namespace glms
 {
     template <typename G, typename T>
-    void assign_value(G& glm_types, const T& arr)
+    void assign_value(G& glm_types, const T& arr, size_t limit = ~0)
     {
-        for (int i = 0; i < glm_types.length(); i++)
+        for (int i = 0; i < glm_types.length() && i < limit; i++)
         {
             glm_types[i] = arr[i];
         }

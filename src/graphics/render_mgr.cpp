@@ -1,5 +1,6 @@
 #include "graphics/graphics.hpp"
 #include "graphics/render_mgr.hpp"
+#include "graphics/animation_mgr.hpp"
 
 fi::RenderMgr::~RenderMgr()
 {
@@ -25,13 +26,15 @@ std::vector<vk::DescriptorSetLayout> fi::RenderMgr::texture_set_layouts() const
 }
 
 std::pair<fi::RenderMgr::DataIdx, size_t> fi::RenderMgr::upload_res(const std::filesystem::path& path,
-                                                                    TextureMgr& texture_mgr)
+                                                                    TextureMgr& texture_mgr,
+                                                                    AnimationMgr& animation_mgr,
+                                                                    gltf::Expected<gltf::GltfDataBuffer>& gltf_file)
 {
     if (locked_)
     {
         return {};
     }
-    auto gltf_file = gltf::GltfDataBuffer::FromPath(path);
+    gltf_file = gltf::GltfDataBuffer::FromPath(path);
     auto asset = parser_.loadGltf(gltf_file.get(), path.parent_path(),
                                   gltf::Options::LoadExternalImages | //
                                       gltf::Options::GenerateMeshIndices);
@@ -130,13 +133,93 @@ std::pair<fi::RenderMgr::DataIdx, size_t> fi::RenderMgr::upload_res(const std::f
         p_mat.roughtness_ = a_mat.pbrData.roughnessFactor;
         p_mat.metalic_roughtness_ = a_mat.pbrData.metallicRoughnessTexture //
                                         ? a_mat.pbrData.metallicRoughnessTexture->textureIndex
-                                        : 0;
+                                        : ~0;
 
         // occlusion map
         if (a_mat.occlusionTexture)
         {
-            p_mat.has_occlusion_map_ = 1;
             p_mat.occlusion_map_idx_ = a_mat.occlusionTexture->textureIndex;
+        }
+
+        // aplha value
+        p_mat.alpha_value_ = a_mat.alphaCutoff;
+
+        // normal
+        if (a_mat.normalTexture)
+        {
+            p_mat.normal_scale_ = a_mat.normalTexture->scale;
+            p_mat.normal_map_idx_ = a_mat.normalTexture->textureIndex;
+        }
+
+        // emissive
+        p_mat.combined_emissive_factor_[3] = a_mat.emissiveStrength;
+        glms::assign_value(p_mat.combined_emissive_factor_, a_mat.emissiveFactor, 3);
+        if (a_mat.emissiveTexture)
+        {
+            p_mat.emissive_map_idx_ = a_mat.emissiveTexture->textureIndex;
+        }
+
+        // anistropy
+        if (a_mat.anisotropy)
+        {
+            p_mat.anistropy_rotation_ = a_mat.anisotropy->anisotropyRotation;
+            p_mat.anistropy_strength_ = a_mat.anisotropy->anisotropyStrength;
+            if (a_mat.anisotropy->anisotropyTexture)
+            {
+                p_mat.anistropy_map_idx_ = a_mat.anisotropy->anisotropyTexture->textureIndex;
+            }
+        }
+
+        // specular
+        if (a_mat.specular)
+        {
+            p_mat.combined_spec_factor_[3] = a_mat.specular->specularFactor;
+            glms::assign_value(p_mat.combined_spec_factor_, a_mat.specular->specularColorFactor, 3);
+            if (a_mat.specular->specularColorTexture)
+            {
+                p_mat.spec_color_map_idx_ = a_mat.specular->specularColorTexture->textureIndex;
+            }
+            if (a_mat.specular->specularTexture)
+            {
+                p_mat.spec_map_idx_ = a_mat.specular->specularTexture->textureIndex;
+            }
+        }
+
+        // transmission
+        if (a_mat.transmission)
+        {
+            p_mat.transmission_factor_ = a_mat.transmission->transmissionFactor;
+            if (a_mat.transmission->transmissionTexture)
+            {
+                p_mat.transmission_map_idx_ = a_mat.transmission->transmissionTexture->textureIndex;
+            }
+        }
+
+        // volume
+        if (a_mat.volume)
+        {
+            p_mat.combined_attenuation_[3] = a_mat.volume->attenuationDistance;
+            glms::assign_value(p_mat.combined_attenuation_, a_mat.volume->attenuationColor, 3);
+            p_mat.thickness_factor_ = a_mat.volume->thicknessFactor;
+            if (a_mat.volume->thicknessTexture)
+            {
+                p_mat.thickness_map_idx_ = a_mat.volume->thicknessTexture->textureIndex;
+            }
+        }
+
+        // sheen
+        if (a_mat.sheen)
+        {
+            p_mat.combined_sheen_color_factor_[3] = a_mat.sheen->sheenRoughnessFactor;
+            glms::assign_value(p_mat.combined_sheen_color_factor_, a_mat.sheen->sheenColorFactor, 3);
+            if (a_mat.sheen->sheenColorTexture)
+            {
+                p_mat.sheen_color_map_idx_ = a_mat.sheen->sheenColorTexture->textureIndex;
+            }
+            if (a_mat.sheen->sheenRoughnessTexture)
+            {
+                p_mat.sheen_roughtness_map_idx_ = a_mat.sheen->sheenRoughnessTexture->textureIndex;
+            }
         }
     }
 
@@ -226,6 +309,7 @@ std::pair<fi::RenderMgr::DataIdx, size_t> fi::RenderMgr::upload_res(const std::f
     cmd.copyBuffer(staging, buffer, {{0, 0, buffer.size()}});
     cmd.end();
     submit_one_time_cmd(cmd);
+    animation_mgr.upload_res(*this, asset);
     return {device_buffers_.size() - 1, draw_calls.size()};
 }
 
