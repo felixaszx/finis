@@ -95,19 +95,7 @@ int main(int argc, char** argv)
     pipeline_info.pDynamicState = &dynamic_state_info;
     CombinedPipeline pipeline = pipeline_mgr.build_pipeline(pipeline_info);
 
-    vk::ImageCreateInfo image_info({}, vk::ImageType::e2D, vk::Format::eR32G32B32A32Sfloat, //
-                                   {1920, 1080, 1}, 1, 1, vk::SampleCountFlagBits::e1,      //
-                                   vk::ImageTiling::eOptimal, vk::ImageUsageFlagBits::eColorAttachment,
-                                   vk::SharingMode::eExclusive, 0, nullptr, vk::ImageLayout::eUndefined);
-    vma::AllocationCreateInfo image_alloc({}, vma::MemoryUsage::eAutoPreferDevice);
-    vk::Image atchm = g.allocator().createImage(image_info, image_alloc).first;
-
-    vk::ImageViewCreateInfo view_info({}, atchm, vk::ImageViewType::e2D, vk::Format::eR32G32B32A32Sfloat, {},
-                                      {vk::ImageAspectFlagBits::eColor, 0, 1, 0, 1});
-    vk::ImageView atchm_view = g.device().createImageView(view_info);
-
-    vk::ImageLayout prev_layout = vk::ImageLayout::eUndefined;
-    vk::RenderingAttachmentInfo atchm_info(atchm_view, vk::ImageLayout::eColorAttachmentOptimal, {}, {}, {},
+    vk::RenderingAttachmentInfo atchm_info({}, vk::ImageLayout::eColorAttachmentOptimal, {}, {}, {},
                                            vk::AttachmentLoadOp::eClear, {}, vk::ClearColorValue{0, 0, 0, 1});
     vk::RenderingInfo rendering({}, {{}, {1920, 1080}}, 1, {}, 1, &atchm_info);
 
