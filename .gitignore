@@ -37,3 +37,4 @@ exe/
 build/
 .cache/
 res/models/
+.vs/
