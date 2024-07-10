@@ -28,7 +28,7 @@ void main()
 {
     MESH_IDX = gl_DrawIDARB;
     FRAG_DATA.position_ = POSITION;
-    FRAG_DATA.normal_ = NORMAL;
+    FRAG_DATA.normal_ = mat3(transpose(inverse(PUSHES.model_))) * NORMAL;
     FRAG_DATA.tex_coord_ = TEX_COORD;
     gl_Position = PUSHES.proj_ * PUSHES.view_ * PUSHES.model_ * vec4(POSITION, 1.0);
 }

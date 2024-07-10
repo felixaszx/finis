@@ -8,6 +8,7 @@
 #include <thread>
 #include <mutex>
 #include <filesystem>
+#include <chrono>
 
 #define GLFW_INCLUDE_VULKAN
 #include <GLFW/glfw3.h>
@@ -51,8 +52,6 @@ namespace fi
       private:
         inline static vk::Instance instance_{};
         inline static vk::SurfaceKHR surface_{};
-        inline static vk::DebugUtilsMessengerEXT messenger_{};
-
         inline static vk::Device device_{};
         inline static vk::PhysicalDevice physical_{};
         inline static vk::PipelineCache pipeline_cache_{};
@@ -68,7 +67,6 @@ namespace fi
       public:
         static vk::Instance instance();
         static vk::SurfaceKHR surface();
-        static vk::DebugUtilsMessengerEXT messenger();
         static vk::Device device();
         static vk::PhysicalDevice physical();
         static vk::PipelineCache pipeline_cache();
@@ -83,7 +81,7 @@ namespace fi
 
     struct Graphics : public GraphicsObject
     {
-        Graphics(int width, int height, bool debug = false, const std::string& title = "");
+        Graphics(int width, int height, const std::string& title = "");
         ~Graphics();
 
         static bool update();

@@ -11,7 +11,7 @@ int main(int argc, char** argv)
 {
     using namespace fi;
 
-    Graphics g(1920, 1080, true);
+    Graphics g(1920, 1080, "finis");
     Swapchain sc;
     sc.create();
 
@@ -117,13 +117,19 @@ int main(int argc, char** argv)
         glm::mat4 proj = glm::perspective(glm::radians(45.0f), float(1920) / 1080, 0.1f, 1000.0f);
     } push;
 
-    uint32_t up = 0;
     while (g.update())
     {
         auto r = g.device().waitForFences(frame_fence, true, std::numeric_limits<uint64_t>::max());
         uint32_t img_idx = sc.aquire_next_image(next_img);
         atchm_info.imageView = sc.views_[img_idx];
         g.device().resetFences(frame_fence);
+
+        while (glfwGetWindowAttrib(g.window(), GLFW_ICONIFIED))
+        {
+            using namespace std::chrono_literals;
+            std::this_thread::sleep_for(1ms);
+            g.update();
+        }
 
         if (glfwGetKey(g.window(), GLFW_KEY_L))
         {
@@ -167,6 +173,5 @@ int main(int argc, char** argv)
     g.device().waitIdle();
     sc.destory();
 
-    int* a = new int;
     return EXIT_SUCCESS;
 }

@@ -1,15 +1,7 @@
 #define VMA_IMPLEMENTATION
 #include "graphics/graphics.hpp"
-VkBool32 VKAPI_CALL debug_cb(VkDebugUtilsMessageSeverityFlagBitsEXT messageSeverity,
-                             VkDebugUtilsMessageTypeFlagsEXT messageType,
-                             const VkDebugUtilsMessengerCallbackDataEXT* pCallbackData, void* pUserData)
-{
-    std::cerr << pCallbackData->pMessage << " {}\n\n";
 
-    return VK_FALSE;
-}
-
-fi::Graphics::Graphics(int width, int height, bool debug, const std::string& title)
+fi::Graphics::Graphics(int width, int height, const std::string& title)
 {
     glfwInit();
     glfwWindowHint(GLFW_CLIENT_API, GLFW_NO_API);
@@ -20,46 +12,16 @@ fi::Graphics::Graphics(int width, int height, bool debug, const std::string& tit
     const char** glfw_exts = glfwGetRequiredInstanceExtensions(&glfw_ext_count);
     std::array<const char*, 1> VALIDATION_LAYERS{"VK_LAYER_KHRONOS_validation"};
     std::vector<const char*> instance_exts{glfw_exts, glfw_exts + glfw_ext_count};
-    if (debug)
-    {
-        instance_exts.push_back(VK_EXT_DEBUG_UTILS_EXTENSION_NAME);
-    }
 
     vk::ApplicationInfo app_info{};
     app_info.applicationVersion = VK_MAKE_VERSION(1, 0, 0);
     app_info.engineVersion = VK_MAKE_VERSION(1, 0, 0);
     app_info.apiVersion = VK_API_VERSION_1_3;
 
-    vk::DebugUtilsMessengerCreateInfoEXT debug_utils_creat_info{};
-    debug_utils_creat_info.messageSeverity = vk::DebugUtilsMessageSeverityFlagBitsEXT::eWarning | //
-                                             vk::DebugUtilsMessageSeverityFlagBitsEXT::eError;
-    debug_utils_creat_info.messageType = vk::DebugUtilsMessageTypeFlagBitsEXT::eValidation | //
-                                         vk::DebugUtilsMessageTypeFlagBitsEXT::eGeneral |    //
-                                         vk::DebugUtilsMessageTypeFlagBitsEXT::ePerformance;
-    debug_utils_creat_info.pfnUserCallback = debug_cb;
-
     vk::InstanceCreateInfo instance_create_info{};
     instance_create_info.pApplicationInfo = &app_info;
     instance_create_info.setPEnabledExtensionNames(instance_exts);
-
-    if (debug)
-    {
-        instance_create_info.setPEnabledLayerNames(VALIDATION_LAYERS);
-        instance_create_info.pNext = &debug_utils_creat_info;
-    }
     instance_ = vk::createInstance(instance_create_info);
-
-    if (debug)
-    {
-        auto load_func =
-            (PFN_vkCreateDebugUtilsMessengerEXT)vkGetInstanceProcAddr(instance_, "vkCreateDebugUtilsMessengerEXT");
-        if (load_func(instance_, (VkDebugUtilsMessengerCreateInfoEXT*)&debug_utils_creat_info, nullptr,
-                      (VkDebugUtilsMessengerEXT*)&messenger_) != VK_SUCCESS)
-        {
-
-            throw std::runtime_error("Do not create validation layers\n");
-        }
-    }
 
     VkSurfaceKHR surface = nullptr;
     glfwCreateWindowSurface(instance_, window_, nullptr, &surface);
@@ -155,10 +117,6 @@ fi::Graphics::Graphics(int width, int height, bool debug, const std::string& tit
 
     std::vector<const char*> device_ext_names = {VK_KHR_SWAPCHAIN_EXTENSION_NAME};
     std::vector<const char*> device_layer_names;
-    if (debug)
-    {
-        device_layer_names.push_back("VK_LAYER_KHRONOS_validation");
-    }
 
     vk::DeviceCreateInfo device_create_info{};
     device_create_info.pNext = &feature2;
@@ -205,12 +163,7 @@ fi::Graphics::~Graphics()
     instance_.destroySurfaceKHR(surface_);
     allocator_.destroy();
     device_.destroy();
-    if (messenger_)
-    {
-        auto load_func =
-            (PFN_vkDestroyDebugUtilsMessengerEXT)vkGetInstanceProcAddr(instance_, "vkDestroyDebugUtilsMessengerEXT");
-        load_func(instance_, messenger_, nullptr);
-    }
+
     instance_.destroy();
     glfwDestroyWindow(window_);
     glfwTerminate();
@@ -231,11 +184,6 @@ vk::Instance fi::GraphicsObject::instance()
 vk::SurfaceKHR fi::GraphicsObject::surface()
 {
     return surface_;
-};
-
-vk::DebugUtilsMessengerEXT fi::GraphicsObject::messenger()
-{
-    return messenger_;
 };
 
 vk::Device fi::GraphicsObject::device()
