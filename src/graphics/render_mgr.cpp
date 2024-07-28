@@ -281,48 +281,52 @@ std::pair<fi::RenderMgr::DataIdx, size_t> fi::RenderMgr::upload_res(const std::f
         mat_idxs.push_back(~0);
     }
 
+    auto& host_buffer = host_buffers_.emplace_back(sizeof_arr(draw_calls) + 0);
+    host_buffer.draw_call_offset_ = 0;
+    memcpy(host_buffer.map_memory() + host_buffer.draw_call_offset_, draw_calls.data(), sizeof_arr(draw_calls));
+
     uint32_t mat_buffer_padding = (sizeof_arr(vtxs) + sizeof_arr(indices)) % 16;
     mat_buffer_padding = mat_buffer_padding ? 16 - mat_buffer_padding : 0;
-
-    auto& buffer = device_buffers_.emplace_back(sizeof_arr(vtxs)                                 //
-                                                    + sizeof_arr(indices)                        //
-                                                    + mat_buffer_padding + sizeof_arr(materials) //
-                                                    + sizeof_arr(mat_idxs)                       //
-                                                    + sizeof_arr(draw_calls),
-                                                DST);
-    Buffer<BufferBase::EmptyExtraInfo, seq_write> staging(buffer.size(), SRC);
+    auto& device_buffer = device_buffers_.emplace_back(sizeof_arr(vtxs)                                 //
+                                                           + sizeof_arr(indices)                        //
+                                                           + mat_buffer_padding + sizeof_arr(materials) //
+                                                           + sizeof_arr(mat_idxs),
+                                                       DST);
+    Buffer<BufferBase::EmptyExtraInfo, seq_write> staging(device_buffer.size(), SRC);
     staging.map_memory();
-    buffer.vtx_offset_ = 0;
-    buffer.idx_offset_ = sizeof_arr(vtxs);
-    buffer.mat_offset_ = buffer.idx_offset_ + sizeof_arr(indices) + mat_buffer_padding;
-    buffer.mat_idx_offset_ = buffer.mat_offset_ + sizeof_arr(materials);
-    buffer.draw_call_offset_ = buffer.mat_idx_offset_ + sizeof_arr(mat_idxs);
+    device_buffer.vtx_offset_ = 0;
+    device_buffer.idx_offset_ = sizeof_arr(vtxs);
+    device_buffer.mat_offset_ = device_buffer.idx_offset_ + sizeof_arr(indices) + mat_buffer_padding;
+    device_buffer.mat_idx_offset_ = device_buffer.mat_offset_ + sizeof_arr(materials);
 
-    memcpy(staging.mapping() + buffer.vtx_offset_, vtxs.data(), sizeof_arr(vtxs));
-    memcpy(staging.mapping() + buffer.idx_offset_, indices.data(), sizeof_arr(indices));
-    memcpy(staging.mapping() + buffer.mat_offset_, materials.data(), sizeof_arr(materials));
-    memcpy(staging.mapping() + buffer.mat_idx_offset_, mat_idxs.data(), sizeof_arr(mat_idxs));
-    memcpy(staging.mapping() + buffer.draw_call_offset_, draw_calls.data(), sizeof_arr(draw_calls));
+    memcpy(staging.mapping() + device_buffer.vtx_offset_, vtxs.data(), sizeof_arr(vtxs));
+    memcpy(staging.mapping() + device_buffer.idx_offset_, indices.data(), sizeof_arr(indices));
+    memcpy(staging.mapping() + device_buffer.mat_offset_, materials.data(), sizeof_arr(materials));
+    memcpy(staging.mapping() + device_buffer.mat_idx_offset_, mat_idxs.data(), sizeof_arr(mat_idxs));
 
     vk::CommandBuffer cmd = one_time_submit_cmd();
     begin_cmd(cmd);
-    cmd.copyBuffer(staging, buffer, {{0, 0, buffer.size()}});
+    cmd.copyBuffer(staging, device_buffer, {{0, 0, device_buffer.size()}});
     cmd.end();
     submit_one_time_cmd(cmd);
     animation_mgr.upload_res(*this, asset);
     return {device_buffers_.size() - 1, draw_calls.size()};
 }
 
-void fi::RenderMgr::draw(
-    const std::vector<DataIdx>& draws,
-    const std::function<void(vk::Buffer device_buffer, uint32_t vtx_buffer_binding, const VtxIdxBufferExtra& offsets,
-                             vk::DescriptorSet texture_set)>& draw_func)
+void fi::RenderMgr::draw(const std::vector<DataIdx>& draws,
+                         const std::function<void(vk::Buffer device_buffer, //
+                                                  uint32_t vtx_buffer_binding,
+                                                  const VtxIdxBufferExtra& offsets, //
+                                                  vk::Buffer host_buffer,
+                                                  const HostBufferExtra& host_offsets, //
+                                                  vk::DescriptorSet texture_set)>& draw_func)
 {
     if (locked_)
     {
         for (auto data_idx : draws)
         {
-            draw_func(device_buffers_[data_idx], 0, device_buffers_[data_idx], texture_sets_[data_idx]);
+            draw_func(device_buffers_[data_idx], 0, device_buffers_[data_idx], host_buffers_[data_idx],
+                      host_buffers_[data_idx], texture_sets_[data_idx]);
         }
     }
 }

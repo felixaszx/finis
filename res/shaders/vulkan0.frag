@@ -47,17 +47,19 @@ struct Material
 
     // sheen
     uint sheen_color_map_idx_;
-    uint sheen_roughtness_map_idx_;         // alginment
+    uint sheen_roughtness_map_idx_;    // alginment
     vec4 combined_sheen_color_factor_; // [3] = sheen roughtness factor
 };
 
 // Datas
 
 layout(location = 0) out vec4 POSITION;
+layout(location = 1) out vec4 NORMAL;
+layout(location = 2) out vec4 COLOR;
 
 layout(location = 0) in struct
 {
-    vec3 position_;
+    vec4 position_;
     vec3 normal_;
     vec2 tex_coord_;
 } FRAG_DATA;
@@ -80,5 +82,7 @@ MATERIAL_IDXS;
 void main()
 {
     Material mat = MATERIALS.data_[MATERIAL_IDXS.mat_idx_[MESH_IDX]];
-    POSITION = texture(textures_arr[mat.color_texture_idx_], FRAG_DATA.tex_coord_);
+    POSITION = FRAG_DATA.position_;
+    NORMAL = vec4(FRAG_DATA.normal_, 1);
+    COLOR = mat.color_factor_ * texture(textures_arr[mat.color_texture_idx_], FRAG_DATA.tex_coord_);
 }

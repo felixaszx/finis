@@ -49,6 +49,8 @@ namespace fi
         std::vector<vk::Pipeline> pipelines_{};
 
       public:
+        ~PipelineMgr();
+
         vk::PipelineLayout build_pipeline_layout(const vk::PipelineLayoutCreateInfo& info);
         fi::CombinedPipeline build_pipeline(const vk::GraphicsPipelineCreateInfo& info);
         fi::CombinedPipeline build_pipeline(const vk::ComputePipelineCreateInfo& info);

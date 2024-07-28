@@ -104,6 +104,14 @@ void fi::PipelineMgr::bind_descriptor_sets(vk::CommandBuffer cmd, const vk::Arra
     cmd.bindDescriptorSets(prev_.type_, prev_, first_set, sets, dynamic_offsets);
 }
 
+fi::PipelineMgr::~PipelineMgr()
+{
+    for (uint32_t i = 0; i < pipelines_.size(); i++)
+    {
+        device().destroyPipeline(pipelines_[i]);
+    }
+}
+
 vk::PipelineLayout fi::PipelineMgr::build_pipeline_layout(const vk::PipelineLayoutCreateInfo& info)
 {
     layouts_.push_back(device().createPipelineLayout(info));

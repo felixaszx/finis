@@ -154,9 +154,9 @@ fi::Texture& fi::TextureMgr::load_texture(const std::string& name, const gltf::S
         barrier.oldLayout = vk::ImageLayout::eTransferSrcOptimal;
         barrier.newLayout = vk::ImageLayout::eShaderReadOnlyOptimal;
         barrier.srcAccessMask = vk::AccessFlagBits::eTransferRead;
-        barrier.dstAccessMask = vk::AccessFlagBits::eShaderRead;
+        barrier.dstAccessMask = vk::AccessFlagBits::eTransferWrite;
         barrier.subresourceRange.baseMipLevel = i - 1;
-        cmd.pipelineBarrier(vk::PipelineStageFlagBits::eTransfer, vk::PipelineStageFlagBits::eFragmentShader, //
+        cmd.pipelineBarrier(vk::PipelineStageFlagBits::eTransfer, vk::PipelineStageFlagBits::eTransfer, //
                             {}, {}, {}, barrier);
 
         mip_w > 1 ? mip_w /= 2 : mip_w;
@@ -164,10 +164,10 @@ fi::Texture& fi::TextureMgr::load_texture(const std::string& name, const gltf::S
     }
     barrier.oldLayout = vk::ImageLayout::eTransferDstOptimal;
     barrier.newLayout = vk::ImageLayout::eShaderReadOnlyOptimal;
-    barrier.srcAccessMask = vk::AccessFlagBits::eTransferRead;
-    barrier.dstAccessMask = vk::AccessFlagBits::eShaderRead;
+    barrier.srcAccessMask = vk::AccessFlagBits::eTransferWrite;
+    barrier.dstAccessMask = vk::AccessFlagBits::eTransferWrite;
     barrier.subresourceRange.baseMipLevel = storage.levels_ - 1;
-    cmd.pipelineBarrier(vk::PipelineStageFlagBits::eTransfer, vk::PipelineStageFlagBits::eFragmentShader, //
+    cmd.pipelineBarrier(vk::PipelineStageFlagBits::eTransfer, vk::PipelineStageFlagBits::eTransfer, //
                         {}, {}, {}, barrier);
     cmd.end();
     submit_one_time_cmd(cmd);

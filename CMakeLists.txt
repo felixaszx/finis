@@ -12,8 +12,12 @@ set(CMAKE_RUNTIME_OUTPUT_DIRECTORY ${CMAKE_SOURCE_DIR}/exe)
 add_subdirectory(src/graphics)
 add_subdirectory(src/extensions)
 
-add_executable(finis main.cpp)
+file(GLOB_RECURSE SRC app/*.cpp )
+add_executable(finis ${SRC})
 target_include_directories(finis PRIVATE ${CMAKE_SOURCE_DIR}/include)
 
 target_link_libraries(finis PRIVATE finis_extension)
 target_link_libraries(finis PRIVATE finis_graphics)
+
+add_executable(nana_test nana.cpp)
+target_link_libraries(nana_test PRIVATE nana png jpeg)

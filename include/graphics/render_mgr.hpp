@@ -94,10 +94,15 @@ namespace fi
             // storage buffer
             vk::DeviceSize mat_offset_ = 0;
             vk::DeviceSize mat_idx_offset_ = 0;
-            vk::DeviceSize bone_offset_ = 0;
+        };
 
-            // indirect draw buffer
+        struct HostBufferExtra
+        {
+            // indirect buffer
             vk::DeviceSize draw_call_offset_ = 0;
+
+            // storage buffer
+            vk::DeviceSize bone_offset_ = 0;
         };
 
       private:
@@ -108,7 +113,8 @@ namespace fi
         // access below via Renderable::data_idx_
         std::vector<std::vector<uint32_t>> mat_idxs_{};
         std::vector<std::vector<vk::DrawIndexedIndirectCommand>> draw_calls_{};
-        std::vector<Buffer<VtxIdxBufferExtra, vertex, index, storage, indirect>> device_buffers_{};
+        std::vector<Buffer<VtxIdxBufferExtra, vertex, index, storage>> device_buffers_{};
+        std::vector<Buffer<HostBufferExtra, indirect, storage, seq_write>> host_buffers_{};
 
         // texture storage
         std::vector<vk::Sampler> sampelers_{};                              // not for access
@@ -127,10 +133,13 @@ namespace fi
                                                              TextureMgr& texture_mgr, AnimationMgr& animation_mgr,
                                                              gltf::Expected<gltf::GltfDataBuffer>& gltf_file);
         void lock_and_prepared();
-        void draw(
-            const std::vector<DataIdx>& draws,
-            const std::function<void(vk::Buffer device_buffer, uint32_t vtx_buffer_binding,
-                                     const VtxIdxBufferExtra& offsets, vk::DescriptorSet texture_set)>& draw_func);
+        void draw(const std::vector<DataIdx>& draws,
+                  const std::function<void(vk::Buffer device_buffer, //
+                                           uint32_t vtx_buffer_binding,
+                                           const VtxIdxBufferExtra& offsets, //
+                                           vk::Buffer host_buffer,
+                                           const HostBufferExtra& host_offsets, //
+                                           vk::DescriptorSet texture_set)>& draw_func);
     };
 
 }; // namespace fi
