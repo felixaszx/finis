@@ -15,9 +15,11 @@ add_subdirectory(src/extensions)
 file(GLOB_RECURSE SRC app/*.cpp )
 add_executable(finis ${SRC})
 target_include_directories(finis PRIVATE ${CMAKE_SOURCE_DIR}/include)
+target_link_libraries(finis PRIVATE fltk)
 
 target_link_libraries(finis PRIVATE finis_extension)
 target_link_libraries(finis PRIVATE finis_graphics)
 
-add_executable(nana_test nana.cpp)
-target_link_libraries(nana_test PRIVATE nana png jpeg)
+add_executable(fltk_test fltk.cpp)
+target_include_directories(fltk_test PRIVATE ${CMAKE_SOURCE_DIR}/include)
+target_link_libraries(fltk_test PRIVATE fltk)

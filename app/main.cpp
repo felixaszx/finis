@@ -6,12 +6,20 @@
 #include "graphics/buffer.hpp"
 #include "graphics/render_mgr.hpp"
 #include "graphics/animation_mgr.hpp"
+#include "fl_ext.hpp"
 
 #include "g_buffer_pipelines.cpp"
 
 int main(int argc, char** argv)
 {
     using namespace fi;
+
+    fle::DoubleWindow fltk(800, 600, "Test window");
+    fltk.end();
+    fle::Flow fltk_flow(0, 0, 800, 600);
+    fltk.add(fltk_flow);
+    fltk.resizable(fltk_flow);
+    fltk.show();
 
     Graphics g(1920, 1080, "finis");
     Swapchain sc;
@@ -59,6 +67,7 @@ int main(int argc, char** argv)
 
     while (g.update())
     {
+        fle::Global::check();
         auto r = g.device().waitForFences(frame_fence, true, std::numeric_limits<uint64_t>::max());
         uint32_t img_idx = sc.aquire_next_image(next_img);
         g.device().resetFences(frame_fence);
@@ -73,6 +82,11 @@ int main(int argc, char** argv)
         if (glfwGetKey(g.window(), GLFW_KEY_L))
         {
             g_buffer.hot_reload(pipeline_mgr);
+        }
+
+        if (glfwGetKey(g.window(), GLFW_KEY_P))
+        {
+            fltk.show();
         }
 
         cmds[0].reset();
@@ -115,5 +129,7 @@ int main(int argc, char** argv)
     sc.destory();
     g.device().destroyCommandPool(cmd_pool);
 
+    fltk.hide();
+    fle::Global::check();
     return EXIT_SUCCESS;
 }
