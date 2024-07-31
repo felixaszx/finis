@@ -46,7 +46,6 @@ int main(int argc, char** argv)
     cmd_alloc.level = vk::CommandBufferLevel::ePrimary;
     auto cmds = g.device().allocateCommandBuffers(cmd_alloc);
     
-
     while (g.update())
     {
         fle::Global::check();
