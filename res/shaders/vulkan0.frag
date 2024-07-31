@@ -61,9 +61,11 @@ layout(location = 0) in struct
 {
     vec4 position_;
     vec3 normal_;
+    vec3 tangent_;
+    vec3 bitangent_;
     vec2 tex_coord_;
 } FRAG_DATA;
-layout(location = 3) in flat int MESH_IDX;
+layout(location = 5) in flat int MESH_IDX;
 
 layout(set = 0, binding = 0) uniform sampler2D textures_arr[];
 layout(std430, set = 0, binding = 1) readonly buffer MATERIALS_
@@ -82,7 +84,20 @@ MATERIAL_IDXS;
 void main()
 {
     Material mat = MATERIALS.data_[MATERIAL_IDXS.mat_idx_[MESH_IDX]];
+    COLOR = mat.color_factor_ * texture(textures_arr[mat.color_texture_idx_], FRAG_DATA.tex_coord_);
+    if (COLOR.a <= 0)
+    {
+        discard;
+    }
+
     POSITION = FRAG_DATA.position_;
     NORMAL = vec4(FRAG_DATA.normal_, 1);
     COLOR = mat.color_factor_ * texture(textures_arr[mat.color_texture_idx_], FRAG_DATA.tex_coord_);
+
+    if (mat.normal_map_idx_ != ~0)
+    {
+        vec3 mapped_normal = texture(textures_arr[mat.normal_map_idx_], FRAG_DATA.tex_coord_).rgb;
+        mapped_normal = normalize(mapped_normal * 2.0 - 1.0);
+        NORMAL.rgb = normalize(mat3(FRAG_DATA.tangent_, FRAG_DATA.bitangent_, FRAG_DATA.normal_) * mapped_normal);
+    }
 }

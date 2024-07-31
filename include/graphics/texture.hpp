@@ -47,9 +47,7 @@ namespace fi
         TextureMgr();
         ~TextureMgr();
 
-        [[nodiscard]] fi::Texture& load_texture(const std::string& name,
-                                            const gltf::StaticVector<std::uint8_t>& bytes, //
-                                            size_t begin, size_t length, bool mip_mapping = true);
+        [[nodiscard]] fi::Texture& load_texture(const std::string& name, bool mip_mapping = true);
         [[nodiscard]] fi::Texture& get_texture(const std::string& name);
         void remove_image(const std::string& file_path);
         uint32_t size() { return images_.size(); }

@@ -28,15 +28,14 @@ fi::TextureMgr::TextureMgr()
 
     gltf::StaticVector<std::uint8_t> bytes(file_size);
     buffer.read(castf(char*, bytes.data()), file_size);
-    Texture tmp = load_texture("res/textures/blank.png", bytes, 0, file_size);
+    Texture tmp = load_texture("res/textures/blank.png");
 }
 
 fi::TextureMgr::~TextureMgr()
 {
 }
 
-fi::Texture& fi::TextureMgr::load_texture(const std::string& name, const gltf::StaticVector<std::uint8_t>& bytes,
-                                          size_t begin, size_t length, bool mip_mapping)
+fi::Texture& fi::TextureMgr::load_texture(const std::string& name, bool mip_mapping)
 {
     if (images_.contains(name))
     {
@@ -46,7 +45,7 @@ fi::Texture& fi::TextureMgr::load_texture(const std::string& name, const gltf::S
     fi::TextureStorage& storage = images_[name];
     storage.name_ = name;
     int w = 0, h = 0, chan = 0;
-    stbi_uc* pixels = stbi_load_from_memory(bytes.data() + begin, length, &w, &h, &chan, STBI_rgb_alpha);
+    stbi_uc* pixels = stbi_load(name.c_str(), &w, &h, &chan, STBI_rgb_alpha);
     if (pixels == nullptr)
     {
         throw std::runtime_error(std::format("{} texture can not be loaded", name));

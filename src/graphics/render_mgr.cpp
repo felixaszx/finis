@@ -36,13 +36,25 @@ std::pair<fi::RenderMgr::DataIdx, size_t> fi::RenderMgr::upload_res(const std::f
     }
     gltf_file = gltf::GltfDataBuffer::FromPath(path);
     auto asset = parser_.loadGltf(gltf_file.get(), path.parent_path(),
-                                  gltf::Options::LoadExternalImages | //
-                                      gltf::Options::GenerateMeshIndices);
+                                  gltf::Options::GenerateMeshIndices | //
+                                      gltf::Options::LoadExternalBuffers);
 
     std::vector<vk::Sampler> samplers;
     std::vector<vk::DescriptorImageInfo>& texture_infos = texture_infos_.emplace_back();
     samplers.reserve(asset->samplers.size());
     texture_infos.reserve(asset->textures.size());
+
+    auto check_mipmap = [](gltf::Filter filter)
+    {
+        switch (filter)
+        {
+            case gltf::Filter::Nearest:
+            case gltf::Filter::Linear:
+                return false;
+            default:
+                return true;
+        }
+    };
 
     for (auto& sampler : asset->samplers)
     {
@@ -96,7 +108,7 @@ std::pair<fi::RenderMgr::DataIdx, size_t> fi::RenderMgr::upload_res(const std::f
         sampler_info.addressModeU = decode_adress_mode(sampler.wrapS);
         sampler_info.addressModeV = decode_adress_mode(sampler.wrapT);
         sampler_info.borderColor = vk::BorderColor::eFloatOpaqueBlack;
-        sampler_info.maxLod = 1000.0f;
+        sampler_info.maxLod = check_mipmap(sampler.minFilter.value_or(gltf::Filter::Linear)) ? 1000.0f : 0.0f;
         sampler_info.mipmapMode = extract_mipmap_mode(sampler.magFilter.value_or(gltf::Filter::LinearMipMapLinear));
         sampler_info.magFilter = extract_filter(sampler.magFilter.value_or(gltf::Filter::Linear));
         sampler_info.minFilter = extract_filter(sampler.minFilter.value_or(gltf::Filter::Linear));
@@ -107,14 +119,11 @@ std::pair<fi::RenderMgr::DataIdx, size_t> fi::RenderMgr::upload_res(const std::f
     for (auto& tex : asset->textures)
     {
         size_t img_idx = tex.imageIndex.value();
-        size_t buffer_view_idx = std::get<gltf::sources::BufferView>(asset->images[img_idx].data).bufferViewIndex;
-        gltf::BufferView& view = asset->bufferViews[buffer_view_idx];
-        gltf::StaticVector<std::uint8_t>& img_data =
-            std::get<gltf::sources::Array>(asset->buffers[view.bufferIndex].data).bytes;
-
-        Texture& tex_info =
-            texture_mgr.load_texture(tex.name == "" ? asset->images[img_idx].name.c_str() : tex.name.c_str(), img_data,
-                                     view.byteOffset, view.byteLength);
+        std::string tex_path = path.parent_path().generic_string() + '/' +
+                               std::get<gltf::sources::URI>(asset->images[img_idx].data).uri.c_str();
+        Texture& tex_info = texture_mgr.load_texture(
+            tex_path,
+            check_mipmap(asset->samplers[tex.samplerIndex.value_or(0)].minFilter.value_or(gltf::Filter::Linear)));
         tex_info.sampler_ = samplers[tex.samplerIndex.value_or(0)];
         texture_infos.push_back(tex_info);
     }
@@ -260,6 +269,15 @@ std::pair<fi::RenderMgr::DataIdx, size_t> fi::RenderMgr::upload_res(const std::f
                     asset.get(), asset->accessors[normal_iter->second],
                     [&](const gltf::math::fvec3& normal, size_t vtx_idx)
                     { glms::assign_value(vtxs[old_vtx_count + vtx_idx].normal_, normal); });
+            }
+
+            auto tangent_iter = p.findAttribute("TANGENT");
+            if (tangent_iter != p.attributes.end())
+            {
+                gltf::iterateAccessorWithIndex<gltf::math::fvec4>(
+                    asset.get(), asset->accessors[tangent_iter->second],
+                    [&](const gltf::math::fvec4& tangent, size_t vtx_idx)
+                    { glms::assign_value(vtxs[old_vtx_count + vtx_idx].tangent_, tangent); });
             }
 
             auto tex_coord_iter = p.findAttribute("TEXCOORD_0");
@@ -436,17 +454,18 @@ std::vector<vk::VertexInputBindingDescription> fi::Renderable::vtx_bindings()
 
 std::vector<vk::VertexInputAttributeDescription> fi::Renderable::vtx_attributes()
 {
-    std::vector<vk::VertexInputAttributeDescription> attributes(3);
+    std::vector<vk::VertexInputAttributeDescription> attributes(4);
     for (size_t i = 0; i < attributes.size(); i++)
     {
         attributes[i].binding = 0;
         attributes[i].format = vk::Format::eR32G32B32Sfloat;
         attributes[i].location = i;
     }
-    attributes[2].format = vk::Format::eR32G32Sfloat;
+    attributes[3].format = vk::Format::eR32G32Sfloat;
 
     attributes[0].offset = offsetof(Renderable::Vertex, position_);
     attributes[1].offset = offsetof(Renderable::Vertex, normal_);
-    attributes[2].offset = offsetof(Renderable::Vertex, tex_coord_);
+    attributes[2].offset = offsetof(Renderable::Vertex, tangent_);
+    attributes[3].offset = offsetof(Renderable::Vertex, tex_coord_);
     return attributes;
 }

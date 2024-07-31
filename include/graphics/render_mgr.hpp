@@ -65,9 +65,10 @@ namespace fi
         {
             glm::vec3 position_{};     // 0
             glm::vec3 normal_{};       // 1
-            glm::vec2 tex_coord_{};    // 2
-            glm::uvec4 bone_ids_{};    // 3
-            glm::vec4 bone_weights_{}; // 4
+            glm::vec3 tangent_{};       // 2
+            glm::vec2 tex_coord_{};    // 3
+            glm::uvec4 bone_ids_{};    // 4
+            glm::vec4 bone_weights_{}; // 5
         };
 
         Material* mat_ = nullptr;
