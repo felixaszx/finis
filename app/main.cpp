@@ -1,11 +1,8 @@
 #include <iostream>
 
 #include "extensions/loader.hpp"
-#include "graphics/graphics.hpp"
-#include "graphics/swapchain.hpp"
-#include "graphics/buffer.hpp"
-#include "graphics/render_mgr.hpp"
-#include "graphics/animation_mgr.hpp"
+#include "graphics2/graphics.hpp"
+#include "graphics2/swapchain.hpp"
 #include "fl_ext.hpp"
 
 int main(int argc, char** argv)
@@ -22,14 +19,6 @@ int main(int argc, char** argv)
     Graphics g(1920, 1080, "finis");
     Swapchain sc;
     sc.create();
-
-    TextureMgr texture_mgr;
-    PipelineMgr pipeline_mgr;
-    RenderMgr render_mgr;
-    AnimationMgr animation_mgr;
-    gltf::Expected<gltf::GltfDataBuffer> gltf_file({});
-    auto sponza = render_mgr.upload_res("res/models/sponza/Sponza.gltf", texture_mgr, animation_mgr, gltf_file);
-    render_mgr.lock_and_prepared();
 
     Semaphore next_img;
     Semaphore submit;

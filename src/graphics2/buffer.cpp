@@ -1,4 +1,4 @@
-#include "graphics/buffer.hpp"
+#include "graphics2/buffer.hpp"
 
 void fi::BufferBase::create_buffer(const vk::BufferCreateInfo& buffer_info, const vma::AllocationCreateInfo& alloc_info)
 {

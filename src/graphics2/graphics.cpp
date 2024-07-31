@@ -1,5 +1,5 @@
 #define VMA_IMPLEMENTATION
-#include "graphics/graphics.hpp"
+#include "graphics2/graphics.hpp"
 
 fi::Graphics::Graphics(int width, int height, const std::string& title)
 {
