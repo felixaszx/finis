@@ -34,15 +34,14 @@ int main(int argc, char** argv)
     cmd_alloc.commandPool = cmd_pool;
     cmd_alloc.level = vk::CommandBufferLevel::ePrimary;
     auto cmds = g.device().allocateCommandBuffers(cmd_alloc);
-    
+
     while (g.update())
     {
-        fle::Global::check();
         auto r = g.device().waitForFences(frame_fence, true, std::numeric_limits<uint64_t>::max());
         uint32_t img_idx = sc.aquire_next_image(next_img);
         g.device().resetFences(frame_fence);
 
-        while (glfwGetWindowAttrib(g.window(), GLFW_ICONIFIED))
+        while (fle::Global::check(), glfwGetWindowAttrib(g.window(), GLFW_ICONIFIED))
         {
             using namespace std::chrono_literals;
             std::this_thread::sleep_for(1ms);
