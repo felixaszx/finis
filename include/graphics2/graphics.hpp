@@ -27,14 +27,11 @@
 #include <glm/gtx/euler_angles.hpp>
 
 #include "vma/vk_mem_alloc.hpp"
-#include "fastgltf/core.hpp"
-#include "fastgltf/types.hpp"
-#include "fastgltf/tools.hpp"
-#include "fastgltf/util.hpp"
+#include "tinygltf/tiny_gltf.h"
 
 namespace fi
 {
-    namespace gltf = fastgltf;
+    namespace gltf = tinygltf;
 
     struct Graphics;
     class GraphicsObject
@@ -62,7 +59,8 @@ namespace fi
 
         inline static vma::Allocator allocator_{};
         inline static GLFWwindow* window_{};
-        inline static gltf::Parser gltf_parser_{};
+
+        inline static gltf::TinyGLTF gltf_loader_{};
 
       public:
         static vk::Instance instance();
@@ -74,9 +72,9 @@ namespace fi
         static uint32_t queue_indices(QueueType type);
         static vma::Allocator allocator();
         static GLFWwindow* window();
-        static gltf::Parser& gltf_parser();
         static vk::CommandBuffer one_time_submit_cmd();
         static void submit_one_time_cmd(vk::CommandBuffer cmd);
+        static gltf::TinyGLTF& gltf_loader();
     };
 
     struct Graphics : public GraphicsObject

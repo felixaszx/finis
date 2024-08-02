@@ -19,6 +19,7 @@ target_include_directories(finis PRIVATE ${CMAKE_SOURCE_DIR}/include)
 target_link_libraries(finis PRIVATE fltk)
 
 target_link_libraries(finis PRIVATE finis_extension)
+target_link_libraries(finis PRIVATE finis_graphics)
 target_link_libraries(finis PRIVATE finis_graphics2)
 
 add_executable(fltk_test fltk.cpp)

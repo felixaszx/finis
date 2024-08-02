@@ -1,4 +1,8 @@
 #define VMA_IMPLEMENTATION
+#define TINYGLTF_IMPLEMENTATION
+#define TINYGLTF_USE_CPP14 
+#define STB_IMAGE_IMPLEMENTATION
+#define STB_IMAGE_WRITE_IMPLEMENTATION
 #include "graphics2/graphics.hpp"
 
 fi::Graphics::Graphics(int width, int height, const std::string& title)
@@ -221,10 +225,10 @@ GLFWwindow* fi::GraphicsObject::window()
     return window_;
 };
 
-fi::gltf::Parser& fi::GraphicsObject::gltf_parser()
+fi::gltf::TinyGLTF& fi::GraphicsObject::gltf_loader()
 {
-    return gltf_parser_;
-};
+    return gltf_loader_;
+}
 
 vk::CommandBuffer fi::GraphicsObject::one_time_submit_cmd()
 {
