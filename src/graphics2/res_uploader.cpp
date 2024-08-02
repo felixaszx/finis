@@ -144,10 +144,13 @@ fi::ResDetails::ResDetails(const std::filesystem::path& path)
 
         material.normal_map_idx_ = mat_in.normalTexture.index;
 
-        // extensions
+// extensions
+#define check_ext(name)                      \
+    const auto& val = ext->second.Get(name); \
+    val.Type() != gltf::NULL_TYPE
         if (auto ext = mat_in.extensions.find("KHR_materials_emissive_strength"); ext != mat_in.extensions.end())
         {
-            if (const auto& val = ext->second.Get("emissiveStrength"); val.Type() != gltf::NULL_TYPE)
+            if (check_ext("emissiveStrength"))
             {
                 material.emissive_factor_[3] = val.GetNumberAsDouble();
             }
@@ -155,22 +158,22 @@ fi::ResDetails::ResDetails(const std::filesystem::path& path)
 
         if (auto ext = mat_in.extensions.find("KHR_materials_specular"); ext != mat_in.extensions.end())
         {
-            if (const auto& val = ext->second.Get("specularFactor"); val.Type() != gltf::NULL_TYPE)
+            if (check_ext("specularFactor"))
             {
                 material.spec_factor_[3] = val.GetNumberAsDouble();
             }
-            if (const auto& val = ext->second.Get("specularTexture"); val.Type() != gltf::NULL_TYPE)
+            if (check_ext("specularTexture"))
             {
                 material.spec_map_idx_ = val.GetNumberAsInt();
             }
-            if (const auto& val = ext->second.Get("specularColorFactor"); val.Type() != gltf::NULL_TYPE)
+            if (check_ext("specularColorFactor"))
             {
                 for (size_t i = 0; i < 3; i++)
                 {
                     material.spec_factor_[i] = val.Get(i).GetNumberAsDouble();
                 }
             }
-            if (const auto& val = ext->second.Get("specularColorTexture"); val.Type() != gltf::NULL_TYPE)
+            if (check_ext("specularColorTexture"))
             {
                 material.spec_color_map_idx_ = val.GetNumberAsInt();
             }
