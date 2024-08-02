@@ -135,8 +135,7 @@ fi::ResDetails::ResDetails(const std::filesystem::path& path)
         material.color_texture_idx_ = mat_in.pbrMetallicRoughness.baseColorTexture.index;
         material.metalic_roughtness_ = mat_in.pbrMetallicRoughness.metallicRoughnessTexture.index;
 
-        glms::assign_value(material.emissive_factor_, mat_in.emissiveFactor);
-        material.emissive_factor_[3] = 1.0f;
+        glms::assign_value(material.emissive_factor_, mat_in.emissiveFactor, 3);
         material.emissive_map_idx_ = mat_in.emissiveTexture.index;
 
         material.occlusion_map_idx_ = mat_in.occlusionTexture.index;
