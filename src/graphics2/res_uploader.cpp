@@ -136,6 +136,7 @@ fi::ResDetails::ResDetails(const std::filesystem::path& path)
         material.metalic_roughtness_ = mat_in.pbrMetallicRoughness.metallicRoughnessTexture.index;
 
         glms::assign_value(material.emissive_factor_, mat_in.emissiveFactor);
+        material.emissive_factor_[3] = 1.0f;
         material.emissive_map_idx_ = mat_in.emissiveTexture.index;
 
         material.occlusion_map_idx_ = mat_in.occlusionTexture.index;
@@ -145,6 +146,36 @@ fi::ResDetails::ResDetails(const std::filesystem::path& path)
         material.normal_map_idx_ = mat_in.normalTexture.index;
 
         // extensions
+        if (auto ext = mat_in.extensions.find("KHR_materials_emissive_strength"); ext != mat_in.extensions.end())
+        {
+            if (const auto& val = ext->second.Get("emissiveStrength"); val.Type() != gltf::NULL_TYPE)
+            {
+                material.emissive_factor_[3] = val.GetNumberAsDouble();
+            }
+        }
+
+        if (auto ext = mat_in.extensions.find("KHR_materials_specular"); ext != mat_in.extensions.end())
+        {
+            if (const auto& val = ext->second.Get("specularFactor"); val.Type() != gltf::NULL_TYPE)
+            {
+                material.spec_factor_[3] = val.GetNumberAsDouble();
+            }
+            if (const auto& val = ext->second.Get("specularTexture"); val.Type() != gltf::NULL_TYPE)
+            {
+                material.spec_map_idx_ = val.GetNumberAsInt();
+            }
+            if (const auto& val = ext->second.Get("specularColorFactor"); val.Type() != gltf::NULL_TYPE)
+            {
+                for (size_t i = 0; i < 3; i++)
+                {
+                    material.spec_factor_[i] = val.Get(i).GetNumberAsDouble();
+                }
+            }
+            if (const auto& val = ext->second.Get("specularColorTexture"); val.Type() != gltf::NULL_TYPE)
+            {
+                material.spec_color_map_idx_ = val.GetNumberAsInt();
+            }
+        }
     }
 }
 

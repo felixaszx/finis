@@ -7,7 +7,7 @@
 struct Material
 {
     vec4 color_factor_;
-    vec4 emissive_factor_;    // [3] = place holder
+    vec4 emissive_factor_;    // [3] = emissive strength
     vec4 sheen_color_factor_; // [3] = sheen roughtness factor
     vec4 spec_factor_;        // [3] = place holder
 

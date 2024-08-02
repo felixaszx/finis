@@ -19,7 +19,7 @@ namespace fi
     struct alignas(16) Material
     {
         glm::vec4 color_factor_ = {1, 1, 1, 1};
-        glm::vec4 emissive_factor_ = {0, 0, 0, 1};    // [3] = place holder
+        glm::vec4 emissive_factor_ = {0, 0, 0, 1};    // [3] = emissive strength
         glm::vec4 sheen_color_factor_ = {0, 0, 0, 0}; // [3] = sheen roughtness factor
         glm::vec4 spec_factor_ = {1, 1, 1, 1};        // [3] = place holder
 
@@ -51,6 +51,13 @@ namespace fi
         void load_mip_maps();
 
       public:
+        inline const static char* EXTENSIONS[] = {"KHR_materials_emissive_strength", //
+                                                  "KHR_materials_transmission",      //
+                                                  "KHR_materials_ior",               //
+                                                  "KHR_materials_volume",               //
+                                                  "KHR_materials_sheen",               //
+                                                  "KHR_materials_specular"};
+
         // storage
         std::vector<vk::Image> textures_{};
         std::vector<vk::ImageView> texture_views_{};
