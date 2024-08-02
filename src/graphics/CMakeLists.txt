@@ -7,6 +7,8 @@ set(CMAKE_RUNTIME_OUTPUT_DIRECTORY ${CMAKE_SOURCE_DIR}/exe)
 find_package(glfw3 REQUIRED)
 find_package(Assimp REQUIRED)
 
+add_subdirectory(fastgltf)
+
 file(GLOB_RECURSE SRC *.cpp )
 add_library(finis_graphics SHARED ${SRC})
 target_include_directories(finis_graphics PRIVATE ${CMAKE_SOURCE_DIR}/include)

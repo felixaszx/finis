@@ -3,6 +3,7 @@
 #include "extensions/loader.hpp"
 #include "graphics2/graphics.hpp"
 #include "graphics2/swapchain.hpp"
+#include "graphics2/res_uploader.hpp"
 #include "fl_ext.hpp"
 
 int main(int argc, char** argv)
@@ -23,6 +24,8 @@ int main(int argc, char** argv)
     Semaphore next_img;
     Semaphore submit;
     Fence frame_fence;
+
+    ResDetails sponza("res/models/sponza/Sponza.gltf");
 
     vk::CommandPoolCreateInfo pool_info{};
     pool_info.flags = vk::CommandPoolCreateFlagBits::eResetCommandBuffer;

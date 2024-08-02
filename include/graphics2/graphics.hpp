@@ -14,24 +14,22 @@
 #include <GLFW/glfw3.h>
 #include <vulkan/vulkan.hpp>
 
-#define GLM_FORCE_RADIANS
-#define GLM_FORCE_DEPTH_ZERO_TO_ONE
-#define GLM_FORCE_INLINE
-#define GLM_FORCE_XYZW_ONLY
-#define GLM_ENABLE_EXPERIMENTAL
-#include <glm/glm.hpp>
-#include <glm/gtc/matrix_transform.hpp>
-#include <glm/gtc/type_ptr.hpp>
-#include <glm/gtx/rotate_vector.hpp>
-#include <glm/gtx/quaternion.hpp>
-#include <glm/gtx/euler_angles.hpp>
+#include "glms.hpp"
 
 #include "vma/vk_mem_alloc.hpp"
 #include "tinygltf/tiny_gltf.h"
 
 namespace fi
 {
-    namespace gltf = tinygltf;
+
+    namespace gltf
+    {
+        using namespace tinygltf;
+        inline bool contains(int idx)
+        {
+            return idx != -1;
+        }
+    }; // namespace gltf
 
     struct Graphics;
     class GraphicsObject

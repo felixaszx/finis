@@ -14,10 +14,6 @@
             "stopAtEntry": false,
             "cwd": "${workspaceFolder}",
             "environment": [
-                {
-                    "name": "_NO_DEBUG_HEAP",
-                    "value": "1"
-                }
             ],
             "externalConsole": false,
             "MIMode": "gdb",

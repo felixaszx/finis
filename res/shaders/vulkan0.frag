@@ -3,52 +3,33 @@
 
 // Declares
 
+#define NO_TEXTURE -1
 struct Material
 {
-    // pbr_data
-    vec4 color_factor_; // alignment
+    vec4 color_factor_;
+    vec4 emissive_factor_;    // [3] = place holder
+    vec4 sheen_color_factor_; // [3] = sheen roughtness factor
+    vec4 spec_factor_;        // [3] = place holder
+
+    float alpha_cutoff_;
     float metalic_;
     float roughtness_;
     uint color_texture_idx_;
-    uint metalic_roughtness_; // alignment
+    uint metalic_roughtness_;
 
-    // emissive
-    vec4 combined_emissive_factor; // [3] = emissive strength // alignment
+    uint normal_map_idx_;
     uint emissive_map_idx_;
-
-    // occlusion  map
     uint occlusion_map_idx_;
 
-    // alpha
-    float alpha_value_;
-
-    // normal
-    float normal_scale_; // alignment
-    uint normal_map_idx_;
-
-    // anistropy
     float anistropy_rotation_;
     float anistropy_strength_;
-    uint anistropy_map_idx_; // alginment
+    uint anistropy_map_idx_;
 
-    // specular
-    vec4 combined_spec_factor_; // [3] = specular strength // alginment
-    uint spec_color_map_idx_;
     uint spec_map_idx_;
+    uint spec_color_map_idx_;
 
-    // transmission
-    float transmission_factor_;
-    uint transmission_map_idx_; // alignment
-
-    // volume
-    vec4 combined_attenuation_; // [3] = attenuation distance // alignment
-    float thickness_factor_;
-    uint thickness_map_idx_;
-
-    // sheen
     uint sheen_color_map_idx_;
-    uint sheen_roughtness_map_idx_;    // alginment
-    vec4 combined_sheen_color_factor_; // [3] = sheen roughtness factor
+    uint sheen_roughtness_map_idx_;
 };
 
 // Datas
@@ -84,17 +65,21 @@ MATERIAL_IDXS;
 void main()
 {
     Material mat = MATERIALS.data_[MATERIAL_IDXS.mat_idx_[MESH_IDX]];
-    COLOR = mat.color_factor_ * texture(textures_arr[mat.color_texture_idx_], FRAG_DATA.tex_coord_);
-    if (COLOR.a <= 0)
-    {
-        discard;
-    }
-
+    COLOR = mat.color_factor_;
     POSITION = FRAG_DATA.position_;
     NORMAL = vec4(FRAG_DATA.normal_, 1);
-    COLOR = mat.color_factor_ * texture(textures_arr[mat.color_texture_idx_], FRAG_DATA.tex_coord_);
 
-    if (mat.normal_map_idx_ != ~0)
+    // texture mapping
+    if (mat.color_texture_idx_ != NO_TEXTURE)
+    {
+        COLOR *= texture(textures_arr[mat.color_texture_idx_], FRAG_DATA.tex_coord_);
+        if (COLOR.a < mat.alpha_cutoff_)
+        {
+            discard;
+        }
+    }
+
+    if (mat.normal_map_idx_ != NO_TEXTURE)
     {
         vec3 mapped_normal = texture(textures_arr[mat.normal_map_idx_], FRAG_DATA.tex_coord_).rgb;
         mapped_normal = normalize(mapped_normal * 2.0 - 1.0);
