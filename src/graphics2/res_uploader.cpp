@@ -179,6 +179,17 @@ fi::ResDetails::ResDetails(const std::filesystem::path& path)
             }
         }
     }
+
+    std::vector<Vertex> vtxs;
+    std::vector<uint32_t> idxs;
+    std::vector<vk::DrawIndexedIndirectCommand> draw_calls;
+
+    for (const auto& mesh : model_.meshes)
+    {
+        for (const auto& prim : mesh.primitives)
+        {
+        }
+    }
 }
 
 fi::ResDetails::~ResDetails()

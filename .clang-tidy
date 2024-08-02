@@ -16,7 +16,8 @@ Checks: "
         -modernize-use-using,
         -modernize-avoid-c-arrays,
         -cppcoreguidelines-avoid-c-arrays,
-        -cppcoreguidelines-owning-memory
+        -cppcoreguidelines-owning-memory,
+        -cppcoreguidelines-macro-usage
         "
 WarningsAsErrors: ''
 HeaderFilterRegex: ''

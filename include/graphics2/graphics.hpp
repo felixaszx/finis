@@ -9,6 +9,8 @@
 #include <mutex>
 #include <filesystem>
 #include <chrono>
+#include <future>
+#include <queue>
 
 #define GLFW_INCLUDE_VULKAN
 #include <GLFW/glfw3.h>
