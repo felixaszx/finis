@@ -25,7 +25,7 @@ int main(int argc, char** argv)
     Semaphore submit;
     Fence frame_fence;
 
-    ResDetails sponza("res/models/sponza/Sponza.gltf");
+    ResDetails sponza("res/models/animated_box/BoxAnimated.gltf");
 
     vk::CommandPoolCreateInfo pool_info{};
     pool_info.flags = vk::CommandPoolCreateFlagBits::eResetCommandBuffer;

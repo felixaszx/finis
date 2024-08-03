@@ -24,11 +24,11 @@
     {                          \
         std::cerr << e.what(); \
     }
-#define casts(type, value)   static_cast<type>(value)
-#define castr(type, value)   reinterpret_cast<type>(value)
-#define castc(type, value)   const_cast<type>(value)
-#define castf(type, value)   (type)(value)
-#define sizeof_arr(std_arr) std_arr.size() * sizeof(std_arr[0])
+#define casts(type, value)  (static_cast<type>(value))
+#define castr(type, value)  (reinterpret_cast<type>(value))
+#define castc(type, value)  (const_cast<type>(value))
+#define castf(type, value)  ((type)(value))
+#define sizeof_arr(std_arr) (std_arr.size() * sizeof(std_arr[0]))
 
 template <typename T, typename Q>
 void sset(T& dst, const Q& src)

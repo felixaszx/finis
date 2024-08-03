@@ -30,6 +30,18 @@ vk::Filter decode_filter_mode(int mode)
     return vk::Filter::eLinear;
 };
 
+template <typename T>
+float get_normalized(T integer)
+{
+    return integer / (float)std::numeric_limits<T>::max();
+}
+
+template <typename T>
+float get_normalized(T* integer)
+{
+    return get_normalized(*integer);
+}
+
 bool decode_mipmap_mode(int mode, vk::SamplerMipmapMode* out_mode)
 {
     switch (mode)
@@ -105,7 +117,7 @@ fi::ResDetails::ResDetails(const std::filesystem::path& path)
             vk::ImageType::e2D,
             vk::Format::eR8G8B8A8Srgb,
             vk::Extent3D(img.width, img.height, 1),
-            static_cast<uint32_t>(mip_mapping ? std::floor(std::log2(std::max(img.width, img.height))) + 1 : 1),
+            casts(uint32_t, mip_mapping ? std::floor(std::log2(std::max(img.width, img.height))) + 1 : 1),
             1,
             vk::SampleCountFlagBits::e1,
             vk::ImageTiling::eOptimal,
@@ -180,14 +192,273 @@ fi::ResDetails::ResDetails(const std::filesystem::path& path)
         }
     }
 
-    std::vector<Vertex> vtxs;
     std::vector<uint32_t> idxs;
     std::vector<vk::DrawIndexedIndirectCommand> draw_calls;
+    size_t old_vtx_count = 0;
+    size_t old_idx_count = 0;
 
     for (const auto& mesh : model_.meshes)
     {
         for (const auto& prim : mesh.primitives)
         {
+            {
+                const gltf::Accessor& idx_acc = model_.accessors[prim.indices];
+                const gltf::BufferView& idx_view = model_.bufferViews[idx_acc.bufferView];
+                const gltf::Buffer& idx_buffer = model_.buffers[idx_view.buffer];
+                idxs.reserve(old_idx_count + idx_acc.count);
+
+                size_t idx_size = gltf::GetComponentSizeInBytes(idx_acc.componentType) //
+                                  * gltf::GetNumComponentsInType(idx_acc.type);
+                size_t stride = idx_view.byteStride ? idx_view.byteStride : idx_size;
+                size_t offset = idx_view.byteOffset + idx_acc.byteOffset;
+                for (size_t b = offset; b < offset + idx_acc.count * idx_size; b += stride)
+                {
+                    if (idx_size == 2)
+                    {
+                        idxs.emplace_back(*castf(uint16_t*, idx_buffer.data.data() + b));
+                    }
+                    else
+                    {
+                        idxs.emplace_back(*castf(uint32_t*, idx_buffer.data.data() + b));
+                    }
+                }
+                vk::DrawIndexedIndirectCommand& draw_call = draw_calls.emplace_back();
+                draw_call.firstIndex = old_idx_count;
+                draw_call.indexCount = idx_acc.count;
+                draw_call.vertexOffset = old_vtx_count;
+                draw_call.firstInstance = 0;
+                draw_call.instanceCount = 1;
+                old_idx_count = idxs.size();
+            }
+
+            std::future<void> position_async = std::async(
+                [&]()
+                {
+                    const gltf::Accessor& acc = model_.accessors[prim.attributes.at("POSITION")];
+                    const gltf::BufferView& view = model_.bufferViews[acc.bufferView];
+                    const gltf::Buffer& buffer = model_.buffers[view.buffer];
+                    positions_.reserve(old_vtx_count + acc.count);
+
+                    size_t pos_size = gltf::GetComponentSizeInBytes(acc.componentType) //
+                                      * gltf::GetNumComponentsInType(acc.type);
+                    size_t stride = view.byteStride ? view.byteStride : pos_size;
+                    size_t offset = view.byteOffset + acc.byteOffset;
+                    for (size_t b = offset; b < offset + acc.count * pos_size; b += stride)
+                    {
+                        glms::assign_value(positions_.emplace_back(), castf(float*, buffer.data.data() + b), 3);
+                    }
+                });
+
+            std::future<void> normal_async = std::async(
+                [&]()
+                {
+                    auto result = prim.attributes.find("NORMAL");
+                    if (result == prim.attributes.end())
+                    {
+                        return;
+                    }
+                    const gltf::Accessor& acc = model_.accessors[result->second];
+                    const gltf::BufferView& view = model_.bufferViews[acc.bufferView];
+                    const gltf::Buffer& buffer = model_.buffers[view.buffer];
+                    normals_.reserve(old_vtx_count + acc.count);
+
+                    size_t size = gltf::GetComponentSizeInBytes(acc.componentType) //
+                                  * gltf::GetNumComponentsInType(acc.type);
+                    size_t stride = view.byteStride ? view.byteStride : size;
+                    size_t offset = view.byteOffset + acc.byteOffset;
+                    for (size_t b = offset; b < offset + acc.count * size; b += stride)
+                    {
+                        glms::assign_value(normals_.emplace_back(), castf(float*, buffer.data.data() + b), 3);
+                    }
+                });
+
+            std::future<void> tangent_async = std::async(
+                [&]()
+                {
+                    auto result = prim.attributes.find("TANGENT");
+                    if (result == prim.attributes.end())
+                    {
+                        return;
+                    }
+                    const gltf::Accessor& acc = model_.accessors[result->second];
+                    const gltf::BufferView& view = model_.bufferViews[acc.bufferView];
+                    const gltf::Buffer& buffer = model_.buffers[view.buffer];
+                    tangents_.reserve(old_vtx_count + acc.count);
+
+                    size_t size = gltf::GetComponentSizeInBytes(acc.componentType) //
+                                  * gltf::GetNumComponentsInType(acc.type);
+                    size_t stride = view.byteStride ? view.byteStride : size;
+                    size_t offset = view.byteOffset + acc.byteOffset;
+                    for (size_t b = offset; b < offset + acc.count * size; b += stride)
+                    {
+                        glms::assign_value(tangents_.emplace_back(), castf(float*, buffer.data.data() + b), 4);
+                    }
+                });
+
+            std::future<void> tex_coord_async = std::async(
+                [&]()
+                {
+                    auto result = prim.attributes.find("TEXCOORD_0");
+                    if (result == prim.attributes.end())
+                    {
+                        return;
+                    }
+                    const gltf::Accessor& acc = model_.accessors[result->second];
+                    const gltf::BufferView& view = model_.bufferViews[acc.bufferView];
+                    const gltf::Buffer& buffer = model_.buffers[view.buffer];
+                    tex_coords_.reserve(old_vtx_count + acc.count);
+
+                    size_t size = gltf::GetComponentSizeInBytes(acc.componentType) //
+                                  * gltf::GetNumComponentsInType(acc.type);
+                    size_t stride = view.byteStride ? view.byteStride : size;
+                    size_t offset = view.byteOffset + acc.byteOffset;
+                    for (size_t b = offset; b < offset + acc.count * size; b += stride)
+                    {
+                        glm::vec2& tex_coord = tex_coords_.emplace_back();
+                        switch (size)
+                        {
+                            case 2:
+                                tex_coord[0] = get_normalized(castf(uint8_t*, buffer.data.data() + b));
+                                tex_coord[1] =
+                                    get_normalized(castf(uint8_t*, buffer.data.data() + b + sizeof(uint8_t)));
+                                break;
+                            case 4:
+                                tex_coord[0] = get_normalized(castf(uint16_t*, buffer.data.data() + b));
+                                tex_coord[1] =
+                                    get_normalized(castf(uint16_t*, buffer.data.data() + b + sizeof(uint16_t)));
+                                break;
+                            case 8:
+                                glms::assign_value(tex_coord, castf(float*, buffer.data.data() + b), 2);
+                                break;
+                        }
+                    }
+                });
+
+            std::future<void> color_async = std::async(
+                [&]()
+                {
+                    auto result = prim.attributes.find("COLOR_0");
+                    if (result == prim.attributes.end())
+                    {
+                        return;
+                    }
+                    const gltf::Accessor& acc = model_.accessors[result->second];
+                    const gltf::BufferView& view = model_.bufferViews[acc.bufferView];
+                    const gltf::Buffer& buffer = model_.buffers[view.buffer];
+                    colors_.reserve(old_vtx_count + acc.count);
+
+                    size_t size = gltf::GetComponentSizeInBytes(acc.componentType) //
+                                  * gltf::GetNumComponentsInType(acc.type);
+                    size_t stride = view.byteStride ? view.byteStride : size;
+                    size_t offset = view.byteOffset + acc.byteOffset;
+                    for (size_t b = offset; b < offset + acc.count * size; b += stride)
+                    {
+                        glm::vec4& color = colors_.emplace_back();
+                        color[3] = 1.0f;
+                        switch (size)
+                        {
+                            case 3:
+                            case 4:
+                                for (int i = 0; i < size; i += sizeof(uint8_t))
+                                {
+                                    color[i] = get_normalized(castf(uint8_t*, buffer.data.data() + b + i));
+                                }
+                                break;
+                            case 6:
+                            case 8:
+                                for (int i = 0; i < size; i += sizeof(uint16_t))
+                                {
+                                    color[i / 2] = get_normalized(castf(uint16_t*, buffer.data.data() + b + i));
+                                }
+                                break;
+                            case 12:
+                            case 16:
+                                glms::assign_value(color, castf(float*, buffer.data.data() + b), size / 4);
+                                break;
+                        }
+                    }
+                });
+
+            std::future<void> joint_async = std::async(
+                [&]()
+                {
+                    auto result = prim.attributes.find("JOINTS_0");
+                    if (result == prim.attributes.end())
+                    {
+                        return;
+                    }
+                    const gltf::Accessor& acc = model_.accessors[result->second];
+                    const gltf::BufferView& view = model_.bufferViews[acc.bufferView];
+                    const gltf::Buffer& buffer = model_.buffers[view.buffer];
+                    joints_.reserve(old_vtx_count + acc.count);
+
+                    size_t size = gltf::GetComponentSizeInBytes(acc.componentType) //
+                                  * gltf::GetNumComponentsInType(acc.type);
+                    size_t stride = view.byteStride ? view.byteStride : size;
+                    size_t offset = view.byteOffset + acc.byteOffset;
+                    for (size_t b = offset; b < offset + acc.count * size; b += stride)
+                    {
+                        switch (size)
+                        {
+                            case 4:
+                                glms::assign_value(joints_.emplace_back(), castf(uint8_t*, buffer.data.data() + b), 4);
+                                break;
+                            case 8:
+                                glms::assign_value(joints_.emplace_back(), castf(uint16_t*, buffer.data.data() + b), 4);
+                                break;
+                        }
+                    }
+                });
+
+            std::future<void> weight_async = std::async(
+                [&]()
+                {
+                    auto result = prim.attributes.find("WEIGHTS_0");
+                    if (result == prim.attributes.end())
+                    {
+                        return;
+                    }
+                    const gltf::Accessor& acc = model_.accessors[result->second];
+                    const gltf::BufferView& view = model_.bufferViews[acc.bufferView];
+                    const gltf::Buffer& buffer = model_.buffers[view.buffer];
+                    weights_.reserve(old_vtx_count + acc.count);
+
+                    size_t size = gltf::GetComponentSizeInBytes(acc.componentType) //
+                                  * gltf::GetNumComponentsInType(acc.type);
+                    size_t stride = view.byteStride ? view.byteStride : size;
+                    size_t offset = view.byteOffset + acc.byteOffset;
+                    for (size_t b = offset; b < offset + acc.count * size; b += stride)
+                    {
+                        glm::vec4& weight = weights_.emplace_back();
+                        switch (size)
+                        {
+                            case 4:
+                                for (int i = 0; i < size; i += sizeof(uint8_t))
+                                {
+                                    weight[i] = get_normalized(castf(uint8_t*, buffer.data.data() + b + i));
+                                }
+                                break;
+                            case 8:
+                                for (int i = 0; i < size; i += sizeof(uint16_t))
+                                {
+                                    weight[i / 2] = get_normalized(castf(uint8_t*, buffer.data.data() + b + i));
+                                }
+                                break;
+                            case 16:
+                                glms::assign_value(weight, castf(float*, buffer.data.data() + b), 4);
+                                break;
+                        }
+                    }
+                });
+
+            position_async.wait();
+            normal_async.wait();
+            tangent_async.wait();
+            tex_coord_async.wait();
+            color_async.wait();
+            joint_async.wait();
+            weight_async.wait();
+            old_vtx_count = positions_.size();
         }
     }
 }

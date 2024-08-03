@@ -19,6 +19,9 @@
 #include "glms.hpp"
 
 #include "vma/vk_mem_alloc.hpp"
+
+#define TINYGLTF_USE_CPP14
+#define TINYGLTF_NOEXCEPTION
 #include "tinygltf/tiny_gltf.h"
 
 namespace fi
