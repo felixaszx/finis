@@ -110,31 +110,123 @@ fi::ResDetails::ResDetails(const std::filesystem::path& path)
         const auto& img = model_.images[tex.source];
         const auto& pixels = model_.images[tex.source].image;
         bool mip_mapping = decode_mipmap_mode(model_.samplers[tex.sampler].magFilter, nullptr);
+        uint32_t levels = mip_mapping ? std::floor(std::log2(std::max(img.width, img.height))) + 1 : 1;
 
-        vma::AllocationCreateInfo alloc_info{{}, vma::MemoryUsage::eAutoPreferDevice};
-        vk::ImageCreateInfo img_info{
-            {},
-            vk::ImageType::e2D,
-            vk::Format::eR8G8B8A8Srgb,
-            vk::Extent3D(img.width, img.height, 1),
-            casts(uint32_t, mip_mapping ? std::floor(std::log2(std::max(img.width, img.height))) + 1 : 1),
-            1,
-            vk::SampleCountFlagBits::e1,
-            vk::ImageTiling::eOptimal,
-            vk::ImageUsageFlagBits::eSampled | vk::ImageUsageFlagBits::eTransferDst |
-                vk::ImageUsageFlagBits::eTransferSrc};
-        auto allocated = allocator().createImage(img_info, alloc_info);
-        textures_.push_back(allocated.first);
-        texture_allocs_.push_back(allocated.second);
+        {
+            vma::AllocationCreateInfo alloc_info{{}, vma::MemoryUsage::eAutoPreferDevice};
+            vk::ImageCreateInfo img_info{{},
+                                         vk::ImageType::e2D,
+                                         vk::Format::eR8G8B8A8Srgb,
+                                         vk::Extent3D(img.width, img.height, 1),
+                                         casts(uint32_t, levels),
+                                         1,
+                                         vk::SampleCountFlagBits::e1,
+                                         vk::ImageTiling::eOptimal,
+                                         vk::ImageUsageFlagBits::eSampled | vk::ImageUsageFlagBits::eTransferDst |
+                                             vk::ImageUsageFlagBits::eTransferSrc};
+            auto allocated = allocator().createImage(img_info, alloc_info);
+            textures_.push_back(allocated.first);
+            texture_allocs_.push_back(allocated.second);
 
-        vk::ImageViewCreateInfo view_info{
-            {},
-            textures_.back(),
-            vk::ImageViewType::e2D,
-            img_info.format,
-            {},
-            {vk::ImageAspectFlagBits::eColor, 0, img_info.mipLevels, 0, img_info.arrayLayers}};
-        texture_views_.push_back(device().createImageView(view_info));
+            vk::ImageViewCreateInfo view_info{
+                {},
+                textures_.back(),
+                vk::ImageViewType::e2D,
+                img_info.format,
+                {},
+                {vk::ImageAspectFlagBits::eColor, 0, img_info.mipLevels, 0, img_info.arrayLayers}};
+            texture_views_.push_back(device().createImageView(view_info));
+        }
+
+        vk::BufferCreateInfo buffer_info{};
+        buffer_info.size = pixels.size();
+        buffer_info.usage = vk::BufferUsageFlagBits::eTransferSrc;
+        vma::AllocationCreateInfo alloc_info{};
+        alloc_info.usage = vma::MemoryUsage::eAutoPreferHost;
+        alloc_info.preferredFlags = vk::MemoryPropertyFlagBits::eHostCoherent;
+        alloc_info.flags = vma::AllocationCreateFlagBits::eHostAccessSequentialWrite;
+        auto staging = allocator().createBuffer(buffer_info, alloc_info);
+        void* mapping = allocator().mapMemory(staging.second);
+        memcpy(mapping, pixels.data(), buffer_info.size);
+        allocator().unmapMemory(staging.second);
+
+        vk::ImageMemoryBarrier barrier{};
+        barrier.newLayout = vk::ImageLayout::eTransferDstOptimal;
+        barrier.srcQueueFamilyIndex = VK_QUEUE_FAMILY_IGNORED;
+        barrier.dstQueueFamilyIndex = VK_QUEUE_FAMILY_IGNORED;
+        barrier.image = textures_.back();
+        barrier.subresourceRange.aspectMask = vk::ImageAspectFlagBits::eColor;
+        barrier.subresourceRange.baseMipLevel = 0;
+        barrier.subresourceRange.levelCount = levels;
+        barrier.subresourceRange.baseArrayLayer = 0;
+        barrier.subresourceRange.layerCount = 1;
+        barrier.srcAccessMask = {};
+        barrier.dstAccessMask = vk::AccessFlagBits::eTransferWrite;
+
+        vk::BufferImageCopy region{};
+        region.imageSubresource.aspectMask = vk::ImageAspectFlagBits::eColor;
+        region.imageSubresource.mipLevel = 0;
+        region.imageSubresource.baseArrayLayer = 0;
+        region.imageSubresource.layerCount = 1;
+        region.imageExtent = vk::Extent3D(img.width, img.height, 1);
+
+        vk::CommandBuffer cmd = one_time_submit_cmd();
+        begin_cmd(cmd, vk::CommandBufferUsageFlagBits::eOneTimeSubmit);
+        cmd.pipelineBarrier(vk::PipelineStageFlagBits::eTopOfPipe, vk::PipelineStageFlagBits::eTransfer, //
+                            {}, {}, {}, barrier);
+        cmd.copyBufferToImage(staging.first, barrier.image, vk::ImageLayout::eTransferDstOptimal, region);
+
+        int32_t mip_w = img.width;
+        int32_t mip_h = img.height;
+        for (int i = 1; i < levels; i++)
+        {
+            barrier.subresourceRange.levelCount = 1;
+            barrier.oldLayout = vk::ImageLayout::eTransferDstOptimal;
+            barrier.newLayout = vk::ImageLayout::eTransferSrcOptimal;
+            barrier.srcAccessMask = vk::AccessFlagBits::eTransferWrite;
+            barrier.dstAccessMask = vk::AccessFlagBits::eTransferRead;
+            barrier.subresourceRange.baseMipLevel = i - 1;
+            cmd.pipelineBarrier(vk::PipelineStageFlagBits::eTransfer, vk::PipelineStageFlagBits::eTransfer, //
+                                {}, {}, {}, barrier);
+
+            vk::ImageBlit blit{};
+            blit.srcOffsets[1] = vk::Offset3D(mip_w, mip_h, 1);
+            blit.srcSubresource.aspectMask = vk::ImageAspectFlagBits::eColor;
+            blit.srcSubresource.mipLevel = i - 1;
+            blit.srcSubresource.baseArrayLayer = 0;
+            blit.srcSubresource.layerCount = 1;
+            blit.dstOffsets[1] = vk::Offset3D(mip_w > 1 ? mip_w / 2 : 1, //
+                                              mip_h > 1 ? mip_h / 2 : 1, //
+                                              1);
+            blit.dstSubresource.aspectMask = vk::ImageAspectFlagBits::eColor;
+            blit.dstSubresource.mipLevel = i;
+            blit.dstSubresource.baseArrayLayer = 0;
+            blit.dstSubresource.layerCount = 1;
+            cmd.blitImage(textures_.back(), vk::ImageLayout::eTransferSrcOptimal, //
+                          textures_.back(), vk::ImageLayout::eTransferDstOptimal, //
+                          blit, vk::Filter::eLinear);
+
+            barrier.oldLayout = vk::ImageLayout::eTransferSrcOptimal;
+            barrier.newLayout = vk::ImageLayout::eShaderReadOnlyOptimal;
+            barrier.srcAccessMask = vk::AccessFlagBits::eTransferRead;
+            barrier.dstAccessMask = vk::AccessFlagBits::eTransferWrite;
+            barrier.subresourceRange.baseMipLevel = i - 1;
+            cmd.pipelineBarrier(vk::PipelineStageFlagBits::eTransfer, vk::PipelineStageFlagBits::eTransfer, //
+                                {}, {}, {}, barrier);
+
+            mip_w > 1 ? mip_w /= 2 : mip_w;
+            mip_h > 1 ? mip_h /= 2 : mip_h;
+        }
+        barrier.oldLayout = vk::ImageLayout::eTransferDstOptimal;
+        barrier.newLayout = vk::ImageLayout::eShaderReadOnlyOptimal;
+        barrier.srcAccessMask = vk::AccessFlagBits::eTransferWrite;
+        barrier.dstAccessMask = vk::AccessFlagBits::eTransferWrite;
+        barrier.subresourceRange.baseMipLevel = levels - 1;
+        cmd.pipelineBarrier(vk::PipelineStageFlagBits::eTransfer, vk::PipelineStageFlagBits::eTransfer, //
+                            {}, {}, {}, barrier);
+        cmd.end();
+        submit_one_time_cmd(cmd);
+        allocator().destroyBuffer(staging.first, staging.second);
     }
 
     for (const auto& mat_in : model_.materials)
@@ -192,17 +284,37 @@ fi::ResDetails::ResDetails(const std::filesystem::path& path)
         }
     }
 
+    std::vector<Vtx> vtxs;
     std::vector<uint32_t> idxs;
     std::vector<vk::DrawIndexedIndirectCommand> draw_calls;
+    std::vector<glm::mat4> instance_mats;
     size_t old_vtx_count = 0;
     size_t old_idx_count = 0;
+
+    auto iterate_acc = [](const std::function<void(size_t idx, const unsigned char* data, size_t size)>& cb, //
+                          const gltf::Accessor& acc,                                                         //
+                          const gltf::Model& model)
+    {
+        const gltf::BufferView& view = model.bufferViews[acc.bufferView];
+        const gltf::Buffer& buffer = model.buffers[view.buffer];
+
+        size_t size = gltf::GetComponentSizeInBytes(acc.componentType) //
+                      * gltf::GetNumComponentsInType(acc.type);
+        size_t stride = view.byteStride ? view.byteStride : size;
+        size_t offset = view.byteOffset + acc.byteOffset;
+        for (size_t b = 0; b < acc.count; b++)
+        {
+            cb(b, buffer.data.data() + offset + b * stride, size);
+        }
+    };
 
     for (const auto& mesh : model_.meshes)
     {
         size_t prim_idx = 0;
         for (const auto& prim : mesh.primitives)
         {
-            prim_names_.push_back(mesh.name + "_" + std::to_string(prim_idx));
+            material_idxs_.push_back(prim.material);
+            prim_names_.push_back(mesh.name + std::format("_prim_{}", prim_idx));
             prim_idx++;
             {
                 const gltf::Accessor& idx_acc = model_.accessors[prim.indices];
@@ -234,24 +346,15 @@ fi::ResDetails::ResDetails(const std::filesystem::path& path)
                 old_idx_count = idxs.size();
             }
 
+            const gltf::Accessor& pos_acc = model_.accessors[prim.attributes.at("POSITION")];
+            vtxs.resize(old_vtx_count + pos_acc.count);
             std::future<void> position_async = std::async(
                 [&]()
                 {
-                    const gltf::Accessor& acc = model_.accessors[prim.attributes.at("POSITION")];
-                    const gltf::BufferView& view = model_.bufferViews[acc.bufferView];
-                    const gltf::Buffer& buffer = model_.buffers[view.buffer];
-                    positions_.reserve(old_vtx_count + acc.count);
-
-                    size_t pos_size = gltf::GetComponentSizeInBytes(acc.componentType) //
-                                      * gltf::GetNumComponentsInType(acc.type);
-                    size_t stride = view.byteStride ? view.byteStride : pos_size;
-                    size_t offset = view.byteOffset + acc.byteOffset;
-                    for (size_t b = offset; b < offset + acc.count * pos_size; b += stride)
-                    {
-                        glms::assign_value(positions_.emplace_back(), castf(float*, buffer.data.data() + b), 3);
-                    }
+                    iterate_acc([&](size_t idx, const unsigned char* data, size_t size)
+                                { glms::assign_value(vtxs[old_vtx_count + idx].position_, (float*)data, 3); }, //
+                                pos_acc, model_);
                 });
-
             std::future<void> normal_async = std::async(
                 [&]()
                 {
@@ -261,20 +364,10 @@ fi::ResDetails::ResDetails(const std::filesystem::path& path)
                         return;
                     }
                     const gltf::Accessor& acc = model_.accessors[result->second];
-                    const gltf::BufferView& view = model_.bufferViews[acc.bufferView];
-                    const gltf::Buffer& buffer = model_.buffers[view.buffer];
-                    normals_.reserve(old_vtx_count + acc.count);
-
-                    size_t size = gltf::GetComponentSizeInBytes(acc.componentType) //
-                                  * gltf::GetNumComponentsInType(acc.type);
-                    size_t stride = view.byteStride ? view.byteStride : size;
-                    size_t offset = view.byteOffset + acc.byteOffset;
-                    for (size_t b = offset; b < offset + acc.count * size; b += stride)
-                    {
-                        glms::assign_value(normals_.emplace_back(), castf(float*, buffer.data.data() + b), 3);
-                    }
+                    iterate_acc([&](size_t idx, const unsigned char* data, size_t size)
+                                { glms::assign_value(vtxs[old_vtx_count + idx].normal_, (float*)data, 3); }, //
+                                acc, model_);
                 });
-
             std::future<void> tangent_async = std::async(
                 [&]()
                 {
@@ -284,20 +377,10 @@ fi::ResDetails::ResDetails(const std::filesystem::path& path)
                         return;
                     }
                     const gltf::Accessor& acc = model_.accessors[result->second];
-                    const gltf::BufferView& view = model_.bufferViews[acc.bufferView];
-                    const gltf::Buffer& buffer = model_.buffers[view.buffer];
-                    tangents_.reserve(old_vtx_count + acc.count);
-
-                    size_t size = gltf::GetComponentSizeInBytes(acc.componentType) //
-                                  * gltf::GetNumComponentsInType(acc.type);
-                    size_t stride = view.byteStride ? view.byteStride : size;
-                    size_t offset = view.byteOffset + acc.byteOffset;
-                    for (size_t b = offset; b < offset + acc.count * size; b += stride)
-                    {
-                        glms::assign_value(tangents_.emplace_back(), castf(float*, buffer.data.data() + b), 4);
-                    }
+                    iterate_acc([&](size_t idx, const unsigned char* data, size_t size)
+                                { glms::assign_value(vtxs[old_vtx_count + idx].tangent_, (float*)data, 4); }, //
+                                acc, model_);
                 });
-
             std::future<void> tex_coord_async = std::async(
                 [&]()
                 {
@@ -307,36 +390,27 @@ fi::ResDetails::ResDetails(const std::filesystem::path& path)
                         return;
                     }
                     const gltf::Accessor& acc = model_.accessors[result->second];
-                    const gltf::BufferView& view = model_.bufferViews[acc.bufferView];
-                    const gltf::Buffer& buffer = model_.buffers[view.buffer];
-                    tex_coords_.reserve(old_vtx_count + acc.count);
-
-                    size_t size = gltf::GetComponentSizeInBytes(acc.componentType) //
-                                  * gltf::GetNumComponentsInType(acc.type);
-                    size_t stride = view.byteStride ? view.byteStride : size;
-                    size_t offset = view.byteOffset + acc.byteOffset;
-                    for (size_t b = offset; b < offset + acc.count * size; b += stride)
-                    {
-                        glm::vec2& tex_coord = tex_coords_.emplace_back();
-                        switch (size)
+                    iterate_acc(
+                        [&](size_t idx, const unsigned char* data, size_t size)
                         {
-                            case 2:
-                                tex_coord[0] = get_normalized(castf(uint8_t*, buffer.data.data() + b));
-                                tex_coord[1] =
-                                    get_normalized(castf(uint8_t*, buffer.data.data() + b + sizeof(uint8_t)));
-                                break;
-                            case 4:
-                                tex_coord[0] = get_normalized(castf(uint16_t*, buffer.data.data() + b));
-                                tex_coord[1] =
-                                    get_normalized(castf(uint16_t*, buffer.data.data() + b + sizeof(uint16_t)));
-                                break;
-                            case 8:
-                                glms::assign_value(tex_coord, castf(float*, buffer.data.data() + b), 2);
-                                break;
-                        }
-                    }
+                            glm::vec2& tex_coord = vtxs[old_vtx_count + idx].tex_coord_;
+                            switch (size)
+                            {
+                                case 2:
+                                    tex_coord[0] = get_normalized(castf(uint8_t*, data));
+                                    tex_coord[1] = get_normalized(castf(uint8_t*, data + sizeof(uint8_t)));
+                                    break;
+                                case 4:
+                                    tex_coord[0] = get_normalized(castf(uint16_t*, data));
+                                    tex_coord[1] = get_normalized(castf(uint16_t*, data + sizeof(uint16_t)));
+                                    break;
+                                case 8:
+                                    glms::assign_value(tex_coord, castf(float*, data), 2);
+                                    break;
+                            }
+                        }, //
+                        acc, model_);
                 });
-
             std::future<void> color_async = std::async(
                 [&]()
                 {
@@ -346,42 +420,35 @@ fi::ResDetails::ResDetails(const std::filesystem::path& path)
                         return;
                     }
                     const gltf::Accessor& acc = model_.accessors[result->second];
-                    const gltf::BufferView& view = model_.bufferViews[acc.bufferView];
-                    const gltf::Buffer& buffer = model_.buffers[view.buffer];
-                    colors_.reserve(old_vtx_count + acc.count);
-
-                    size_t size = gltf::GetComponentSizeInBytes(acc.componentType) //
-                                  * gltf::GetNumComponentsInType(acc.type);
-                    size_t stride = view.byteStride ? view.byteStride : size;
-                    size_t offset = view.byteOffset + acc.byteOffset;
-                    for (size_t b = offset; b < offset + acc.count * size; b += stride)
-                    {
-                        glm::vec4& color = colors_.emplace_back();
-                        color[3] = 1.0f;
-                        switch (size)
+                    iterate_acc(
+                        [&](size_t idx, const unsigned char* data, size_t size)
                         {
-                            case 3:
-                            case 4:
-                                for (int i = 0; i < size; i += sizeof(uint8_t))
-                                {
-                                    color[i] = get_normalized(castf(uint8_t*, buffer.data.data() + b + i));
-                                }
-                                break;
-                            case 6:
-                            case 8:
-                                for (int i = 0; i < size; i += sizeof(uint16_t))
-                                {
-                                    color[i / 2] = get_normalized(castf(uint16_t*, buffer.data.data() + b + i));
-                                }
-                                break;
-                            case 12:
-                            case 16:
-                                glms::assign_value(color, castf(float*, buffer.data.data() + b), size / 4);
-                                break;
-                        }
-                    }
+                            glm::vec4& color = vtxs[old_vtx_count + idx].color_;
+                            color[3] = 1.0f;
+                            switch (size)
+                            {
+                                case 3:
+                                case 4:
+                                    for (int i = 0; i < size; i += sizeof(uint8_t))
+                                    {
+                                        color[i] = get_normalized(castf(uint8_t*, data + i));
+                                    }
+                                    break;
+                                case 6:
+                                case 8:
+                                    for (int i = 0; i < size; i += sizeof(uint16_t))
+                                    {
+                                        color[i / 2] = get_normalized(castf(uint16_t*, data + i));
+                                    }
+                                    break;
+                                case 12:
+                                case 16:
+                                    glms::assign_value(color, castf(float*, data), size / 4);
+                                    break;
+                            }
+                        }, //
+                        acc, model_);
                 });
-
             std::future<void> joint_async = std::async(
                 [&]()
                 {
@@ -391,28 +458,22 @@ fi::ResDetails::ResDetails(const std::filesystem::path& path)
                         return;
                     }
                     const gltf::Accessor& acc = model_.accessors[result->second];
-                    const gltf::BufferView& view = model_.bufferViews[acc.bufferView];
-                    const gltf::Buffer& buffer = model_.buffers[view.buffer];
-                    joints_.reserve(old_vtx_count + acc.count);
-
-                    size_t size = gltf::GetComponentSizeInBytes(acc.componentType) //
-                                  * gltf::GetNumComponentsInType(acc.type);
-                    size_t stride = view.byteStride ? view.byteStride : size;
-                    size_t offset = view.byteOffset + acc.byteOffset;
-                    for (size_t b = offset; b < offset + acc.count * size; b += stride)
-                    {
-                        switch (size)
+                    iterate_acc(
+                        [&](size_t idx, const unsigned char* data, size_t size)
                         {
-                            case 4:
-                                glms::assign_value(joints_.emplace_back(), castf(uint8_t*, buffer.data.data() + b), 4);
-                                break;
-                            case 8:
-                                glms::assign_value(joints_.emplace_back(), castf(uint16_t*, buffer.data.data() + b), 4);
-                                break;
-                        }
-                    }
+                            glm::u16vec4& joint = vtxs[idx].joint_;
+                            switch (size)
+                            {
+                                case 4:
+                                    glms::assign_value(joint, castf(uint8_t*, data), 4);
+                                    break;
+                                case 8:
+                                    glms::assign_value(joint, castf(uint16_t*, data), 4);
+                                    break;
+                            }
+                        }, //
+                        acc, model_);
                 });
-
             std::future<void> weight_async = std::async(
                 [&]()
                 {
@@ -422,36 +483,30 @@ fi::ResDetails::ResDetails(const std::filesystem::path& path)
                         return;
                     }
                     const gltf::Accessor& acc = model_.accessors[result->second];
-                    const gltf::BufferView& view = model_.bufferViews[acc.bufferView];
-                    const gltf::Buffer& buffer = model_.buffers[view.buffer];
-                    weights_.reserve(old_vtx_count + acc.count);
-
-                    size_t size = gltf::GetComponentSizeInBytes(acc.componentType) //
-                                  * gltf::GetNumComponentsInType(acc.type);
-                    size_t stride = view.byteStride ? view.byteStride : size;
-                    size_t offset = view.byteOffset + acc.byteOffset;
-                    for (size_t b = offset; b < offset + acc.count * size; b += stride)
-                    {
-                        glm::vec4& weight = weights_.emplace_back();
-                        switch (size)
+                    iterate_acc(
+                        [&](size_t idx, const unsigned char* data, size_t size)
                         {
-                            case 4:
-                                for (int i = 0; i < size; i += sizeof(uint8_t))
-                                {
-                                    weight[i] = get_normalized(castf(uint8_t*, buffer.data.data() + b + i));
-                                }
-                                break;
-                            case 8:
-                                for (int i = 0; i < size; i += sizeof(uint16_t))
-                                {
-                                    weight[i / 2] = get_normalized(castf(uint8_t*, buffer.data.data() + b + i));
-                                }
-                                break;
-                            case 16:
-                                glms::assign_value(weight, castf(float*, buffer.data.data() + b), 4);
-                                break;
-                        }
-                    }
+                            glm::vec4& weight = vtxs[old_vtx_count + idx].weight_;
+                            switch (size)
+                            {
+                                case 4:
+                                    for (int i = 0; i < size; i += sizeof(uint8_t))
+                                    {
+                                        weight[i] = get_normalized(castf(uint8_t*, data));
+                                    }
+                                    break;
+                                case 8:
+                                    for (int i = 0; i < size; i += sizeof(uint16_t))
+                                    {
+                                        weight[i / 2] = get_normalized(castf(uint8_t*, data));
+                                    }
+                                    break;
+                                case 16:
+                                    glms::assign_value(weight, castf(float*, data), 4);
+                                    break;
+                            }
+                        }, //
+                        acc, model_);
                 });
 
             position_async.wait();
@@ -461,9 +516,29 @@ fi::ResDetails::ResDetails(const std::filesystem::path& path)
             color_async.wait();
             joint_async.wait();
             weight_async.wait();
-            old_vtx_count = positions_.size();
+            old_vtx_count = vtxs.size();
         }
     }
+
+    while (sizeof_arr(material_idxs_) % 16)
+    {
+        material_idxs_.push_back(-1);
+    }
+
+    make_unique2(device_buffer_,
+                 sizeof_arr(vtxs)             //
+                     + sizeof_arr(idxs)       //
+                     + sizeof_arr(materials_) //
+                     + sizeof_arr(material_idxs_),
+                 DST);
+    make_unique2(host_buffer_, sizeof_arr(draw_calls) //
+                                   + sizeof_arr(instance_mats));
+    Buffer<BufferBase::EmptyExtraInfo, vertex, seq_write> staging(device_buffer_->size(), SRC);
+
+    device_buffer_->idx_buffer_ = sizeof_arr(vtxs);
+    device_buffer_->materails_ = device_buffer_->idx_buffer_ + sizeof_arr(idxs);
+    device_buffer_->materail_idxs_ = device_buffer_->materails_ + sizeof_arr(materials_);
+    host_buffer_->instance_mat_ = sizeof(draw_calls);
 }
 
 fi::ResDetails::~ResDetails()
