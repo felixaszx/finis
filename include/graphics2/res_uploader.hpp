@@ -78,6 +78,7 @@ namespace fi
         // accessors
         std::unique_ptr<Buffer<DeviceBufferOffsets, vertex, index, storage>> device_buffer_{};
         std::unique_ptr<Buffer<BufferBase::EmptyExtraInfo, indirect, storage, seq_write>> host_buffer_{};
+        std::vector<std::string> prim_names_{};
         std::vector<uint32_t> material_idxs_{};
 
         ResDetails(const std::filesystem::path& path);

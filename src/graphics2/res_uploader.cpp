@@ -199,8 +199,11 @@ fi::ResDetails::ResDetails(const std::filesystem::path& path)
 
     for (const auto& mesh : model_.meshes)
     {
+        size_t prim_idx = 0;
         for (const auto& prim : mesh.primitives)
         {
+            prim_names_.push_back(mesh.name + "_" + std::to_string(prim_idx));
+            prim_idx++;
             {
                 const gltf::Accessor& idx_acc = model_.accessors[prim.indices];
                 const gltf::BufferView& idx_view = model_.bufferViews[idx_acc.bufferView];
