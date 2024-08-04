@@ -297,14 +297,60 @@ fi::ResDetails::ResDetails(const std::filesystem::path& path)
     {
         const gltf::BufferView& view = model.bufferViews[acc.bufferView];
         const gltf::Buffer& buffer = model.buffers[view.buffer];
-
         size_t size = gltf::GetComponentSizeInBytes(acc.componentType) //
                       * gltf::GetNumComponentsInType(acc.type);
         size_t stride = view.byteStride ? view.byteStride : size;
         size_t offset = view.byteOffset + acc.byteOffset;
-        for (size_t b = 0; b < acc.count; b++)
+
+        if (acc.sparse.isSparse)
         {
-            cb(b, buffer.data.data() + offset + b * stride, size);
+            const gltf::BufferView& sparse_view = model.bufferViews[acc.sparse.indices.bufferView];
+            const gltf::Buffer& sparse_buffer = model.buffers[sparse_view.buffer];
+            const gltf::BufferView& deviate_view = model.bufferViews[acc.sparse.values.bufferView];
+            const gltf::Buffer& deviate_buffer = model.buffers[deviate_view.buffer];
+            size_t sparse_size = gltf::GetComponentSizeInBytes(acc.sparse.indices.componentType);
+            size_t sparse_offset = sparse_view.byteOffset + acc.sparse.indices.byteOffset;
+            size_t deviate_offset = deviate_view.byteOffset + acc.sparse.values.byteOffset;
+
+            std::vector<size_t> deviate_idxs;
+            deviate_idxs.reserve(acc.sparse.count);
+            for (size_t i = 0; i < deviate_idxs.size(); i++)
+            {
+                const unsigned char* sparse_ptr = (sparse_buffer.data.data() + sparse_offset + sparse_size * i);
+                switch (sparse_size)
+                {
+                    case 1:
+                        deviate_idxs.push_back(*sparse_ptr);
+                        break;
+                    case 2:
+                        deviate_idxs.push_back(*castf(uint16_t*, sparse_ptr));
+                        break;
+                    case 4:
+                        deviate_idxs.push_back(*castf(uint32_t*, sparse_ptr));
+                        break;
+                }
+            }
+
+            size_t deviate_idx = 0;
+            for (size_t b = 0; b < acc.count; b++)
+            {
+                if (deviate_idxs[deviate_idx] == b)
+                {
+                    cb(b, deviate_buffer.data.data() + deviate_offset + deviate_idx * size, size);
+                    deviate_idx++;
+                }
+                else
+                {
+                    cb(b, buffer.data.data() + offset + b * stride, size);
+                }
+            }
+        }
+        else
+        {
+            for (size_t b = 0; b < acc.count; b++)
+            {
+                cb(b, buffer.data.data() + offset + b * stride, size);
+            }
         }
     };
 
@@ -525,20 +571,33 @@ fi::ResDetails::ResDetails(const std::filesystem::path& path)
         material_idxs_.push_back(-1);
     }
 
-    make_unique2(device_buffer_,
-                 sizeof_arr(vtxs)             //
-                     + sizeof_arr(idxs)       //
-                     + sizeof_arr(materials_) //
-                     + sizeof_arr(material_idxs_),
+    make_unique2(buffer_,
+                 sizeof_arr(vtxs)                 //
+                     + sizeof_arr(idxs)           //
+                     + sizeof_arr(materials_)     //
+                     + sizeof_arr(material_idxs_) //
+                     + sizeof_arr(draw_calls),
                  DST);
-    make_unique2(host_buffer_, sizeof_arr(draw_calls) //
-                                   + sizeof_arr(instance_mats));
-    Buffer<BufferBase::EmptyExtraInfo, vertex, seq_write> staging(device_buffer_->size(), SRC);
+    Buffer<BufferBase::EmptyExtraInfo, vertex, seq_write> staging(buffer_->size(), SRC);
 
-    device_buffer_->idx_buffer_ = sizeof_arr(vtxs);
-    device_buffer_->materails_ = device_buffer_->idx_buffer_ + sizeof_arr(idxs);
-    device_buffer_->materail_idxs_ = device_buffer_->materails_ + sizeof_arr(materials_);
-    host_buffer_->instance_mat_ = sizeof(draw_calls);
+    buffer_->idx_buffer_ = sizeof_arr(vtxs);
+    buffer_->materials_ = buffer_->idx_buffer_ + sizeof_arr(idxs);
+    buffer_->material_idxs_ = buffer_->materials_ + sizeof_arr(materials_);
+    buffer_->draw_calls_ = buffer_->material_idxs_ + sizeof_arr(material_idxs_);
+    // device_buffer_->joints_ = device_buffer_->draw_calls_ + sizeof_arr(joints);
+
+    memcpy(staging.map_memory(), vtxs.data(), sizeof_arr(vtxs));
+    memcpy(staging.mapping() + buffer_->idx_buffer_, idxs.data(), sizeof_arr(idxs));
+    memcpy(staging.mapping() + buffer_->materials_, materials_.data(), sizeof_arr(materials_));
+    memcpy(staging.mapping() + buffer_->material_idxs_, material_idxs_.data(), sizeof_arr(material_idxs_));
+    memcpy(staging.mapping() + buffer_->draw_calls_, draw_calls.data(), sizeof_arr(draw_calls));
+    // memcpy(staging.mapping() + device_buffer_->joints_, joints_.data(), sizeof_arr(joints_));
+
+    vk::CommandBuffer cmd = one_time_submit_cmd();
+    begin_cmd(cmd);
+    cmd.copyBuffer(staging, *buffer_, {{0, 0, buffer_->size()}});
+    cmd.end();
+    submit_one_time_cmd(cmd);
 }
 
 fi::ResDetails::~ResDetails()

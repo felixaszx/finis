@@ -71,19 +71,14 @@ namespace fi
         {
             vk::DeviceSize vtx_buffer_ = 0;
             vk::DeviceSize idx_buffer_ = 0;
-            vk::DeviceSize materails_ = 0;
-            vk::DeviceSize materail_idxs_ = 0;
-        };
-
-        struct HostBufferOffsets
-        {
+            vk::DeviceSize materials_ = 0;
+            vk::DeviceSize material_idxs_ = 0;
             vk::DeviceSize draw_calls_ = 0;
-            vk::DeviceSize instance_mat_ = 0;
+            vk::DeviceSize joints_ = 0;
         };
 
         // accessors
-        std::unique_ptr<Buffer<DeviceBufferOffsets, vertex, index, storage>> device_buffer_{};
-        std::unique_ptr<Buffer<HostBufferOffsets, indirect, vertex, seq_write>> host_buffer_{};
+        std::unique_ptr<Buffer<DeviceBufferOffsets, vertex, index, storage>> buffer_{};
         std::vector<std::string> prim_names_{};
         std::vector<uint32_t> material_idxs_{};
 
