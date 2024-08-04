@@ -4,7 +4,7 @@
 #include "graphics2/graphics.hpp"
 #include "graphics2/swapchain.hpp"
 #include "graphics2/res_uploader.hpp"
-#include "fl_ext.hpp"
+#include "fltk/fl_ext.hpp"
 
 int main(int argc, char** argv)
 {

@@ -227,6 +227,11 @@ fi::ResDetails::ResDetails(const std::filesystem::path& path)
         cmd.end();
         submit_one_time_cmd(cmd);
         allocator().destroyBuffer(staging.first, staging.second);
+
+        vk::DescriptorImageInfo& tex_info = tex_infos_.emplace_back();
+        tex_info.imageLayout = vk::ImageLayout::eShaderReadOnlyOptimal;
+        tex_info.imageView = texture_views_.back();
+        tex_info.sampler = samplers_[tex.sampler];
     }
 
     for (const auto& mat_in : model_.materials)
@@ -357,6 +362,7 @@ fi::ResDetails::ResDetails(const std::filesystem::path& path)
     for (const auto& mesh : model_.meshes)
     {
         size_t prim_idx = 0;
+        prim_per_mesh_.push_back(mesh.primitives.size());
         for (const auto& prim : mesh.primitives)
         {
             material_idxs_.push_back(prim.material);
@@ -364,25 +370,20 @@ fi::ResDetails::ResDetails(const std::filesystem::path& path)
             prim_idx++;
             {
                 const gltf::Accessor& idx_acc = model_.accessors[prim.indices];
-                const gltf::BufferView& idx_view = model_.bufferViews[idx_acc.bufferView];
-                const gltf::Buffer& idx_buffer = model_.buffers[idx_view.buffer];
                 idxs.reserve(old_idx_count + idx_acc.count);
-
-                size_t idx_size = gltf::GetComponentSizeInBytes(idx_acc.componentType) //
-                                  * gltf::GetNumComponentsInType(idx_acc.type);
-                size_t stride = idx_view.byteStride ? idx_view.byteStride : idx_size;
-                size_t offset = idx_view.byteOffset + idx_acc.byteOffset;
-                for (size_t b = offset; b < offset + idx_acc.count * idx_size; b += stride)
-                {
-                    if (idx_size == 2)
+                iterate_acc(
+                    [&](size_t iter_idx, const unsigned char* data, size_t size)
                     {
-                        idxs.emplace_back(*castf(uint16_t*, idx_buffer.data.data() + b));
-                    }
-                    else
-                    {
-                        idxs.emplace_back(*castf(uint32_t*, idx_buffer.data.data() + b));
-                    }
-                }
+                        if (size == 2)
+                        {
+                            idxs.emplace_back(*castf(uint16_t*, data));
+                        }
+                        else
+                        {
+                            idxs.emplace_back(*castf(uint32_t*, data));
+                        }
+                    },
+                    idx_acc, model_);
                 vk::DrawIndexedIndirectCommand& draw_call = draw_calls.emplace_back();
                 draw_call.firstIndex = old_idx_count;
                 draw_call.indexCount = idx_acc.count;
@@ -596,10 +597,37 @@ fi::ResDetails::ResDetails(const std::filesystem::path& path)
     cmd.copyBuffer(staging, *buffer_, {{0, 0, buffer_->size()}});
     cmd.end();
     submit_one_time_cmd(cmd);
+
+    vk::DescriptorSetLayoutCreateInfo layout_info{};
+    std::array<vk::DescriptorSetLayoutBinding, 3> bindings = {};
+
+    bindings[0].binding = 0;
+    bindings[0].descriptorCount = tex_infos_.size();
+    bindings[0].descriptorType = vk::DescriptorType::eCombinedImageSampler;
+    bindings[0].stageFlags = vk::ShaderStageFlagBits::eFragment;
+
+    bindings[1].binding = 1;
+    bindings[1].descriptorCount = 1;
+    bindings[1].descriptorType = vk::DescriptorType::eStorageBuffer;
+    bindings[1].stageFlags = vk::ShaderStageFlagBits::eFragment;
+
+    bindings[2].binding = 2;
+    bindings[2].descriptorCount = 1;
+    bindings[2].descriptorType = vk::DescriptorType::eStorageBuffer;
+    bindings[2].stageFlags = vk::ShaderStageFlagBits::eFragment;
+
+    layout_info.setBindings(bindings);
+    set_layout_ = device().createDescriptorSetLayout(layout_info);
+
+    des_sizes_[0].type = vk::DescriptorType::eCombinedImageSampler;
+    des_sizes_[0].descriptorCount = tex_infos_.size();
+    des_sizes_[1].type = vk::DescriptorType::eStorageBuffer;
+    des_sizes_[1].descriptorCount = 2;
 }
 
 fi::ResDetails::~ResDetails()
 {
+    device().destroyDescriptorSetLayout(set_layout_);
     for (size_t i = 0; i < textures_.size(); i++)
     {
         device().destroyImageView(texture_views_[i]);
@@ -610,4 +638,38 @@ fi::ResDetails::~ResDetails()
     {
         device().destroySampler(sampler);
     }
+}
+
+void fi::ResDetails::generate_descriptors(vk::DescriptorPool des_pool)
+{
+    vk::DescriptorSetAllocateInfo alloc_info{};
+    alloc_info.descriptorPool = des_pool;
+    alloc_info.setSetLayouts(set_layout_);
+    des_set_ = device().allocateDescriptorSets(alloc_info)[0];
+
+    vk::WriteDescriptorSet write_textures{};
+    write_textures.dstSet = des_set_;
+    write_textures.dstBinding = 0;
+    write_textures.descriptorType = vk::DescriptorType::eCombinedImageSampler;
+    write_textures.setImageInfo(tex_infos_);
+
+    std::array<vk::DescriptorBufferInfo, 2> ssbo_infos{};
+    ssbo_infos[0].buffer = *buffer_;
+    ssbo_infos[0].offset = buffer_->materials_;
+    ssbo_infos[0].range = sizeof_arr(materials_);
+    ssbo_infos[1].buffer = *buffer_;
+    ssbo_infos[1].offset = buffer_->material_idxs_;
+    ssbo_infos[1].range = sizeof_arr(material_idxs_);
+    vk::WriteDescriptorSet write_ssbos{};
+    write_ssbos.dstSet = des_set_;
+    write_ssbos.dstBinding = 1;
+    write_ssbos.descriptorType = vk::DescriptorType::eStorageBuffer;
+    write_ssbos.setBufferInfo(ssbo_infos);
+    device().updateDescriptorSets({write_textures, write_ssbos}, {});
+}
+
+void fi::ResDetails::draw(
+    const std::function<void(vk::Buffer vtx_buffer, uint32_t next_binding, vk::DescriptorSet res_set)>& draw_func)
+{
+    draw_func(*buffer_, 1, des_set_);
 }

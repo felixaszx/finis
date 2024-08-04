@@ -64,8 +64,14 @@ namespace fi
         std::vector<vk::Image> textures_{};
         std::vector<vk::ImageView> texture_views_{};
         std::vector<vma::Allocation> texture_allocs_{};
+        std::vector<vk::DescriptorImageInfo> tex_infos_{};
+
         std::vector<vk::Sampler> samplers_{};
         std::vector<Material> materials_{};
+
+        std::array<vk::DescriptorPoolSize, 2> des_sizes_{};
+        vk::DescriptorSetLayout set_layout_{};
+        vk::DescriptorSet des_set_{};
 
         struct DeviceBufferOffsets
         {
@@ -78,11 +84,16 @@ namespace fi
 
         // accessors
         std::unique_ptr<Buffer<DeviceBufferOffsets, vertex, index, storage>> buffer_{};
+        std::vector<size_t> prim_per_mesh_{};
         std::vector<std::string> prim_names_{};
         std::vector<uint32_t> material_idxs_{};
 
         ResDetails(const std::filesystem::path& path);
         ~ResDetails();
+
+        void generate_descriptors(vk::DescriptorPool des_pool);
+        void draw(const std::function<void(vk::Buffer vtx_buffer, uint32_t next_binding, vk::DescriptorSet res_set)>&
+                      draw_func);
     };
 
     struct ResStructure : private GraphicsObject

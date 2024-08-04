@@ -3,7 +3,7 @@
 #include <chrono>
 #include <iostream>
 
-#include "fl_ext.hpp"
+#include "fltk/fl_ext.hpp"
 
 int main(int argc, char** argv)
 {

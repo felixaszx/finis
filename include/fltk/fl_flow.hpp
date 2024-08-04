@@ -5,6 +5,7 @@
 #include <FL/Fl_Widget.H>
 #include <FL/Fl_Group.H>
 #include <FL/Fl_Group.H>
+#include <iostream>
 #include <exception>
 #include <string>
 #include <vector>
@@ -64,24 +65,15 @@ namespace fl
         inline Transform(Fl_Widget_Tracker _widget, int _padding)
             : m_widget(_widget),
               m_padding(_padding),
-              m_x(),
-              m_y(),
-              m_w(),
-              m_h(),
-              m_cx(),
-              m_cy(),
-              m_cw(),
-              m_ch()
+              m_x(_widget.widget()->x() - m_padding),
+              m_y(_widget.widget()->y() - m_padding),
+              m_w(_widget.widget()->w() + m_padding * 2),
+              m_h(_widget.widget()->h() + m_padding * 2),
+              m_cx(m_x),
+              m_cy(m_y),
+              m_cw(m_w),
+              m_ch(m_h)
         {
-            m_x = _widget.widget()->x() - m_padding;
-            m_y = _widget.widget()->y() - m_padding;
-            m_w = _widget.widget()->w() + m_padding * 2;
-            m_h = _widget.widget()->h() + m_padding * 2;
-
-            m_cx = m_x;
-            m_cy = m_y;
-            m_cw = m_w;
-            m_ch = m_h;
         }
 
         inline bool contains(Transform& _other)
@@ -131,8 +123,8 @@ namespace fl
 
         inline void debug_output()
         {
-            printf("Committed: %i %i %i %i\n", m_cx, m_cy, m_cw, m_ch);
-            printf("Staging: %i %i %i %i\n", m_x, m_y, m_w, m_h);
+            std::cerr << "Committed: " << m_cx << " " << m_cy << " " << m_cw << " " << m_ch << "\n";
+            std::cerr << "Staging: " << m_x << " " << m_y << " " << m_w << " " << m_h << "\n";
         }
 
         inline void commit()
@@ -311,8 +303,7 @@ namespace fl
             : Fl_Group(_x, _y, _w, _h, _label),
               m_padding(0)
         {
-            end();
-            resizable(NULL);
+            resizable(nullptr);
             set_padding(0);
             box(FL_NO_BOX);
         }
