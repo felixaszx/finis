@@ -74,10 +74,16 @@ void free_container_memory(C& container)
     C().swap(container);
 }
 
-template <typename Obj, typename... Param>
-inline constexpr void make_unique2(std::unique_ptr<Obj>& unique_ptr, Param... param)
+template <typename Ptr, typename... Param>
+inline constexpr void make_unique2(std::unique_ptr<Ptr>& unique_ptr, Param&&... param)
 {
-    unique_ptr = std::make_unique<Obj>(param...);
+    unique_ptr = std::make_unique<Ptr>(std::forward<Param>(param)...);
+}
+
+template <typename Ptr, typename... Param>
+inline constexpr void make_shared2(std::shared_ptr<Ptr>& shared_ptr, Param&&... param)
+{
+    shared_ptr = std::make_shared<Ptr>(std::forward<Param>(param)...);
 }
 
 #endif // INCLUDE_TOOLS_HPP

@@ -50,7 +50,6 @@ namespace fi
       private:
         gltf::Model model_{};
         void add_texture(unsigned char* pixels, uint32_t w, uint32_t h);
-        void load_mip_maps();
 
       public:
         inline const static char* EXTENSIONS[] = {"KHR_materials_emissive_strength", //
@@ -84,9 +83,9 @@ namespace fi
 
         // accessors
         std::unique_ptr<Buffer<DeviceBufferOffsets, vertex, index, storage>> buffer_{};
-        std::vector<size_t> prim_per_mesh_{};
-        std::vector<std::string> prim_names_{};
-        std::vector<uint32_t> material_idxs_{};
+        std::vector<size_t> prim_per_mesh_{};   // indexed by mesh
+        std::vector<std::string> prim_names_{}; // indexed by prim
+        std::vector<uint32_t> material_idxs_{}; // indexed by prim
 
         ResDetails(const std::filesystem::path& path);
         ~ResDetails();
@@ -94,11 +93,32 @@ namespace fi
         void generate_descriptors(vk::DescriptorPool des_pool);
         void draw(const std::function<void(vk::Buffer vtx_buffer, uint32_t next_binding, vk::DescriptorSet res_set)>&
                       draw_func);
+
+        [[nodiscard]] const gltf::Model& model() const;
+    };
+
+    struct Node
+    {
+        std::string names_ = "";
+        size_t mesh_idx_ = -1;
+        size_t skin_idx_ = -1;
+
+        glm::quat rotation_ = {0, 0, 0, 0};
+        glm::vec3 scale_ = {1, 1, 1};
+        glm::vec3 translation_ = {0, 0, 0};
+        glm::mat4 matrix_ = glm::identity<glm::mat4>();
+
+        std::weak_ptr<Node> parent_{};
+        std::vector<std::shared_ptr<Node>> children_{};
     };
 
     struct ResStructure : private GraphicsObject
     {
+        std::vector<std::shared_ptr<Node>> roots_{};
+        std::vector<std::weak_ptr<Node>> meshes_{};
+        std::vector<std::weak_ptr<Node>> skins_{};
         std::unique_ptr<Buffer<BufferBase::EmptyExtraInfo, vertex>> buffer_{};
+
         ResStructure(ResDetails& res_details);
     };
 

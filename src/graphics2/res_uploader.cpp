@@ -64,10 +64,6 @@ bool decode_mipmap_mode(int mode, vk::SamplerMipmapMode* out_mode)
     return false;
 };
 
-void fi::ResDetails::load_mip_maps()
-{
-}
-
 fi::ResDetails::ResDetails(const std::filesystem::path& path)
 {
     gltf_loader().SetImagesAsIs(false);
@@ -640,6 +636,11 @@ fi::ResDetails::~ResDetails()
     }
 }
 
+const fi::gltf::Model& fi::ResDetails::model() const
+{
+    return model_;
+}
+
 void fi::ResDetails::generate_descriptors(vk::DescriptorPool des_pool)
 {
     vk::DescriptorSetAllocateInfo alloc_info{};
@@ -672,4 +673,52 @@ void fi::ResDetails::draw(
     const std::function<void(vk::Buffer vtx_buffer, uint32_t next_binding, vk::DescriptorSet res_set)>& draw_func)
 {
     draw_func(*buffer_, 1, des_set_);
+}
+
+void set_node_details(std::shared_ptr<fi::Node>& target, const fi::gltf::Node& node,
+                      const std::vector<fi::gltf::Node>& nodes)
+{
+    target->names_ = node.name;
+    target->mesh_idx_ = node.mesh;
+    target->skin_idx_ = node.skin;
+    glms::assign_value(target->rotation_, node.rotation, node.rotation.size());
+    glms::assign_value(target->scale_, node.scale, node.scale.size());
+    glms::assign_value(target->translation_, node.translation, node.translation.size());
+    if (!node.matrix.empty())
+    {
+        glms::assign_value(target->matrix_[0], node.matrix.data());
+        glms::assign_value(target->matrix_[1], node.matrix.data() + 4);
+        glms::assign_value(target->matrix_[2], node.matrix.data() + 8);
+        glms::assign_value(target->matrix_[3], node.matrix.data() + 12);
+    }
+
+    for (auto child : node.children)
+    {
+        auto& child_node = target->children_.emplace_back();
+        make_shared2(child_node);
+        child_node->parent_ = target;
+        set_node_details(child_node, nodes[child], nodes);
+    }
+};
+
+fi::ResStructure::ResStructure(ResDetails& res_details)
+{
+    const gltf::Model& model = res_details.model();
+    const gltf::Scene& scene = model.scenes[model.defaultScene];
+
+    for (auto root_node : scene.nodes)
+    {
+        auto& root = roots_.emplace_back();
+        make_shared2(root);
+        set_node_details(root, model.nodes[root_node], model.nodes);
+
+        if (model.nodes[root_node].mesh == -1)
+        {
+            skins_.emplace_back(root);
+        }
+        else
+        {
+            meshes_.emplace_back(root);
+        }
+    }
 }
