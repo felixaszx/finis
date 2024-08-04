@@ -74,7 +74,6 @@ namespace fi
             vk::DeviceSize materials_ = 0;
             vk::DeviceSize material_idxs_ = 0;
             vk::DeviceSize draw_calls_ = 0;
-            vk::DeviceSize joints_ = 0;
         };
 
         // accessors
@@ -84,6 +83,12 @@ namespace fi
 
         ResDetails(const std::filesystem::path& path);
         ~ResDetails();
+    };
+
+    struct ResStructure : private GraphicsObject
+    {
+        std::unique_ptr<Buffer<BufferBase::EmptyExtraInfo, vertex>> buffer_{};
+        ResStructure(ResDetails& res_details);
     };
 
 }; // namespace fi

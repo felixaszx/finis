@@ -584,14 +584,12 @@ fi::ResDetails::ResDetails(const std::filesystem::path& path)
     buffer_->materials_ = buffer_->idx_buffer_ + sizeof_arr(idxs);
     buffer_->material_idxs_ = buffer_->materials_ + sizeof_arr(materials_);
     buffer_->draw_calls_ = buffer_->material_idxs_ + sizeof_arr(material_idxs_);
-    // device_buffer_->joints_ = device_buffer_->draw_calls_ + sizeof_arr(joints);
 
     memcpy(staging.map_memory(), vtxs.data(), sizeof_arr(vtxs));
     memcpy(staging.mapping() + buffer_->idx_buffer_, idxs.data(), sizeof_arr(idxs));
     memcpy(staging.mapping() + buffer_->materials_, materials_.data(), sizeof_arr(materials_));
     memcpy(staging.mapping() + buffer_->material_idxs_, material_idxs_.data(), sizeof_arr(material_idxs_));
     memcpy(staging.mapping() + buffer_->draw_calls_, draw_calls.data(), sizeof_arr(draw_calls));
-    // memcpy(staging.mapping() + device_buffer_->joints_, joints_.data(), sizeof_arr(joints_));
 
     vk::CommandBuffer cmd = one_time_submit_cmd();
     begin_cmd(cmd);
