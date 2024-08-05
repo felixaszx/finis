@@ -45,6 +45,13 @@ namespace fi
         uint32_t sheen_roughtness_map_idx_ = ~0;
     };
 
+    struct ResMesh
+    {
+        std::string name_{};
+        uint32_t draw_call_count_ = 0;
+        vk::DeviceSize draw_call_offset_ = 0;
+    };
+
     struct ResDetails : private GraphicsObject
     {
       private:
@@ -83,18 +90,19 @@ namespace fi
 
         // accessors
         std::unique_ptr<Buffer<DeviceBufferOffsets, vertex, index, storage>> buffer_{};
-        std::vector<size_t> prim_per_mesh_{};   // indexed by mesh
-        std::vector<std::string> prim_names_{}; // indexed by prim
         std::vector<uint32_t> material_idxs_{}; // indexed by prim
+        std::vector<ResMesh> meshes_{};
 
         ResDetails(const std::filesystem::path& path);
         ~ResDetails();
 
         void generate_descriptors(vk::DescriptorPool des_pool);
-        void draw(const std::function<void(vk::Buffer vtx_buffer, uint32_t next_binding, vk::DescriptorSet res_set)>&
-                      draw_func);
-
         [[nodiscard]] const gltf::Model& model() const;
+        void bind(vk::CommandBuffer cmd, uint32_t buffer_binding, vk::PipelineLayout pipeline_layout, uint32_t set);
+        void draw_mesh(vk::CommandBuffer cmd, size_t mesh_idx);
+        void set_pipeline_create_details(std::vector<vk::VertexInputBindingDescription>& binding_des,
+                                         std::vector<vk::VertexInputAttributeDescription>& attrib_des,
+                                         uint32_t buffer_binding = 0);
     };
 
     struct Node

@@ -357,13 +357,14 @@ fi::ResDetails::ResDetails(const std::filesystem::path& path)
 
     for (const auto& mesh : model_.meshes)
     {
-        size_t prim_idx = 0;
-        prim_per_mesh_.push_back(mesh.primitives.size());
+        ResMesh& res_mesh = meshes_.emplace_back();
+        res_mesh.name_ = mesh.name;
+        res_mesh.draw_call_count_ = mesh.primitives.size();
+        res_mesh.draw_call_offset_ = sizeof_arr(draw_calls);
+
         for (const auto& prim : mesh.primitives)
         {
             material_idxs_.push_back(prim.material);
-            prim_names_.push_back(mesh.name + std::format("_prim_{}", prim_idx));
-            prim_idx++;
             {
                 const gltf::Accessor& idx_acc = model_.accessors[prim.indices];
                 idxs.reserve(old_idx_count + idx_acc.count);
@@ -582,6 +583,11 @@ fi::ResDetails::ResDetails(const std::filesystem::path& path)
     buffer_->material_idxs_ = buffer_->materials_ + sizeof_arr(materials_);
     buffer_->draw_calls_ = buffer_->material_idxs_ + sizeof_arr(material_idxs_);
 
+    for (auto& mesh : meshes_)
+    {
+        mesh.draw_call_offset_ += buffer_->draw_calls_;
+    }
+
     memcpy(staging.map_memory(), vtxs.data(), sizeof_arr(vtxs));
     memcpy(staging.mapping() + buffer_->idx_buffer_, idxs.data(), sizeof_arr(idxs));
     memcpy(staging.mapping() + buffer_->materials_, materials_.data(), sizeof_arr(materials_));
@@ -641,6 +647,54 @@ const fi::gltf::Model& fi::ResDetails::model() const
     return model_;
 }
 
+void fi::ResDetails::bind(vk::CommandBuffer cmd, uint32_t buffer_binding, vk::PipelineLayout pipeline_layout,
+                          uint32_t set)
+{
+    cmd.bindDescriptorSets(vk::PipelineBindPoint::eGraphics, pipeline_layout, set, des_set_, {});
+    cmd.bindVertexBuffers(buffer_binding, *buffer_, buffer_->vtx_buffer_);
+    cmd.bindIndexBuffer(*buffer_, buffer_->idx_buffer_, vk::IndexType::eUint32);
+}
+
+void fi::ResDetails::draw_mesh(vk::CommandBuffer cmd, size_t mesh_idx)
+{
+    cmd.drawIndexedIndirect(*buffer_,                            //
+                            meshes_[mesh_idx].draw_call_offset_, //
+                            meshes_[mesh_idx].draw_call_count_,  //
+                            sizeof(vk::DrawIndexedIndirectCommand));
+}
+
+void fi::ResDetails::set_pipeline_create_details(std::vector<vk::VertexInputBindingDescription>& binding_des,
+                                                 std::vector<vk::VertexInputAttributeDescription>& attrib_des,
+                                                 uint32_t buffer_binding)
+{
+    binding_des.resize(1);
+    binding_des[0].binding = buffer_binding;
+    binding_des[0].inputRate = vk::VertexInputRate::eVertex;
+    binding_des[0].stride = sizeof(Vtx);
+
+    attrib_des.resize(7);
+    for (size_t i = 0; i < attrib_des.size(); i++)
+    {
+        attrib_des[i].binding = buffer_binding;
+        attrib_des[i].location = i;
+    }
+    attrib_des[0].format = vk::Format::eR32G32B32Sfloat;
+    attrib_des[1].format = vk::Format::eR32G32B32Sfloat;
+    attrib_des[2].format = vk::Format::eR32G32B32A32Sfloat;
+    attrib_des[3].format = vk::Format::eR32G32Sfloat;
+    attrib_des[4].format = vk::Format::eR32G32B32A32Sfloat;
+    attrib_des[5].format = vk::Format::eR32G32B32A32Sfloat;
+    attrib_des[6].format = vk::Format::eR32G32B32A32Sfloat;
+
+    attrib_des[0].offset = offsetof(Vtx, position_);
+    attrib_des[1].offset = offsetof(Vtx, normal_);
+    attrib_des[2].offset = offsetof(Vtx, tangent_);
+    attrib_des[3].offset = offsetof(Vtx, tex_coord_);
+    attrib_des[4].offset = offsetof(Vtx, color_);
+    attrib_des[5].offset = offsetof(Vtx, joint_);
+    attrib_des[6].offset = offsetof(Vtx, weight_);
+}
+
 void fi::ResDetails::generate_descriptors(vk::DescriptorPool des_pool)
 {
     vk::DescriptorSetAllocateInfo alloc_info{};
@@ -667,12 +721,6 @@ void fi::ResDetails::generate_descriptors(vk::DescriptorPool des_pool)
     write_ssbos.descriptorType = vk::DescriptorType::eStorageBuffer;
     write_ssbos.setBufferInfo(ssbo_infos);
     device().updateDescriptorSets({write_textures, write_ssbos}, {});
-}
-
-void fi::ResDetails::draw(
-    const std::function<void(vk::Buffer vtx_buffer, uint32_t next_binding, vk::DescriptorSet res_set)>& draw_func)
-{
-    draw_func(*buffer_, 1, des_set_);
 }
 
 void set_node_details(std::shared_ptr<fi::Node>& target, const fi::gltf::Node& node,
