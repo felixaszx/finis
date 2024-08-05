@@ -115,11 +115,9 @@ namespace fi
     struct ResStructure : private GraphicsObject
     {
         std::vector<std::shared_ptr<Node>> roots_{};
-        std::vector<std::weak_ptr<Node>> meshes_{};
-        std::vector<std::weak_ptr<Node>> skins_{};
-        std::unique_ptr<Buffer<BufferBase::EmptyExtraInfo, vertex>> buffer_{};
+        std::unique_ptr<Buffer<BufferBase::EmptyExtraInfo, storage, seq_write>> buffer_{};
 
-        ResStructure(ResDetails& res_details);
+        ResStructure(const ResDetails& res_details);
     };
 
 }; // namespace fi

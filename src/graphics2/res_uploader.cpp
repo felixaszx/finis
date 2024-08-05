@@ -64,6 +64,69 @@ bool decode_mipmap_mode(int mode, vk::SamplerMipmapMode* out_mode)
     return false;
 };
 
+void iterate_acc(const std::function<void(size_t idx, const unsigned char* data, size_t size)>& cb, //
+                 const fi::gltf::Accessor& acc,                                                     //
+                 const fi::gltf::Model& model)
+{
+    const fi::gltf::BufferView& view = model.bufferViews[acc.bufferView];
+    const fi::gltf::Buffer& buffer = model.buffers[view.buffer];
+    size_t size = fi::gltf::GetComponentSizeInBytes(acc.componentType) //
+                  * fi::gltf::GetNumComponentsInType(acc.type);
+    size_t stride = view.byteStride ? view.byteStride : size;
+    size_t offset = view.byteOffset + acc.byteOffset;
+
+    if (acc.sparse.isSparse)
+    {
+        const fi::gltf::BufferView& sparse_view = model.bufferViews[acc.sparse.indices.bufferView];
+        const fi::gltf::Buffer& sparse_buffer = model.buffers[sparse_view.buffer];
+        const fi::gltf::BufferView& deviate_view = model.bufferViews[acc.sparse.values.bufferView];
+        const fi::gltf::Buffer& deviate_buffer = model.buffers[deviate_view.buffer];
+        size_t sparse_size = fi::gltf::GetComponentSizeInBytes(acc.sparse.indices.componentType);
+        size_t sparse_offset = sparse_view.byteOffset + acc.sparse.indices.byteOffset;
+        size_t deviate_offset = deviate_view.byteOffset + acc.sparse.values.byteOffset;
+
+        std::vector<size_t> deviate_idxs;
+        deviate_idxs.reserve(acc.sparse.count);
+        for (size_t i = 0; i < deviate_idxs.size(); i++)
+        {
+            const unsigned char* sparse_ptr = (sparse_buffer.data.data() + sparse_offset + sparse_size * i);
+            switch (sparse_size)
+            {
+                case 1:
+                    deviate_idxs.push_back(*sparse_ptr);
+                    break;
+                case 2:
+                    deviate_idxs.push_back(*castf(uint16_t*, sparse_ptr));
+                    break;
+                case 4:
+                    deviate_idxs.push_back(*castf(uint32_t*, sparse_ptr));
+                    break;
+            }
+        }
+
+        size_t deviate_idx = 0;
+        for (size_t b = 0; b < acc.count; b++)
+        {
+            if (deviate_idxs[deviate_idx] == b)
+            {
+                cb(b, deviate_buffer.data.data() + deviate_offset + deviate_idx * size, size);
+                deviate_idx++;
+            }
+            else
+            {
+                cb(b, buffer.data.data() + offset + b * stride, size);
+            }
+        }
+    }
+    else
+    {
+        for (size_t b = 0; b < acc.count; b++)
+        {
+            cb(b, buffer.data.data() + offset + b * stride, size);
+        }
+    }
+};
+
 fi::ResDetails::ResDetails(const std::filesystem::path& path)
 {
     gltf_loader().SetImagesAsIs(false);
@@ -291,69 +354,6 @@ fi::ResDetails::ResDetails(const std::filesystem::path& path)
     std::vector<glm::mat4> instance_mats;
     size_t old_vtx_count = 0;
     size_t old_idx_count = 0;
-
-    auto iterate_acc = [](const std::function<void(size_t idx, const unsigned char* data, size_t size)>& cb, //
-                          const gltf::Accessor& acc,                                                         //
-                          const gltf::Model& model)
-    {
-        const gltf::BufferView& view = model.bufferViews[acc.bufferView];
-        const gltf::Buffer& buffer = model.buffers[view.buffer];
-        size_t size = gltf::GetComponentSizeInBytes(acc.componentType) //
-                      * gltf::GetNumComponentsInType(acc.type);
-        size_t stride = view.byteStride ? view.byteStride : size;
-        size_t offset = view.byteOffset + acc.byteOffset;
-
-        if (acc.sparse.isSparse)
-        {
-            const gltf::BufferView& sparse_view = model.bufferViews[acc.sparse.indices.bufferView];
-            const gltf::Buffer& sparse_buffer = model.buffers[sparse_view.buffer];
-            const gltf::BufferView& deviate_view = model.bufferViews[acc.sparse.values.bufferView];
-            const gltf::Buffer& deviate_buffer = model.buffers[deviate_view.buffer];
-            size_t sparse_size = gltf::GetComponentSizeInBytes(acc.sparse.indices.componentType);
-            size_t sparse_offset = sparse_view.byteOffset + acc.sparse.indices.byteOffset;
-            size_t deviate_offset = deviate_view.byteOffset + acc.sparse.values.byteOffset;
-
-            std::vector<size_t> deviate_idxs;
-            deviate_idxs.reserve(acc.sparse.count);
-            for (size_t i = 0; i < deviate_idxs.size(); i++)
-            {
-                const unsigned char* sparse_ptr = (sparse_buffer.data.data() + sparse_offset + sparse_size * i);
-                switch (sparse_size)
-                {
-                    case 1:
-                        deviate_idxs.push_back(*sparse_ptr);
-                        break;
-                    case 2:
-                        deviate_idxs.push_back(*castf(uint16_t*, sparse_ptr));
-                        break;
-                    case 4:
-                        deviate_idxs.push_back(*castf(uint32_t*, sparse_ptr));
-                        break;
-                }
-            }
-
-            size_t deviate_idx = 0;
-            for (size_t b = 0; b < acc.count; b++)
-            {
-                if (deviate_idxs[deviate_idx] == b)
-                {
-                    cb(b, deviate_buffer.data.data() + deviate_offset + deviate_idx * size, size);
-                    deviate_idx++;
-                }
-                else
-                {
-                    cb(b, buffer.data.data() + offset + b * stride, size);
-                }
-            }
-        }
-        else
-        {
-            for (size_t b = 0; b < acc.count; b++)
-            {
-                cb(b, buffer.data.data() + offset + b * stride, size);
-            }
-        }
-    };
 
     for (const auto& mesh : model_.meshes)
     {
@@ -701,7 +701,7 @@ void set_node_details(std::shared_ptr<fi::Node>& target, const fi::gltf::Node& n
     }
 };
 
-fi::ResStructure::ResStructure(ResDetails& res_details)
+fi::ResStructure::ResStructure(const ResDetails& res_details)
 {
     const gltf::Model& model = res_details.model();
     const gltf::Scene& scene = model.scenes[model.defaultScene];
@@ -711,14 +711,5 @@ fi::ResStructure::ResStructure(ResDetails& res_details)
         auto& root = roots_.emplace_back();
         make_shared2(root);
         set_node_details(root, model.nodes[root_node], model.nodes);
-
-        if (model.nodes[root_node].mesh == -1)
-        {
-            skins_.emplace_back(root);
-        }
-        else
-        {
-            meshes_.emplace_back(root);
-        }
     }
 }
