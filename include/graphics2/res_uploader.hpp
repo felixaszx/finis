@@ -13,7 +13,7 @@ namespace fi
         glm::vec4 tangent_ = {0, 0, 0, 1};
         glm::vec2 tex_coord_ = {0, 0};
         glm::vec4 color_ = {0, 0, 0, 1};
-        glm::u16vec4 joint_ = {-1, -1, -1, -1};
+        glm::uvec4 joint_ = {-1, -1, -1, -1};
         glm::vec4 weight_ = {0, 0, 0, 0};
     };
 

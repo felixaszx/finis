@@ -505,7 +505,7 @@ fi::ResDetails::ResDetails(const std::filesystem::path& path)
                     iterate_acc(
                         [&](size_t idx, const unsigned char* data, size_t size)
                         {
-                            glm::u16vec4& joint = vtxs[idx].joint_;
+                            glm::uvec4& joint = vtxs[idx].joint_;
                             switch (size)
                             {
                                 case 4:
@@ -689,7 +689,7 @@ void fi::ResDetails::set_pipeline_create_details(std::vector<vk::VertexInputBind
     attrib_des[2].format = vk::Format::eR32G32B32A32Sfloat;
     attrib_des[3].format = vk::Format::eR32G32Sfloat;
     attrib_des[4].format = vk::Format::eR32G32B32A32Sfloat;
-    attrib_des[5].format = vk::Format::eR16G16B16A16Uint;
+    attrib_des[5].format = vk::Format::eR32G32B32A32Uint;
     attrib_des[6].format = vk::Format::eR32G32B32A32Sfloat;
 
     attrib_des[0].offset = offsetof(Vtx, position_);
