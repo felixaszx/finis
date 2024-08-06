@@ -25,15 +25,15 @@ int main(int argc, char** argv)
     Semaphore submit;
     Fence frame_fence;
 
-    ResDetails sponza("res/models/sponza/Sponza.gltf");
-    ResStructure sponza_stucture(sponza);
+    ResDetails test_model("res/models/sponza/Sponza.gltf");
+    ResStructure test_model_stucture(test_model);
 
     vk::DescriptorPoolCreateInfo des_pool_info{};
-    des_pool_info.setPoolSizes(sponza.des_sizes_);
+    des_pool_info.setPoolSizes(test_model.des_sizes_);
     des_pool_info.maxSets = 10;
     vk::DescriptorPool des_pool = g.device().createDescriptorPool(des_pool_info);
 
-    sponza.generate_descriptors(des_pool);
+    test_model.generate_descriptors(des_pool);
 
     vk::CommandPoolCreateInfo pool_info{};
     pool_info.flags = vk::CommandPoolCreateFlagBits::eResetCommandBuffer;

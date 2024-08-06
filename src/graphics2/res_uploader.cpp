@@ -723,30 +723,8 @@ void fi::ResDetails::generate_descriptors(vk::DescriptorPool des_pool)
     device().updateDescriptorSets({write_textures, write_ssbos}, {});
 }
 
-void set_node_details(std::shared_ptr<fi::Node>& target, const fi::gltf::Node& node,
-                      const std::vector<fi::gltf::Node>& nodes)
-{
-    target->names_ = node.name;
-    target->mesh_idx_ = node.mesh;
-    target->skin_idx_ = node.skin;
-    glms::assign_value(target->rotation_, node.rotation, node.rotation.size());
-    glms::assign_value(target->scale_, node.scale, node.scale.size());
-    glms::assign_value(target->translation_, node.translation, node.translation.size());
-    if (!node.matrix.empty())
-    {
-        glms::assign_value(target->matrix_[0], node.matrix.data());
-        glms::assign_value(target->matrix_[1], node.matrix.data() + 4);
-        glms::assign_value(target->matrix_[2], node.matrix.data() + 8);
-        glms::assign_value(target->matrix_[3], node.matrix.data() + 12);
-    }
+void set_node_details(fi::Node& target, const fi::gltf::Node& node, const std::vector<fi::gltf::Node>& nodes) {
 
-    for (auto child : node.children)
-    {
-        auto& child_node = target->children_.emplace_back();
-        make_shared2(child_node);
-        child_node->parent_ = target;
-        set_node_details(child_node, nodes[child], nodes);
-    }
 };
 
 fi::ResStructure::ResStructure(const ResDetails& res_details)
@@ -754,10 +732,67 @@ fi::ResStructure::ResStructure(const ResDetails& res_details)
     const gltf::Model& model = res_details.model();
     const gltf::Scene& scene = model.scenes[model.defaultScene];
 
-    for (auto root_node : scene.nodes)
+    nodes_.reserve(model.nodes.size());
+    for (const auto& node : model.nodes)
     {
-        auto& root = roots_.emplace_back();
-        make_shared2(root);
-        set_node_details(root, model.nodes[root_node], model.nodes);
+        Node& target = nodes_.emplace_back();
+        target.names_ = node.name;
+        target.mesh_idx_ = node.mesh;
+        target.skin_idx_ = node.skin;
+
+        for (int i = 0; i < node.matrix.size() / 4; i++)
+        {
+            glms::assign_value(target.matrix_[i], node.matrix.data() + i * 4);
+        }
+
+        target.children_.reserve(node.children.size());
+        for (auto child : node.children)
+        {
+            target.children_.push_back(child);
+        }
+    }
+
+    roots_.reserve(scene.nodes.size());
+    for (auto& root : scene.nodes)
+    {
+        roots_.push_back(root);
+    }
+
+    skins_.reserve(model.skins.size());
+    for (auto& skin_in : model.skins)
+    {
+        Skin& skin = skins_.emplace_back();
+
+        skin.inv_matrices_.reserve(model.accessors[skin_in.inverseBindMatrices].count);
+        iterate_acc([&](size_t idx, const unsigned char* data, size_t size)
+                    { skin.inv_matrices_.push_back(*castf(glm::mat4*, data)); },
+                    model.accessors[skin_in.inverseBindMatrices], model);
+
+        skin.joints_.reserve(skin_in.joints.size());
+        for (auto joint_id : skin_in.joints)
+        {
+            skin.joints_.push_back(joint_id);
+        }
+
+        skin.matrices_offsets_.resize(skin.joints_.size(), 0);
+    }
+}
+
+void traverse_node_helper(const std::function<void(fi::Node& node)>& func, glm::mat4 parent_transform, fi::Node& node,
+                          std::vector<fi::Node>& nodes)
+{
+    node.matrix_ = parent_transform * node.matrix_;
+    func(node);
+    for (size_t child_idx : node.children_)
+    {
+        traverse_node_helper(func, node.matrix_, nodes[child_idx], nodes);
+    }
+}
+
+void fi::ResStructure::traverse_node(const std::function<void(Node& node)>& func)
+{
+    for (auto& root : roots_)
+    {
+        traverse_node_helper(func, glm::identity<glm::mat4>(), nodes_[root], nodes_);
     }
 }

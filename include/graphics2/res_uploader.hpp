@@ -110,22 +110,27 @@ namespace fi
         std::string names_ = "";
         size_t mesh_idx_ = -1;
         size_t skin_idx_ = -1;
-
-        glm::quat rotation_ = {0, 0, 0, 0};
-        glm::vec3 scale_ = {1, 1, 1};
-        glm::vec3 translation_ = {0, 0, 0};
         glm::mat4 matrix_ = glm::identity<glm::mat4>();
 
-        std::weak_ptr<Node> parent_{};
-        std::vector<std::shared_ptr<Node>> children_{};
+        std::vector<size_t> children_{};
+    };
+
+    struct Skin
+    {
+        std::vector<glm::mat4> inv_matrices_{};
+        std::vector<size_t> joints_{};
+        std::vector<vk::DeviceSize> matrices_offsets_{};
     };
 
     struct ResStructure : private GraphicsObject
     {
-        std::vector<std::shared_ptr<Node>> roots_{};
+        std::vector<Node> nodes_{};
+        std::vector<size_t> roots_{};
+        std::vector<Skin> skins_{};
         std::unique_ptr<Buffer<BufferBase::EmptyExtraInfo, storage, seq_write>> buffer_{};
-
         ResStructure(const ResDetails& res_details);
+
+        void traverse_node(const std::function<void(Node& node)>& func);
     };
 
 }; // namespace fi
