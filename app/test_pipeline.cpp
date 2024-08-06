@@ -125,31 +125,32 @@ inline void test_pipeline(fi::Graphics& g, fi::Swapchain& sc)
     ShaderModule fs_{"res/shaders/vulkan0.frag", vk::ShaderStageFlagBits::eFragment};
     std::vector<vk::PipelineShaderStageCreateInfo> shader_infos_ = {vs_, fs_};
 
-    vk::PipelineVertexInputStateCreateInfo vtx_state_{};
-    vk::PipelineInputAssemblyStateCreateInfo input_asm_{};
-    vk::PipelineTessellationStateCreateInfo tesselation_info_{};
-    vk::PipelineViewportStateCreateInfo view_port_{};
-    vk::PipelineRasterizationStateCreateInfo rasterizer_{};
-    vk::PipelineMultisampleStateCreateInfo multi_sample_{};
-    vk::PipelineDepthStencilStateCreateInfo ds_info_{};
-    vk::PipelineColorBlendStateCreateInfo blend_states_{};
-    vk::PipelineDynamicStateCreateInfo dynamic_state_info_{};
-    vk::PipelineRenderingCreateInfo render_info_{};
+    vk::PipelineVertexInputStateCreateInfo vtx_state{};
+    vk::PipelineInputAssemblyStateCreateInfo input_asm{};
+    vk::PipelineTessellationStateCreateInfo tesselation_info{};
+    vk::PipelineViewportStateCreateInfo view_port{};
+    vk::PipelineRasterizationStateCreateInfo rasterizer{};
+    vk::PipelineMultisampleStateCreateInfo multi_sample{};
+    vk::PipelineDepthStencilStateCreateInfo pso_ds_info{};
+    vk::PipelineColorBlendStateCreateInfo blend_states{};
+    vk::PipelineDynamicStateCreateInfo dynamic_state_info{};
+    vk::PipelineRenderingCreateInfo render_info{};
 
-    input_asm_.topology = vk::PrimitiveTopology::eTriangleList;
-    view_port_.viewportCount = 1;
-    view_port_.scissorCount = 1;
-    rasterizer_.lineWidth = 1;
-    multi_sample_.rasterizationSamples = vk::SampleCountFlagBits::e1;
-    ds_info_.depthTestEnable = true;
-    ds_info_.depthCompareOp = vk::CompareOp::eLess;
-    ds_info_.depthWriteEnable = true;
+    input_asm.topology = vk::PrimitiveTopology::eTriangleList;
+    view_port.viewportCount = 1;
+    view_port.scissorCount = 1;
+    rasterizer.lineWidth = 1;
+    rasterizer.cullMode = vk::CullModeFlagBits::eBack;
+    multi_sample.rasterizationSamples = vk::SampleCountFlagBits::e1;
+    pso_ds_info.depthTestEnable = true;
+    pso_ds_info.depthCompareOp = vk::CompareOp::eLess;
+    pso_ds_info.depthWriteEnable = true;
 
     std::vector<vk::VertexInputAttributeDescription> vtx_attributes;
     std::vector<vk::VertexInputBindingDescription> vtx_bindings;
     ResDetails::set_pipeline_create_details(vtx_bindings, vtx_attributes, 0);
-    vtx_state_.setVertexAttributeDescriptions(vtx_attributes);
-    vtx_state_.setVertexBindingDescriptions(vtx_bindings);
+    vtx_state.setVertexAttributeDescriptions(vtx_attributes);
+    vtx_state.setVertexBindingDescriptions(vtx_bindings);
 
     std::vector<vk::PipelineColorBlendAttachmentState> color_state(4);
     for (int i = 0; i < color_state.size(); i++)
@@ -159,29 +160,29 @@ inline void test_pipeline(fi::Graphics& g, fi::Swapchain& sc)
                                         vk::ColorComponentFlagBits::eB | //
                                         vk::ColorComponentFlagBits::eA;
     }
-    blend_states_.setAttachments(color_state);
+    blend_states.setAttachments(color_state);
 
     std::vector<vk::DynamicState> dynamic_states = {vk::DynamicState::eScissor, vk::DynamicState::eViewport};
-    dynamic_state_info_.setDynamicStates(dynamic_states);
+    dynamic_state_info.setDynamicStates(dynamic_states);
 
     std::vector<vk::Format> formats = {atchm_info.format, atchm_info.format, atchm_info.format, atchm_info.format};
-    render_info_.setColorAttachmentFormats(formats);
-    render_info_.setDepthAttachmentFormat(ds_info.format);
-    render_info_.setStencilAttachmentFormat(ds_info.format);
+    render_info.setColorAttachmentFormats(formats);
+    render_info.setDepthAttachmentFormat(ds_info.format);
+    render_info.setStencilAttachmentFormat(ds_info.format);
 
     vk::GraphicsPipelineCreateInfo pso_info{};
     pso_info.layout = pso_layout;
-    pso_info.pNext = &render_info_;
+    pso_info.pNext = &render_info;
     pso_info.setStages(shader_infos_);
-    pso_info.pVertexInputState = &vtx_state_;
-    pso_info.pInputAssemblyState = &input_asm_;
-    pso_info.pTessellationState = &tesselation_info_;
-    pso_info.pViewportState = &view_port_;
-    pso_info.pRasterizationState = &rasterizer_;
-    pso_info.pMultisampleState = &multi_sample_;
-    pso_info.pDepthStencilState = &ds_info_;
-    pso_info.pColorBlendState = &blend_states_;
-    pso_info.pDynamicState = &dynamic_state_info_;
+    pso_info.pVertexInputState = &vtx_state;
+    pso_info.pInputAssemblyState = &input_asm;
+    pso_info.pTessellationState = &tesselation_info;
+    pso_info.pViewportState = &view_port;
+    pso_info.pRasterizationState = &rasterizer;
+    pso_info.pMultisampleState = &multi_sample;
+    pso_info.pDepthStencilState = &pso_ds_info;
+    pso_info.pColorBlendState = &blend_states;
+    pso_info.pDynamicState = &dynamic_state_info;
     pso = g.device().createGraphicsPipelines(g.pipeline_cache(), pso_info).value[0];
 };
 
