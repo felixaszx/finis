@@ -14,7 +14,7 @@ namespace fi
         glm::vec3 normal_ = {0, 0, 0};
         glm::vec4 tangent_ = {0, 0, 0, 1};
         glm::vec2 tex_coord_ = {0, 0};
-        glm::vec4 color_ = {0, 0, 0, 1};
+        glm::vec4 color_ = {1, 1, 1, 1};
         glm::uvec4 joint_ = {-1, -1, -1, -1};
         glm::vec4 weight_ = {0, 0, 0, 0};
     };
@@ -92,7 +92,7 @@ namespace fi
         };
 
         // accessors
-        std::unique_ptr<Buffer<DeviceBufferOffsets, vertex, index, storage>> buffer_{};
+        std::unique_ptr<Buffer<DeviceBufferOffsets, vertex, index, indirect, storage>> buffer_{};
         std::vector<uint32_t> material_idxs_{}; // indexed by prim
         std::vector<ResMesh> meshes_{};
 
@@ -104,8 +104,8 @@ namespace fi
         void bind(vk::CommandBuffer cmd, uint32_t buffer_binding, vk::PipelineLayout pipeline_layout, uint32_t set);
         void draw_mesh(vk::CommandBuffer cmd, size_t mesh_idx);
         static void set_pipeline_create_details(std::vector<vk::VertexInputBindingDescription>& binding_des,
-                                         std::vector<vk::VertexInputAttributeDescription>& attrib_des,
-                                         uint32_t buffer_binding = 0);
+                                                std::vector<vk::VertexInputAttributeDescription>& attrib_des,
+                                                uint32_t buffer_binding = 0);
     };
 
     struct ResSkin
@@ -142,7 +142,7 @@ namespace fi
 
         [[nodiscard]] bool empty() const { return skins_.empty(); }
         void allocate_descriptor(vk::DescriptorPool des_pool);
-        void bind(vk::CommandBuffer cmd,vk::PipelineLayout pipeline_layout, uint32_t set);
+        void bind(vk::CommandBuffer cmd, vk::PipelineLayout pipeline_layout, uint32_t set);
     };
 
     template <typename OutT>

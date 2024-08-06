@@ -46,8 +46,9 @@ layout(location = 0) in struct
     vec3 tangent_;
     vec3 bitangent_;
     vec2 tex_coord_;
+    vec4 color_;
 } FRAG_DATA;
-layout(location = 5) in flat int MESH_IDX;
+layout(location = 6) in flat int MESH_IDX;
 
 layout(set = 0, binding = 0) uniform sampler2D textures_arr[];
 layout(std430, set = 0, binding = 1) readonly buffer MATERIALS_
@@ -93,7 +94,7 @@ void main()
     // texture mapping
     if (mat.color_texture_idx_ != NO_TEXTURE)
     {
-        COLOR *= texture(textures_arr[mat.color_texture_idx_], FRAG_DATA.tex_coord_);
+        COLOR *= FRAG_DATA.color_ * texture(textures_arr[mat.color_texture_idx_], FRAG_DATA.tex_coord_);
         if (COLOR.a < mat.alpha_cutoff_)
         {
             discard;

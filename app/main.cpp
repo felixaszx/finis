@@ -28,22 +28,22 @@ int main(int argc, char** argv)
     Semaphore submit;
     Fence frame_fence;
 
-    ResDetails test_model("res/models/spartan_armour_mkv_-_halo_reach/scene.gltf");
-    ResSkinDetails test_skins(test_model);
+    ResDetails test_model("res/models/sponza/Sponza.gltf");
+    // ResSkinDetails test_skins(test_model);
     std::vector<ResAnimation> test_animations = load_res_animations(test_model);
 
     std::vector<vk::DescriptorPoolSize> combinned_sizes;
     combinned_sizes.insert(combinned_sizes.end(), test_model.des_sizes_.begin(), test_model.des_sizes_.end());
-    combinned_sizes.insert(combinned_sizes.end(), test_skins.des_sizes_.begin(), test_skins.des_sizes_.end());
+    // combinned_sizes.insert(combinned_sizes.end(), test_skins.des_sizes_.begin(), test_skins.des_sizes_.end());
 
     vk::DescriptorPoolCreateInfo des_pool_info{};
     des_pool_info.setPoolSizes(combinned_sizes);
     des_pool_info.maxSets = 100;
     vk::DescriptorPool des_pool = g.device().createDescriptorPool(des_pool_info);
     test_model.allocate_descriptor(des_pool);
-    test_skins.allocate_descriptor(des_pool);
+    // test_skins.allocate_descriptor(des_pool);
 
-    std::vector<vk::DescriptorSetLayout> set_layouts = {test_model.set_layout_, test_skins.set_layout_};
+    std::vector<vk::DescriptorSetLayout> set_layouts = {test_model.set_layout_};
     vk::PushConstantRange push_range{};
     push_range.size = 3 * sizeof(glm::mat4);
     push_range.stageFlags = vk::ShaderStageFlagBits::eVertex;
@@ -64,6 +64,20 @@ int main(int argc, char** argv)
     cmd_alloc.commandPool = cmd_pool;
     cmd_alloc.level = vk::CommandBufferLevel::ePrimary;
     auto cmds = g.device().allocateCommandBuffers(cmd_alloc);
+
+    struct
+    {
+        glm::mat4 model = glm::scale(glm::vec3(0.1, 0.1, 0.1));
+        glm::mat4 view = glm::lookAt(glm::vec3(0, 0, 0), glm::vec3(1, 0, 0), glm::vec3(0, 1, 0));
+        glm::mat4 proj = glms::perspective(glm::radians(45.0f), float(1920) / 1080, 0.1f, 1000.0f);
+    } push;
+
+    vk::RenderingInfo rendering{};
+    rendering.setColorAttachments(color_infos);
+    rendering.pDepthAttachment = &depth_stencil_info;
+    rendering.pStencilAttachment = &depth_stencil_info;
+    rendering.layerCount = 1;
+    rendering.renderArea = vk::Rect2D{{}, {1920, 1080}};
 
     while (true)
     {
@@ -89,6 +103,16 @@ int main(int argc, char** argv)
 
         cmds[0].reset();
         begin_cmd(cmds[0]);
+
+        cmds[0].beginRendering(rendering);
+        cmds[0].bindPipeline(vk::PipelineBindPoint::eGraphics, pso);
+        test_model.bind(cmds[0], 0, pso_layout, 0);
+        cmds[0].pushConstants(pso_layout, vk::ShaderStageFlagBits::eVertex, 0, sizeof(push), &push);
+        cmds[0].setViewport(0, vk::Viewport(0, 0, 1920, 1080, 0, 1));
+        cmds[0].setScissor(0, vk::Rect2D({}, {1920, 1080}));
+        test_model.draw_mesh(cmds[0], 0);
+        cmds[0].endRendering();
+        
         cmds[0].end();
 
         std::vector<vk::PipelineStageFlags> waiting_stages = {vk::PipelineStageFlagBits::eColorAttachmentOutput};

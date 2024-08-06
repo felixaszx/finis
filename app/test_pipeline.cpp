@@ -107,6 +107,19 @@ inline void test_pipeline(fi::Graphics& g, fi::Swapchain& sc)
     cmd.end();
     g.submit_one_time_cmd(cmd);
 
+    color_infos.resize(4);
+    for (int i = 0; i < 4; i++)
+    {
+        color_infos[i].imageLayout = vk::ImageLayout::eColorAttachmentOptimal;
+        color_infos[i].loadOp = vk::AttachmentLoadOp::eClear;
+        color_infos[i].clearValue = vk::ClearColorValue{0, 0, 0, 1};
+        color_infos[i].imageView = color_views[i];
+    }
+    depth_stencil_info.imageLayout = vk::ImageLayout::eDepthStencilAttachmentOptimal;
+    depth_stencil_info.loadOp = vk::AttachmentLoadOp::eClear;
+    depth_stencil_info.clearValue = vk::ClearDepthStencilValue{{1.0f, 0}};
+    depth_stencil_info.imageView = depth_stencil_view;
+
     // set pso
     ShaderModule vs_{"res/shaders/vulkan0.vert", vk::ShaderStageFlagBits::eVertex};
     ShaderModule fs_{"res/shaders/vulkan0.frag", vk::ShaderStageFlagBits::eFragment};

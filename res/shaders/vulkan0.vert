@@ -17,8 +17,9 @@ layout(location = 0) out struct
     vec3 tangent_;
     vec3 bitangent_;
     vec2 tex_coord_;
+    vec4 color_;
 } FRAG_DATA;
-layout(location = 5) out flat int MESH_IDX;
+layout(location = 6) out flat int MESH_IDX;
 
 layout(push_constant) uniform PUSHES_
 {
@@ -34,7 +35,8 @@ void main()
     FRAG_DATA.position_ = PUSHES.model_ * vec4(POSITION, 1.0);
     FRAG_DATA.normal_ = normalize(mat3(transpose(inverse(PUSHES.model_))) * NORMAL);
     FRAG_DATA.tangent_ = normalize(mat3(transpose(inverse(PUSHES.model_))) * TANGENT.xyz);
-    FRAG_DATA.bitangent_ = normalize(cross(FRAG_DATA.normal_, FRAG_DATA.tangent_));
+    FRAG_DATA.bitangent_ = TANGENT.w * normalize(cross(FRAG_DATA.tangent_, FRAG_DATA.normal_));
     FRAG_DATA.tex_coord_ = TEX_COORD;
+
     gl_Position = PUSHES.proj_ * PUSHES.view_ * FRAG_DATA.position_;
 }
