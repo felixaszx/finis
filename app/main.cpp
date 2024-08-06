@@ -6,9 +6,12 @@
 #include "graphics2/res_uploader.hpp"
 #include "fltk/fl_ext.hpp"
 
+#include "test_pipeline.cpp"
+
 int main(int argc, char** argv)
 {
     using namespace fi;
+    using namespace program;
 
     fle::DoubleWindow fltk(800, 600, "");
     fltk.end();
@@ -39,6 +42,17 @@ int main(int argc, char** argv)
     vk::DescriptorPool des_pool = g.device().createDescriptorPool(des_pool_info);
     test_model.allocate_descriptor(des_pool);
     test_skins.allocate_descriptor(des_pool);
+
+    std::vector<vk::DescriptorSetLayout> set_layouts = {test_model.set_layout_, test_skins.set_layout_};
+    vk::PushConstantRange push_range{};
+    push_range.size = 3 * sizeof(glm::mat4);
+    push_range.stageFlags = vk::ShaderStageFlagBits::eVertex;
+
+    vk::PipelineLayoutCreateInfo pso_layout_info{};
+    pso_layout_info.setSetLayouts(set_layouts);
+    pso_layout_info.setPushConstantRanges(push_range);
+    pso_layout = g.device().createPipelineLayout(pso_layout_info);
+    test_pipeline(g, sc);
 
     vk::CommandPoolCreateInfo pool_info{};
     pool_info.flags = vk::CommandPoolCreateFlagBits::eResetCommandBuffer;
@@ -93,6 +107,8 @@ int main(int argc, char** argv)
     sc.destory();
     g.device().destroyCommandPool(cmd_pool);
     g.device().destroyDescriptorPool(des_pool);
+    free_test_pipeline(g, sc);
+    g.device().destroyPipelineLayout(pso_layout);
 
     fltk.hide();
     fle::Global::check();

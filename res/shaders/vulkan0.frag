@@ -37,6 +37,7 @@ struct Material
 layout(location = 0) out vec4 POSITION;
 layout(location = 1) out vec4 NORMAL;
 layout(location = 2) out vec4 COLOR;
+layout(location = 3) out vec4 SPECULAR;
 
 layout(location = 0) in struct
 {
@@ -59,6 +60,26 @@ layout(std430, set = 0, binding = 2) readonly buffer MATERIAL_IDXS_
     uint mat_idx_[];
 }
 MATERIAL_IDXS;
+
+/*
+layout(std430, set = 1, binding = 0) readonly buffer SKIN_IDXS_
+{
+    uint skin_idx_[];
+}
+SKIN_IDXS;
+
+layout(std430, set = 1, binding = 1) readonly buffer JOINT_INV_MAT_
+{
+    mat4 mat_[];
+}
+JOINT_INV_MAT;
+
+layout(std430, set = 1, binding = 2) readonly buffer JOINT_
+{
+    mat4 mat_[];
+}
+JOINT;
+*/
 
 // Code
 

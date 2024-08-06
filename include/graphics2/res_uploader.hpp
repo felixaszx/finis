@@ -103,7 +103,7 @@ namespace fi
         [[nodiscard]] const gltf::Model& model() const;
         void bind(vk::CommandBuffer cmd, uint32_t buffer_binding, vk::PipelineLayout pipeline_layout, uint32_t set);
         void draw_mesh(vk::CommandBuffer cmd, size_t mesh_idx);
-        void set_pipeline_create_details(std::vector<vk::VertexInputBindingDescription>& binding_des,
+        static void set_pipeline_create_details(std::vector<vk::VertexInputBindingDescription>& binding_des,
                                          std::vector<vk::VertexInputAttributeDescription>& attrib_des,
                                          uint32_t buffer_binding = 0);
     };
