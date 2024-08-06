@@ -75,7 +75,7 @@ namespace fi
         std::vector<vk::DescriptorImageInfo> tex_infos_{};
 
         std::vector<vk::Sampler> samplers_{};
-        std::vector<ResMaterial> materials_{};
+        std::vector<ResMaterial> materials_{}; // indexed by material_idxs_[prim]
 
         std::array<vk::DescriptorPoolSize, 2> des_sizes_{};
         vk::DescriptorSetLayout set_layout_{};
@@ -90,11 +90,10 @@ namespace fi
             vk::DeviceSize draw_calls_ = 0;
         };
 
-        // accessors
         size_t prim_count_ = 0;
         std::unique_ptr<Buffer<DeviceBufferOffsets, vertex, index, indirect, storage>> buffer_{};
         std::vector<uint32_t> material_idxs_{}; // indexed by prim
-        std::vector<ResMesh> meshes_{};         // indexed by material_idxs_[prim]
+        std::vector<ResMesh> meshes_{};         // indexed by mesh
 
         ResDetails(const std::filesystem::path& path);
         ~ResDetails();
@@ -127,9 +126,8 @@ namespace fi
             vk::DeviceSize joints_ = 0;
         };
 
-        std::vector<ResSkin> skins_{};
+        std::vector<ResSkin> skins_{}; // index by skin
 
-        // accessors
         std::unique_ptr<Buffer<SkinOffsets, storage, seq_write>> buffer_{};
         std::vector<uint32_t> skin_idx_{};      // indexed by prim
         std::vector<glm::mat4> inv_matrices_{}; // indexed by skin_idx_[prim]
@@ -177,8 +175,6 @@ namespace fi
 
     struct ResAnimation
     {
-
-        // accessor
         std::vector<size_t> key_frames_idx_{};   // indexed by node
         std::vector<ResKeyFrames> key_frames_{}; // indexed by key_frames_idx_[node]
     };
