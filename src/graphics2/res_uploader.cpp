@@ -295,7 +295,7 @@ fi::ResDetails::ResDetails(const std::filesystem::path& path)
 
     for (const auto& mat_in : model_.materials)
     {
-        Material& material = materials_.emplace_back();
+        ResMaterial& material = materials_.emplace_back();
 
         glms::assign_value(material.color_factor_, mat_in.pbrMetallicRoughness.baseColorFactor);
         material.metalic_ = mat_in.pbrMetallicRoughness.metallicFactor;
@@ -348,7 +348,7 @@ fi::ResDetails::ResDetails(const std::filesystem::path& path)
         }
     }
 
-    std::vector<Vtx> vtxs;
+    std::vector<ResVtx> vtxs;
     std::vector<uint32_t> idxs;
     std::vector<vk::DrawIndexedIndirectCommand> draw_calls;
     std::vector<glm::mat4> instance_mats;
@@ -359,7 +359,8 @@ fi::ResDetails::ResDetails(const std::filesystem::path& path)
     {
         ResMesh& res_mesh = meshes_.emplace_back();
         res_mesh.name_ = mesh.name;
-        res_mesh.draw_call_count_ = mesh.primitives.size();
+        res_mesh.primitive_count_ = mesh.primitives.size();
+        res_mesh.primitive_idx_ = material_idxs_.size();
         res_mesh.draw_call_offset_ = sizeof_arr(draw_calls);
 
         for (const auto& prim : mesh.primitives)
@@ -664,7 +665,7 @@ void fi::ResDetails::draw_mesh(vk::CommandBuffer cmd, size_t mesh_idx)
 {
     cmd.drawIndexedIndirect(*buffer_,                            //
                             meshes_[mesh_idx].draw_call_offset_, //
-                            meshes_[mesh_idx].draw_call_count_,  //
+                            meshes_[mesh_idx].primitive_count_,  //
                             sizeof(vk::DrawIndexedIndirectCommand));
 }
 
@@ -675,7 +676,7 @@ void fi::ResDetails::set_pipeline_create_details(std::vector<vk::VertexInputBind
     binding_des.resize(1);
     binding_des[0].binding = buffer_binding;
     binding_des[0].inputRate = vk::VertexInputRate::eVertex;
-    binding_des[0].stride = sizeof(Vtx);
+    binding_des[0].stride = sizeof(ResVtx);
 
     attrib_des.resize(7);
     for (size_t i = 0; i < attrib_des.size(); i++)
@@ -692,13 +693,13 @@ void fi::ResDetails::set_pipeline_create_details(std::vector<vk::VertexInputBind
     attrib_des[5].format = vk::Format::eR32G32B32A32Uint;
     attrib_des[6].format = vk::Format::eR32G32B32A32Sfloat;
 
-    attrib_des[0].offset = offsetof(Vtx, position_);
-    attrib_des[1].offset = offsetof(Vtx, normal_);
-    attrib_des[2].offset = offsetof(Vtx, tangent_);
-    attrib_des[3].offset = offsetof(Vtx, tex_coord_);
-    attrib_des[4].offset = offsetof(Vtx, color_);
-    attrib_des[5].offset = offsetof(Vtx, joint_);
-    attrib_des[6].offset = offsetof(Vtx, weight_);
+    attrib_des[0].offset = offsetof(ResVtx, position_);
+    attrib_des[1].offset = offsetof(ResVtx, normal_);
+    attrib_des[2].offset = offsetof(ResVtx, tangent_);
+    attrib_des[3].offset = offsetof(ResVtx, tex_coord_);
+    attrib_des[4].offset = offsetof(ResVtx, color_);
+    attrib_des[5].offset = offsetof(ResVtx, joint_);
+    attrib_des[6].offset = offsetof(ResVtx, weight_);
 }
 
 void fi::ResDetails::allocate_descriptor(vk::DescriptorPool des_pool)
@@ -729,76 +730,95 @@ void fi::ResDetails::allocate_descriptor(vk::DescriptorPool des_pool)
     device().updateDescriptorSets({write_textures, write_ssbos}, {});
 }
 
-void set_node_details(fi::Node& target, const fi::gltf::Node& node, const std::vector<fi::gltf::Node>& nodes) {
-
-};
-
-fi::ResStructure::ResStructure(const ResDetails& res_details)
+fi::ResSkinDetails::ResSkinDetails(const ResDetails& res_details)
 {
     const gltf::Model& model = res_details.model();
-    const gltf::Scene& scene = model.scenes[model.defaultScene];
-
-    nodes_.reserve(model.nodes.size());
-    for (const auto& node : model.nodes)
+    if (model.skins.empty())
     {
-        Node& target = nodes_.emplace_back();
-        target.names_ = node.name;
-        target.mesh_idx_ = node.mesh;
-        target.skin_idx_ = node.skin;
-
-        for (int i = 0; i < node.matrix.size() / 4; i++)
-        {
-            glms::assign_value(target.matrix_[i], node.matrix.data() + i * 4);
-        }
-
-        target.children_.reserve(node.children.size());
-        for (auto child : node.children)
-        {
-            target.children_.push_back(child);
-        }
-    }
-
-    roots_.reserve(scene.nodes.size());
-    for (auto& root : scene.nodes)
-    {
-        roots_.push_back(root);
+        return;
     }
 
     skins_.reserve(model.skins.size());
-    for (auto& skin_in : model.skins)
+    for (const auto& skin : model.skins)
     {
-        Skin& skin = skins_.emplace_back();
-
-        skin.inv_matrices_.reserve(model.accessors[skin_in.inverseBindMatrices].count);
+        skins_.emplace_back(joints_.size(), skin.joints.size());
+        joints_.resize(joints_.size() + skin.joints.size(), glm::identity<glm::mat4>());
+        const gltf::Accessor& inv_mat_acc = model.accessors[skin.inverseBindMatrices];
+        inv_matrices_.reserve(joints_.size());
         iterate_acc([&](size_t idx, const unsigned char* data, size_t size)
-                    { skin.inv_matrices_.push_back(*castf(glm::mat4*, data)); },
-                    model.accessors[skin_in.inverseBindMatrices], model);
+                    { inv_matrices_.push_back(*castf(glm::mat4*, data)); }, inv_mat_acc, model);
+    }
 
-        skin.joints_.reserve(skin_in.joints.size());
-        for (auto joint_id : skin_in.joints)
+    skin_idx_.resize(res_details.material_idxs_.size(), -1);
+    for (const auto& node : model.nodes)
+    {
+        if (node.skin != -1 && node.mesh != -1)
         {
-            skin.joints_.push_back(joint_id);
+            const ResMesh& mesh = res_details.meshes_[node.mesh];
+            for (size_t i = 0; i < mesh.primitive_count_; i++)
+            {
+                skin_idx_[mesh.primitive_idx_ + i] = skins_[node.skin].joint_idx_;
+            }
         }
-
-        skin.matrices_offsets_.resize(skin.joints_.size(), 0);
     }
+
+    while (sizeof_arr(skin_idx_) % 16)
+    {
+        skin_idx_.push_back(-1);
+    }
+
+    make_unique2(buffer_, sizeof_arr(skin_idx_) + 2 * sizeof_arr(inv_matrices_));
+    buffer_->inv_matrices_ = sizeof_arr(skin_idx_);
+    buffer_->joints_ = buffer_->inv_matrices_ + sizeof_arr(inv_matrices_);
+
+    memcpy(buffer_->map_memory(), skin_idx_.data(), sizeof_arr(skin_idx_));
+    memcpy(buffer_->mapping() + buffer_->inv_matrices_, inv_matrices_.data(), sizeof_arr(inv_matrices_));
+    memcpy(buffer_->mapping() + buffer_->joints_, joints_.data(), sizeof_arr(joints_));
+
+    vk::DescriptorSetLayoutCreateInfo layout_info{};
+    std::array<vk::DescriptorSetLayoutBinding, 3> bindings = {};
+    for (size_t b = 0; b < bindings.size(); b++)
+    {
+        bindings[b].binding = b;
+        bindings[b].descriptorCount = 1;
+        bindings[b].descriptorType = vk::DescriptorType::eStorageBuffer;
+        bindings[b].stageFlags = vk::ShaderStageFlagBits::eVertex;
+    }
+
+    layout_info.setBindings(bindings);
+    set_layout_ = device().createDescriptorSetLayout(layout_info);
+
+    des_sizes_[0].type = vk::DescriptorType::eStorageBuffer;
+    des_sizes_[0].descriptorCount = bindings.size();
 }
 
-void traverse_node_helper(const std::function<void(fi::Node& node)>& func, const glm::mat4& parent_transform,
-                          fi::Node& node, std::vector<fi::Node>& nodes)
+fi::ResSkinDetails::~ResSkinDetails()
 {
-    node.matrix_ = parent_transform * node.matrix_;
-    func(node);
-    for (size_t child_idx : node.children_)
-    {
-        traverse_node_helper(func, node.matrix_, nodes[child_idx], nodes);
-    }
+    device().destroyDescriptorSetLayout(set_layout_);
 }
 
-void fi::ResStructure::traverse_node(const std::function<void(Node& node)>& func)
+void fi::ResSkinDetails::allocate_descriptor(vk::DescriptorPool des_pool)
 {
-    for (auto& root : roots_)
-    {
-        traverse_node_helper(func, glm::identity<glm::mat4>(), nodes_[root], nodes_);
-    }
+    vk::DescriptorSetAllocateInfo alloc_info{};
+    alloc_info.descriptorPool = des_pool;
+    alloc_info.setSetLayouts(set_layout_);
+    des_set_ = device().allocateDescriptorSets(alloc_info)[0];
+
+    std::array<vk::DescriptorBufferInfo, 3> buffer_infos{};
+    buffer_infos[0].buffer = *buffer_;
+    buffer_infos[0].offset = buffer_->skin_idx_;
+    buffer_infos[0].range = sizeof_arr(skin_idx_);
+    buffer_infos[1].buffer = *buffer_;
+    buffer_infos[1].offset = buffer_->inv_matrices_;
+    buffer_infos[1].range = sizeof_arr(inv_matrices_);
+    buffer_infos[2].buffer = *buffer_;
+    buffer_infos[2].offset = buffer_->skin_idx_;
+    buffer_infos[2].range = sizeof_arr(joints_);
+
+    vk::WriteDescriptorSet write{};
+    write.descriptorType = vk::DescriptorType::eStorageBuffer;
+    write.dstBinding = 0;
+    write.dstSet = des_set_;
+    write.setBufferInfo(buffer_infos);
+    device().updateDescriptorSets(write, {});
 }

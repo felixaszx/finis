@@ -6,7 +6,7 @@
 
 namespace fi
 {
-    struct Vtx
+    struct ResVtx
     {
         glm::vec3 position_ = {0, 0, 0};
         glm::vec3 normal_ = {0, 0, 0};
@@ -17,7 +17,7 @@ namespace fi
         glm::vec4 weight_ = {0, 0, 0, 0};
     };
 
-    struct alignas(16) Material
+    struct alignas(16) ResMaterial
     {
         glm::vec4 color_factor_ = {1, 1, 1, 1};
         glm::vec4 emissive_factor_ = {0, 0, 0, 1};    // [3] = emissive strength
@@ -48,7 +48,8 @@ namespace fi
     struct ResMesh
     {
         std::string name_{};
-        uint32_t draw_call_count_ = 0;
+        uint32_t primitive_count_ = 0;
+        size_t primitive_idx_ = 0;
         vk::DeviceSize draw_call_offset_ = 0;
     };
 
@@ -73,7 +74,7 @@ namespace fi
         std::vector<vk::DescriptorImageInfo> tex_infos_{};
 
         std::vector<vk::Sampler> samplers_{};
-        std::vector<Material> materials_{};
+        std::vector<ResMaterial> materials_{};
 
         std::array<vk::DescriptorPoolSize, 2> des_sizes_{};
         vk::DescriptorSetLayout set_layout_{};
@@ -105,32 +106,38 @@ namespace fi
                                          uint32_t buffer_binding = 0);
     };
 
-    struct Node
+    struct ResSkin
     {
-        std::string names_ = "";
-        size_t mesh_idx_ = -1;
-        size_t skin_idx_ = -1;
-        glm::mat4 matrix_ = glm::identity<glm::mat4>();
-
-        std::vector<size_t> children_{};
+        size_t joint_idx_ = -1;
+        size_t joint_count_ = 0;
     };
 
-    struct Skin
+    struct ResSkinDetails : private GraphicsObject
     {
+        std::array<vk::DescriptorPoolSize, 1> des_sizes_{};
+        vk::DescriptorSetLayout set_layout_{};
+        vk::DescriptorSet des_set_{};
+
+        struct SkinOffsets
+        {
+            vk::DeviceSize skin_idx_ = 0;
+            vk::DeviceSize inv_matrices_ = 0;
+            vk::DeviceSize joints_ = 0;
+        };
+
+        std::vector<ResSkin> skins_{};
+
+        // accessors
+        std::unique_ptr<Buffer<SkinOffsets, storage, seq_write>> buffer_{};
+        std::vector<uint32_t> skin_idx_{}; // indexed by prim
         std::vector<glm::mat4> inv_matrices_{};
-        std::vector<size_t> joints_{};
-        std::vector<vk::DeviceSize> matrices_offsets_{};
-    };
+        std::vector<glm::mat4> joints_{};
 
-    struct ResStructure : private GraphicsObject
-    {
-        std::vector<Node> nodes_{};
-        std::vector<size_t> roots_{};
-        std::vector<Skin> skins_{};
-        std::unique_ptr<Buffer<BufferBase::EmptyExtraInfo, storage, seq_write>> buffer_{};
-        ResStructure(const ResDetails& res_details);
+        ResSkinDetails(const ResDetails& res_details);
+        ~ResSkinDetails();
 
-        void traverse_node(const std::function<void(Node& node)>& func);
+        [[nodiscard]] bool empty() const { return skins_.empty(); }
+        void allocate_descriptor(vk::DescriptorPool des_pool);
     };
 
 }; // namespace fi
