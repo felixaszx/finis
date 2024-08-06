@@ -569,6 +569,11 @@ fi::ResDetails::ResDetails(const std::filesystem::path& path)
         material_idxs_.push_back(-1);
     }
 
+    while ((sizeof_arr(vtxs) + sizeof_arr(idxs)) % 16)
+    {
+        idxs.push_back(-1);
+    }
+
     make_unique2(buffer_,
                  sizeof_arr(vtxs)                 //
                      + sizeof_arr(idxs)           //

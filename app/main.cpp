@@ -79,9 +79,11 @@ int main(int argc, char** argv)
         g.queues(GraphicsObject::GRAPHICS).submit(submit_info, frame_fence);
         sc.present(submit_sems);
     }
+    
     g.device().waitIdle();
     sc.destory();
     g.device().destroyCommandPool(cmd_pool);
+    g.device().destroyDescriptorPool(des_pool);
 
     fltk.hide();
     fle::Global::check();
