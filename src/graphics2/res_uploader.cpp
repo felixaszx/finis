@@ -701,7 +701,7 @@ void fi::ResDetails::set_pipeline_create_details(std::vector<vk::VertexInputBind
     attrib_des[6].offset = offsetof(Vtx, weight_);
 }
 
-void fi::ResDetails::generate_descriptors(vk::DescriptorPool des_pool)
+void fi::ResDetails::allocate_descriptor(vk::DescriptorPool des_pool)
 {
     vk::DescriptorSetAllocateInfo alloc_info{};
     alloc_info.descriptorPool = des_pool;
@@ -784,8 +784,8 @@ fi::ResStructure::ResStructure(const ResDetails& res_details)
     }
 }
 
-void traverse_node_helper(const std::function<void(fi::Node& node)>& func, glm::mat4 parent_transform, fi::Node& node,
-                          std::vector<fi::Node>& nodes)
+void traverse_node_helper(const std::function<void(fi::Node& node)>& func, const glm::mat4& parent_transform,
+                          fi::Node& node, std::vector<fi::Node>& nodes)
 {
     node.matrix_ = parent_transform * node.matrix_;
     func(node);

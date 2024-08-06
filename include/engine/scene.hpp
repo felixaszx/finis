@@ -16,15 +16,13 @@ namespace fi
 {
     struct SceneObj
     {
-      public:
         entt::entity id_{};
-        std::weak_ptr<SceneObj> parent_{};
         std::unordered_set<std::shared_ptr<SceneObj>> children_{};
 
         glm::vec3 position_ = {0, 0, 0}; // all relative
         glm::vec3 scale_ = {1, 1, 1};
         glm::quat rotation_{};
-        glm::mat4 transform_ = glm::mat4(1.0f);
+        glm::mat4 transform_ = glm::mat4(1.0f); // updated by traversal function
 
         SceneObj(const SceneObj&) = delete;
         SceneObj(SceneObj&&) = delete;
@@ -34,7 +32,7 @@ namespace fi
         ~SceneObj();
 
         operator entt::entity&() { return id_; }
-        static void build_relation(const std::shared_ptr<SceneObj>& parent, const std::shared_ptr<SceneObj>& child);
+        void add_child(std::shared_ptr<SceneObj>& child);
 
         [[nodiscard]] glm::vec3 get_world_pos() const;
         void traverse_scene(const std::function<void(SceneObj&)>& func = {});

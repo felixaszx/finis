@@ -32,8 +32,7 @@ int main(int argc, char** argv)
     des_pool_info.setPoolSizes(test_model.des_sizes_);
     des_pool_info.maxSets = 10;
     vk::DescriptorPool des_pool = g.device().createDescriptorPool(des_pool_info);
-
-    test_model.generate_descriptors(des_pool);
+    test_model.allocate_descriptor(des_pool);
 
     vk::CommandPoolCreateInfo pool_info{};
     pool_info.flags = vk::CommandPoolCreateFlagBits::eResetCommandBuffer;

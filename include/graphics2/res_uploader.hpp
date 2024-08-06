@@ -96,7 +96,7 @@ namespace fi
         ResDetails(const std::filesystem::path& path);
         ~ResDetails();
 
-        void generate_descriptors(vk::DescriptorPool des_pool);
+        void allocate_descriptor(vk::DescriptorPool des_pool);
         [[nodiscard]] const gltf::Model& model() const;
         void bind(vk::CommandBuffer cmd, uint32_t buffer_binding, vk::PipelineLayout pipeline_layout, uint32_t set);
         void draw_mesh(vk::CommandBuffer cmd, size_t mesh_idx);
