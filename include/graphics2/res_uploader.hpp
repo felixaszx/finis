@@ -3,6 +3,8 @@
 
 #include "graphics.hpp"
 #include "buffer.hpp"
+#include <set>
+#include <queue>
 
 namespace fi
 {
@@ -136,10 +138,113 @@ namespace fi
         ResSkinDetails(const ResDetails& res_details);
         ~ResSkinDetails();
 
+        void test() { gltf::Model m; }
+
         [[nodiscard]] bool empty() const { return skins_.empty(); }
         void allocate_descriptor(vk::DescriptorPool des_pool);
+        void bind(vk::CommandBuffer cmd,vk::PipelineLayout pipeline_layout, uint32_t set);
     };
 
+    template <typename OutT>
+    struct ResAnimationSampler
+    {
+        inline static OutT default_ = {};
+
+        size_t interporlation_method_ = 0;
+        std::vector<float> time_stamps_{};
+        std::vector<OutT> output_{};
+
+        ResAnimationSampler(const OutT& default_val = {}) { default_ = default_val; }
+
+        OutT sample_time_stamp(float time_stamp);
+    };
+
+    struct ResKeyFrame
+    {
+        glm::vec3 translation_{};
+        glm::quat rotation_{};
+        glm::vec3 scale_{};
+    };
+
+    struct ResKeyFrames
+    {
+        ResAnimationSampler<glm::vec3> translation_sampler_{glm::vec3(0, 0, 0)};
+        ResAnimationSampler<glm::quat> rotation_sampler_{glm::quat(1, 0, 0, 0)};
+        ResAnimationSampler<glm::vec3> scale_sampler_{glm::vec3(1, 1, 1)};
+
+        ResKeyFrame sample_time_stamp(float time_stamp);
+    };
+
+    struct ResAnimation
+    {
+        std::vector<ResKeyFrames> key_frames_{};
+
+        // accessor
+        std::vector<size_t> key_frames_idx_{}; // indexed by node
+    };
+
+    std::vector<ResAnimation> load_res_animations(const ResDetails& res_details);
+
+    template <typename OutT>
+    inline OutT ResAnimationSampler<OutT>::sample_time_stamp(float time_stamp)
+    {
+        OutT result = default_;
+        if (output_.empty())
+        {
+            return result;
+        }
+
+        float curr_time = time_stamp;
+        float prev_time = 0;
+        float next_time = 0;
+        const OutT* prev_out = &result;
+        const OutT* next_out = nullptr;
+
+        if (curr_time >= time_stamps_.back())
+        {
+            int quot = curr_time / time_stamps_.back();
+            curr_time -= quot * time_stamps_.back();
+        }
+
+        for (size_t i = 0; i < time_stamps_.size(); i++)
+        {
+            if (time_stamps_[i] >= curr_time)
+            {
+                next_time = time_stamps_[i];
+                next_out = &output_[i];
+                if (i)
+                {
+                    prev_time = time_stamps_[i - 1];
+                    prev_out = &output_[i - 1];
+                }
+                break;
+            }
+        }
+
+        switch (interporlation_method_)
+        {
+            case 0: // linear
+            case 2: // cubic spine not supported
+            {
+                float inpl_val = (curr_time - prev_time) / (next_time - prev_time);
+                if constexpr (std::is_same_v<OutT, glm::quat>)
+                {
+                    result = glm::slerp(*prev_out, *next_out, inpl_val);
+                }
+                else
+                {
+                    result = glm::lerp(*prev_out, *next_out, inpl_val);
+                }
+                break;
+            }
+            case 1: // steps
+            {
+                result = *prev_out;
+                break;
+            }
+        }
+        return result;
+    }
 }; // namespace fi
 
 #endif // GRAPHICS2_RES_UPLOADER_HPP

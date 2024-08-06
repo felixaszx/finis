@@ -822,3 +822,88 @@ void fi::ResSkinDetails::allocate_descriptor(vk::DescriptorPool des_pool)
     write.setBufferInfo(buffer_infos);
     device().updateDescriptorSets(write, {});
 }
+
+void fi::ResSkinDetails::bind(vk::CommandBuffer cmd, vk::PipelineLayout pipeline_layout, uint32_t set)
+{
+    cmd.bindDescriptorSets(vk::PipelineBindPoint::eGraphics, pipeline_layout, set, des_set_, {});
+}
+
+template <typename OutT>
+void set_sampler(const fi::gltf::AnimationSampler& anim_sampler, fi::ResAnimationSampler<OutT>& res_sampler,
+                 const fi::gltf::Model& model)
+{
+    const fi::gltf::Accessor& in_acc = model.accessors[anim_sampler.input];
+    const fi::gltf::Accessor& out_acc = model.accessors[anim_sampler.output];
+    res_sampler.time_stamps_.reserve(in_acc.count);
+    res_sampler.output_.reserve(in_acc.count);
+
+    if (anim_sampler.interpolation == "LINEAR")
+    {
+        res_sampler.interporlation_method_ = 0;
+    }
+    else if (anim_sampler.interpolation == "STEP")
+    {
+        res_sampler.interporlation_method_ = 1;
+    }
+    else
+    {
+        res_sampler.interporlation_method_ = 2;
+    }
+
+    iterate_acc([&](size_t idx, const unsigned char* data, size_t size)
+                { res_sampler.time_stamps_.push_back(*castf(float*, data)); }, in_acc, model);
+    iterate_acc([&](size_t idx, const unsigned char* data, size_t size)
+                { res_sampler.output_.push_back(*castf(OutT*, data)); }, out_acc, model);
+}
+
+std::vector<fi::ResAnimation> fi::load_res_animations(const ResDetails& res_details)
+{
+    const gltf::Model& model = res_details.model();
+    std::vector<ResAnimation> animations;
+    animations.reserve(model.animations.size());
+
+    for (const auto& anim_in : model.animations)
+    {
+        ResAnimation& anim = animations.emplace_back();
+        anim.key_frames_idx_.resize(model.nodes.size(), -1);
+
+        for (const auto& channel : anim_in.channels)
+        {
+            size_t key_frame_idx = anim.key_frames_idx_[channel.target_node];
+            if (key_frame_idx == -1)
+            {
+                anim.key_frames_.emplace_back();
+                key_frame_idx = anim.key_frames_.size() - 1;
+                anim.key_frames_idx_[channel.target_node] = key_frame_idx;
+            }
+
+            ResKeyFrames& key_frames = anim.key_frames_[key_frame_idx];
+            const gltf::AnimationSampler& sampler = anim_in.samplers[channel.sampler];
+            if (channel.target_path == "translation")
+            {
+                set_sampler(sampler, key_frames.translation_sampler_, model);
+            }
+            else if (channel.target_path == "rotation")
+            {
+                set_sampler(sampler, key_frames.rotation_sampler_, model);
+            }
+            else if (channel.target_path == "scale")
+            {
+                set_sampler(sampler, key_frames.scale_sampler_, model);
+            }
+            else
+            {
+                continue;
+            }
+        }
+    }
+
+    return animations;
+}
+
+fi::ResKeyFrame fi::ResKeyFrames::sample_time_stamp(float time_stamp)
+{
+    return {translation_sampler_.sample_time_stamp(time_stamp), //
+            rotation_sampler_.sample_time_stamp(time_stamp),    //
+            scale_sampler_.sample_time_stamp(time_stamp)};
+}

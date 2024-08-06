@@ -27,6 +27,7 @@ int main(int argc, char** argv)
 
     ResDetails test_model("res/models/spartan_armour_mkv_-_halo_reach/scene.gltf");
     ResSkinDetails test_skins(test_model);
+    std::vector<ResAnimation> test_animations = load_res_animations(test_model);
 
     std::vector<vk::DescriptorPoolSize> combinned_sizes;
     combinned_sizes.insert(combinned_sizes.end(), test_model.des_sizes_.begin(), test_model.des_sizes_.end());
