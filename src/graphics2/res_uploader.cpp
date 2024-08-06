@@ -759,11 +759,6 @@ fi::ResSkinDetails::ResSkinDetails(const ResDetails& res_details)
         }
     }
 
-    while (sizeof_arr(skin_idx_) % 16)
-    {
-        skin_idx_.push_back(-1);
-    }
-
     make_unique2(buffer_, sizeof_arr(skin_idx_) + 2 * sizeof_arr(inv_matrices_));
     buffer_->inv_matrices_ = sizeof_arr(skin_idx_);
     buffer_->joints_ = buffer_->inv_matrices_ + sizeof_arr(inv_matrices_);
