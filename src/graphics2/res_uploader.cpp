@@ -683,12 +683,13 @@ void fi::ResDetails::set_pipeline_create_details(std::vector<vk::VertexInputBind
         attrib_des[i].binding = buffer_binding;
         attrib_des[i].location = i;
     }
+
     attrib_des[0].format = vk::Format::eR32G32B32Sfloat;
     attrib_des[1].format = vk::Format::eR32G32B32Sfloat;
     attrib_des[2].format = vk::Format::eR32G32B32A32Sfloat;
     attrib_des[3].format = vk::Format::eR32G32Sfloat;
     attrib_des[4].format = vk::Format::eR32G32B32A32Sfloat;
-    attrib_des[5].format = vk::Format::eR32G32B32A32Sfloat;
+    attrib_des[5].format = vk::Format::eR16G16B16A16Uint;
     attrib_des[6].format = vk::Format::eR32G32B32A32Sfloat;
 
     attrib_des[0].offset = offsetof(Vtx, position_);
