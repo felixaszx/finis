@@ -365,31 +365,32 @@ fi::ResDetails::ResDetails(const std::filesystem::path& path)
         for (const auto& prim : mesh.primitives)
         {
             material_idxs_.push_back(prim.material);
-            {
-                const gltf::Accessor& idx_acc = model_.accessors[prim.indices];
-                idxs.reserve(old_idx_count + idx_acc.count);
-                iterate_acc(
-                    [&](size_t iter_idx, const unsigned char* data, size_t size)
-                    {
-                        if (size == 2)
+            std::future<void> idx_async = std::async(
+                [&]()
+                {
+                    const gltf::Accessor& idx_acc = model_.accessors[prim.indices];
+                    idxs.reserve(old_idx_count + idx_acc.count);
+                    iterate_acc(
+                        [&](size_t iter_idx, const unsigned char* data, size_t size)
                         {
-                            idxs.emplace_back(*castf(uint16_t*, data));
-                        }
-                        else
-                        {
-                            idxs.emplace_back(*castf(uint32_t*, data));
-                        }
-                    },
-                    idx_acc, model_);
-                vk::DrawIndexedIndirectCommand& draw_call = draw_calls.emplace_back();
-                draw_call.firstIndex = old_idx_count;
-                draw_call.indexCount = idx_acc.count;
-                draw_call.vertexOffset = old_vtx_count;
-                draw_call.firstInstance = 0;
-                draw_call.instanceCount = 1;
-                old_idx_count = idxs.size();
-            }
-
+                            if (size == 2)
+                            {
+                                idxs.emplace_back(*castf(uint16_t*, data));
+                            }
+                            else
+                            {
+                                idxs.emplace_back(*castf(uint32_t*, data));
+                            }
+                        },
+                        idx_acc, model_);
+                    vk::DrawIndexedIndirectCommand& draw_call = draw_calls.emplace_back();
+                    draw_call.firstIndex = old_idx_count;
+                    draw_call.indexCount = idx_acc.count;
+                    draw_call.vertexOffset = old_vtx_count;
+                    draw_call.firstInstance = 0;
+                    draw_call.instanceCount = 1;
+                    old_idx_count = idxs.size();
+                });
             const gltf::Accessor& pos_acc = model_.accessors[prim.attributes.at("POSITION")];
             vtxs.resize(old_vtx_count + pos_acc.count);
             std::future<void> position_async = std::async(
@@ -553,6 +554,7 @@ fi::ResDetails::ResDetails(const std::filesystem::path& path)
                         acc, model_);
                 });
 
+            idx_async.wait();
             position_async.wait();
             normal_async.wait();
             tangent_async.wait();
