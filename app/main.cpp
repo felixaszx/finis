@@ -46,7 +46,7 @@ int main(int argc, char** argv)
     cmd_alloc.level = vk::CommandBufferLevel::ePrimary;
     auto cmds = g.device().allocateCommandBuffers(cmd_alloc);
 
-    while (g.update())
+    while (true)
     {
         auto r = g.device().waitForFences(frame_fence, true, std::numeric_limits<uint64_t>::max());
         uint32_t img_idx = sc.aquire_next_image(next_img);
@@ -57,6 +57,10 @@ int main(int argc, char** argv)
             using namespace std::chrono_literals;
             std::this_thread::sleep_for(1ms);
             g.update();
+        }
+        if (!g.update())
+        {
+            break;
         }
 
         if (glfwGetKey(g.window(), GLFW_KEY_P))
@@ -79,7 +83,7 @@ int main(int argc, char** argv)
         g.queues(GraphicsObject::GRAPHICS).submit(submit_info, frame_fence);
         sc.present(submit_sems);
     }
-    
+
     g.device().waitIdle();
     sc.destory();
     g.device().destroyCommandPool(cmd_pool);
