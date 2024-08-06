@@ -10,7 +10,7 @@ int main(int argc, char** argv)
 {
     using namespace fi;
 
-    fle::DoubleWindow fltk(800, 600, "Test window");
+    fle::DoubleWindow fltk(800, 600, "");
     fltk.end();
     fle::Flow flow(0, 0, 800, 600);
     fltk.add(flow);
