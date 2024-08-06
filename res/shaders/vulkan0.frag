@@ -87,14 +87,14 @@ JOINT;
 void main()
 {
     Material mat = MATERIALS.data_[MATERIAL_IDXS.mat_idx_[MESH_IDX]];
-    COLOR = mat.color_factor_;
+    COLOR = FRAG_DATA.color_ * mat.color_factor_;
     POSITION = FRAG_DATA.position_;
     NORMAL = vec4(FRAG_DATA.normal_, 1);
 
     // texture mapping
     if (mat.color_texture_idx_ != NO_TEXTURE)
     {
-        COLOR *= FRAG_DATA.color_ * texture(textures_arr[mat.color_texture_idx_], FRAG_DATA.tex_coord_);
+        COLOR *= texture(textures_arr[mat.color_texture_idx_], FRAG_DATA.tex_coord_);
         if (COLOR.a < mat.alpha_cutoff_)
         {
             discard;

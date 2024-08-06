@@ -361,7 +361,6 @@ fi::ResDetails::ResDetails(const std::filesystem::path& path)
         res_mesh.name_ = mesh.name;
         res_mesh.primitive_count_ = mesh.primitives.size();
         res_mesh.primitive_idx_ = material_idxs_.size();
-        res_mesh.draw_call_offset_ = sizeof_arr(draw_calls);
 
         for (const auto& prim : mesh.primitives)
         {
@@ -565,6 +564,7 @@ fi::ResDetails::ResDetails(const std::filesystem::path& path)
         }
     }
 
+    prim_count_ = material_idxs_.size();
     while (sizeof_arr(material_idxs_) % 16)
     {
         material_idxs_.push_back(-1);
@@ -588,11 +588,6 @@ fi::ResDetails::ResDetails(const std::filesystem::path& path)
     buffer_->materials_ = buffer_->idx_buffer_ + sizeof_arr(idxs);
     buffer_->material_idxs_ = buffer_->materials_ + sizeof_arr(materials_);
     buffer_->draw_calls_ = buffer_->material_idxs_ + sizeof_arr(material_idxs_);
-
-    for (auto& mesh : meshes_)
-    {
-        mesh.draw_call_offset_ += buffer_->draw_calls_;
-    }
 
     memcpy(staging.map_memory(), vtxs.data(), sizeof_arr(vtxs));
     memcpy(staging.mapping() + buffer_->idx_buffer_, idxs.data(), sizeof_arr(idxs));
@@ -661,11 +656,11 @@ void fi::ResDetails::bind(vk::CommandBuffer cmd, uint32_t buffer_binding, vk::Pi
     cmd.bindIndexBuffer(*buffer_, buffer_->idx_buffer_, vk::IndexType::eUint32);
 }
 
-void fi::ResDetails::draw_mesh(vk::CommandBuffer cmd, size_t mesh_idx)
+void fi::ResDetails::draw(vk::CommandBuffer cmd)
 {
-    cmd.drawIndexedIndirect(*buffer_,                            //
-                            meshes_[mesh_idx].draw_call_offset_, //
-                            meshes_[mesh_idx].primitive_count_,  //
+    cmd.drawIndexedIndirect(*buffer_,             //
+                            buffer_->draw_calls_, //
+                            prim_count_,          //
                             sizeof(vk::DrawIndexedIndirectCommand));
 }
 

@@ -52,7 +52,6 @@ namespace fi
         std::string name_{};
         uint32_t primitive_count_ = 0;
         size_t primitive_idx_ = 0;
-        vk::DeviceSize draw_call_offset_ = 0;
     };
 
     struct ResDetails : private GraphicsObject
@@ -92,9 +91,10 @@ namespace fi
         };
 
         // accessors
+        size_t prim_count_ = 0;
         std::unique_ptr<Buffer<DeviceBufferOffsets, vertex, index, indirect, storage>> buffer_{};
         std::vector<uint32_t> material_idxs_{}; // indexed by prim
-        std::vector<ResMesh> meshes_{};
+        std::vector<ResMesh> meshes_{};         // indexed by material_idxs_[prim]
 
         ResDetails(const std::filesystem::path& path);
         ~ResDetails();
@@ -102,7 +102,7 @@ namespace fi
         void allocate_descriptor(vk::DescriptorPool des_pool);
         [[nodiscard]] const gltf::Model& model() const;
         void bind(vk::CommandBuffer cmd, uint32_t buffer_binding, vk::PipelineLayout pipeline_layout, uint32_t set);
-        void draw_mesh(vk::CommandBuffer cmd, size_t mesh_idx);
+        void draw(vk::CommandBuffer cmd);
         static void set_pipeline_create_details(std::vector<vk::VertexInputBindingDescription>& binding_des,
                                                 std::vector<vk::VertexInputAttributeDescription>& attrib_des,
                                                 uint32_t buffer_binding = 0);
@@ -131,8 +131,8 @@ namespace fi
 
         // accessors
         std::unique_ptr<Buffer<SkinOffsets, storage, seq_write>> buffer_{};
-        std::vector<uint32_t> skin_idx_{}; // indexed by prim
-        std::vector<glm::mat4> inv_matrices_{};
+        std::vector<uint32_t> skin_idx_{};      // indexed by prim
+        std::vector<glm::mat4> inv_matrices_{}; // indexed by skin_idx_[prim]
         std::vector<glm::mat4> joints_{};
 
         ResSkinDetails(const ResDetails& res_details);
@@ -177,10 +177,10 @@ namespace fi
 
     struct ResAnimation
     {
-        std::vector<ResKeyFrames> key_frames_{};
 
         // accessor
-        std::vector<size_t> key_frames_idx_{}; // indexed by node
+        std::vector<size_t> key_frames_idx_{};   // indexed by node
+        std::vector<ResKeyFrames> key_frames_{}; // indexed by key_frames_idx_[node]
     };
 
     std::vector<ResAnimation> load_res_animations(const ResDetails& res_details);

@@ -67,9 +67,9 @@ int main(int argc, char** argv)
 
     struct
     {
-        glm::mat4 model = glm::scale(glm::vec3(0.1, 0.1, 0.1));
+        glm::mat4 model = glm::scale(glm::vec3(1, 1, 1));
         glm::mat4 view = glm::lookAt(glm::vec3(0, 0, 0), glm::vec3(1, 0, 0), glm::vec3(0, 1, 0));
-        glm::mat4 proj = glms::perspective(glm::radians(45.0f), float(1920) / 1080, 0.1f, 1000.0f);
+        glm::mat4 proj = glms::perspective(glm::radians(45.0f), float(1920) / 1080, 0.1f, 100000000000000000.0f);
     } push;
 
     vk::RenderingInfo rendering{};
@@ -110,9 +110,9 @@ int main(int argc, char** argv)
         cmds[0].pushConstants(pso_layout, vk::ShaderStageFlagBits::eVertex, 0, sizeof(push), &push);
         cmds[0].setViewport(0, vk::Viewport(0, 0, 1920, 1080, 0, 1));
         cmds[0].setScissor(0, vk::Rect2D({}, {1920, 1080}));
-        test_model.draw_mesh(cmds[0], 0);
+        test_model.draw(cmds[0]);
         cmds[0].endRendering();
-        
+
         cmds[0].end();
 
         std::vector<vk::PipelineStageFlags> waiting_stages = {vk::PipelineStageFlagBits::eColorAttachmentOutput};

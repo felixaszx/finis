@@ -35,8 +35,9 @@ void main()
     FRAG_DATA.position_ = PUSHES.model_ * vec4(POSITION, 1.0);
     FRAG_DATA.normal_ = normalize(mat3(transpose(inverse(PUSHES.model_))) * NORMAL);
     FRAG_DATA.tangent_ = normalize(mat3(transpose(inverse(PUSHES.model_))) * TANGENT.xyz);
-    FRAG_DATA.bitangent_ = TANGENT.w * normalize(cross(FRAG_DATA.tangent_, FRAG_DATA.normal_));
+    FRAG_DATA.bitangent_ = TANGENT.w * normalize(cross(FRAG_DATA.normal_, FRAG_DATA.tangent_));
     FRAG_DATA.tex_coord_ = TEX_COORD;
+    FRAG_DATA.color_ = COLOR;
 
     gl_Position = PUSHES.proj_ * PUSHES.view_ * FRAG_DATA.position_;
 }
