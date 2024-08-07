@@ -38,7 +38,15 @@ fi::ResSceneDetails::ResSceneDetails(const ResDetails& res_details)
             nodes_.reserve(model.nodes.size());
             for (auto& node_in : model.nodes)
             {
-                nodes_.emplace_back().name_ = node_in.name;
+                ResSceneNode& node = nodes_.emplace_back();
+                node.name_ = node_in.name;
+                glms::assign_value(node.preset_translation_, node_in.translation, node_in.translation.size());
+                glms::assign_value(node.preset_rotation_, node_in.rotation, node_in.rotation.size());
+                glms::assign_value(node.preset_scale_, node_in.scale, node_in.scale.size());
+                for (int i = 0; i < node_in.matrix.size(); i += 4)
+                {
+                    glms::assign_value(node.preset_transform_[i / 4], node_in.matrix.data() + i, 4);
+                }
             }
         });
 
@@ -86,17 +94,18 @@ fi::ResSceneDetails::ResSceneDetails(const ResDetails& res_details)
     transform_async.wait();
 }
 
-void fi::ResSceneDetails::update_scene(const std::function<void(ResSceneNode& node, size_t node_idx)>& func)
+void fi::ResSceneDetails::update_scene(const std::function<void(ResSceneNode& node, size_t node_idx)>& func,
+                                       const glm::mat4& root_transform)
 {
     for (auto root_node_idx : roots_)
     {
-        update_scene_helper(func, root_node_idx, glm::identity<glm::mat4>());
+        update_scene_helper(func, root_node_idx, root_transform);
     }
 }
-void fi::ResSceneDetails::update_scene()
+void fi::ResSceneDetails::update_scene(const glm::mat4& root_transform)
 {
     for (auto root_node_idx : roots_)
     {
-        update_scene_helper(root_node_idx, glm::identity<glm::mat4>());
+        update_scene_helper(root_node_idx, root_transform);
     }
 }

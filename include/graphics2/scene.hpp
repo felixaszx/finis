@@ -8,6 +8,11 @@ namespace fi
     struct ResSceneNode
     {
         std::string name_ = "";
+        glm::vec3 preset_translation_ = {0, 0, 0};
+        glm::quat preset_rotation_ = {0, 0, 0, 1};
+        glm::vec3 preset_scale_ = {1, 1, 1};
+        glm::mat4 preset_transform_ = glm::identity<glm::mat4>(); // set by node
+
         glm::vec3 translation_ = {0, 0, 0};
         glm::quat rotation_ = {0, 0, 0, 1};
         glm::vec3 scale_ = {1, 1, 1};
@@ -37,8 +42,9 @@ namespace fi
 
         // calculate node_transform after the callback
         inline void apply_transform(size_t node_idx, const glm::mat4& matrix) { nodes_[node_idx].transform_ = matrix; }
-        void update_scene(const std::function<void(ResSceneNode& node, size_t node_idx)>& func);
-        void update_scene();
+        void update_scene(const std::function<void(ResSceneNode& node, size_t node_idx)>& func,
+                          const glm::mat4& root_transform = glm::identity<glm::mat4>());
+        void update_scene(const glm::mat4& root_transform = glm::identity<glm::mat4>());
     };
 }; // namespace fi
 

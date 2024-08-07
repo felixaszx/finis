@@ -29,7 +29,7 @@ int main(int argc, char** argv)
     Semaphore submit;
     Fence frame_fence;
 
-    ResDetails test_model("res/models/spartan_armour_mkv_-_halo_reach/scene.gltf");
+    ResDetails test_model("res/models/lakeside_-_exterior_scene/scene.gltf");
     ResSkinDetails test_skins(test_model);
     std::vector<ResAnimation> test_animations = load_res_animations(test_model);
     ResSceneDetails test_scene(test_model);
