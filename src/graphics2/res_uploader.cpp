@@ -862,45 +862,56 @@ std::vector<fi::ResAnimation> fi::load_res_animations(const ResDetails& res_deta
 {
     const gltf::Model& model = res_details.model();
     std::vector<ResAnimation> animations;
-    animations.reserve(model.animations.size());
+    animations.resize(model.animations.size());
 
-    for (const auto& anim_in : model.animations)
+    std::vector<std::future<void>> animation_asyncs;
+    animation_asyncs.reserve(animations.size());
+    for (size_t a = 0; a < animations.size(); a++)
     {
-        ResAnimation& anim = animations.emplace_back();
-        anim.key_frames_idx_.resize(model.nodes.size(), -1);
-        anim.name_ = anim_in.name;
+        animation_asyncs.emplace_back(std::async(
+            [&](const tinygltf::Animation& anim_in, size_t anim_idx)
+            {
+                ResAnimation& anim = animations[anim_idx];
+                anim.key_frames_idx_.resize(model.nodes.size(), -1);
+                anim.name_ = anim_in.name;
 
-        for (const auto& channel : anim_in.channels)
-        {
-            size_t key_frame_idx = anim.key_frames_idx_[channel.target_node];
-            if (key_frame_idx == -1)
-            {
-                anim.key_frames_.emplace_back();
-                key_frame_idx = anim.key_frames_.size() - 1;
-                anim.key_frames_idx_[channel.target_node] = key_frame_idx;
-            }
+                for (const auto& channel : anim_in.channels)
+                {
+                    size_t key_frame_idx = anim.key_frames_idx_[channel.target_node];
+                    if (key_frame_idx == -1)
+                    {
+                        anim.key_frames_.emplace_back();
+                        key_frame_idx = anim.key_frames_.size() - 1;
+                        anim.key_frames_idx_[channel.target_node] = key_frame_idx;
+                    }
 
-            ResKeyFrames& key_frames = anim.key_frames_[key_frame_idx];
-            const gltf::AnimationSampler& sampler = anim_in.samplers[channel.sampler];
-            if (channel.target_path == "translation")
-            {
-                set_sampler(sampler, key_frames.translation_sampler_, model);
-            }
-            else if (channel.target_path == "rotation")
-            {
-                set_sampler(sampler, key_frames.rotation_sampler_, model);
-            }
-            else if (channel.target_path == "scale")
-            {
-                set_sampler(sampler, key_frames.scale_sampler_, model);
-            }
-            else
-            {
-                continue;
-            }
-        }
+                    ResKeyFrames& key_frames = anim.key_frames_[key_frame_idx];
+                    const gltf::AnimationSampler& sampler = anim_in.samplers[channel.sampler];
+                    if (channel.target_path == "translation")
+                    {
+                        set_sampler(sampler, key_frames.translation_sampler_, model);
+                    }
+                    else if (channel.target_path == "rotation")
+                    {
+                        set_sampler(sampler, key_frames.rotation_sampler_, model);
+                    }
+                    else if (channel.target_path == "scale")
+                    {
+                        set_sampler(sampler, key_frames.scale_sampler_, model);
+                    }
+                    else
+                    {
+                        continue;
+                    }
+                }
+            },
+            model.animations[a], a));
     }
 
+    for (auto& anim_fut : animation_asyncs)
+    {
+        anim_fut.wait();
+    }
     return animations;
 }
 
@@ -909,4 +920,13 @@ fi::ResKeyFrame fi::ResKeyFrames::sample_time_stamp(float time_stamp)
     return {translation_sampler_.sample_time_stamp(time_stamp), //
             rotation_sampler_.sample_time_stamp(time_stamp),    //
             scale_sampler_.sample_time_stamp(time_stamp)};
+}
+
+void fi::ResKeyFrames::set_sample_time_stamp(float time_stamp, glm::vec3& translation, glm::quat& rotation,
+                                             glm::vec3& scale)
+{
+    ResKeyFrame key_frame = sample_time_stamp(time_stamp);
+    translation = key_frame.translation_;
+    rotation = key_frame.rotation_;
+    scale = key_frame.scale_;
 }

@@ -132,7 +132,7 @@ namespace fi
         std::unique_ptr<Buffer<SkinOffsets, storage, seq_write>> buffer_{};
         std::vector<uint32_t> skin_idx_{};      // indexed by prim
         std::vector<glm::mat4> inv_matrices_{}; // indexed by skin_idx_[prim]
-        std::vector<uint32_t> joints_{};       // indexed by skin_idx_[prim], store node_idx
+        std::vector<uint32_t> joints_{};        // indexed by skin_idx_[prim], store node_idx
 
         ResSkinDetails(const ResDetails& res_details);
         ~ResSkinDetails();
@@ -170,6 +170,7 @@ namespace fi
         ResAnimationSampler<glm::vec3> scale_sampler_{glm::vec3(1, 1, 1)};
 
         ResKeyFrame sample_time_stamp(float time_stamp);
+        void set_sample_time_stamp(float time_stamp, glm::vec3& translation, glm::quat& rotation, glm::vec3& scale);
     };
 
     struct ResAnimation
