@@ -9,12 +9,12 @@ namespace fi
     {
         std::string name_ = "";
         glm::vec3 preset_translation_ = {0, 0, 0};
-        glm::quat preset_rotation_ = {0, 0, 0, 1};
+        glm::quat preset_rotation_ = {0, 0, 0, 0};
         glm::vec3 preset_scale_ = {1, 1, 1};
         glm::mat4 preset_transform_ = glm::identity<glm::mat4>(); // set by ResSceneDetails
 
         glm::vec3 translation_ = {0, 0, 0};
-        glm::quat rotation_ = {0, 0, 0, 1};
+        glm::quat rotation_ = {0, 0, 0, 0};
         glm::vec3 scale_ = {1, 1, 1};
     };
 
