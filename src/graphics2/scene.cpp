@@ -9,7 +9,6 @@ void fi::ResSceneDetails::update_scene_helper(const std::function<void(ResSceneN
     glm::mat4 scale = glm::scale(nodes_[curr].scale_);
     node_transform_[curr] = parent_transform                 //
                             * translation * rotation * scale //
-                            * nodes_[curr].transform_        //
                             * nodes_[curr].preset_transform_;
 
     for (auto child_idx : node_children_[curr])
@@ -25,7 +24,6 @@ void fi::ResSceneDetails::update_scene_helper(size_t curr, const glm::mat4& pare
     glm::mat4 scale = glm::scale(nodes_[curr].scale_);
     node_transform_[curr] = parent_transform                 //
                             * translation * rotation * scale //
-                            * nodes_[curr].transform_        //
                             * nodes_[curr].preset_transform_;
 
     for (auto child_idx : node_children_[curr])

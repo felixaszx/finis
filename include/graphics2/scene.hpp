@@ -13,10 +13,9 @@ namespace fi
         glm::vec3 preset_scale_ = {1, 1, 1};
         glm::mat4 preset_transform_ = glm::identity<glm::mat4>(); // set by ResSceneDetails
 
-        glm::vec3 translation_ = {0, 0, 0}; // set by update_scene callback
+        glm::vec3 translation_ = {0, 0, 0};
         glm::quat rotation_ = {0, 0, 0, 1};
         glm::vec3 scale_ = {1, 1, 1};
-        glm::mat4 transform_ = glm::identity<glm::mat4>(); // set by apply_transform
     };
 
     // support only 1 scene
@@ -42,7 +41,6 @@ namespace fi
         ResSceneDetails(const ResDetails& res_details);
 
         // calculate node_transform after the callback
-        inline void apply_transform(size_t node_idx, const glm::mat4& matrix) { nodes_[node_idx].transform_ = matrix; }
         void update_scene(const std::function<void(ResSceneNode& node, size_t node_idx)>& func,
                           const glm::mat4& root_transform = glm::identity<glm::mat4>());
         void update_scene(const glm::mat4& root_transform = glm::identity<glm::mat4>());
