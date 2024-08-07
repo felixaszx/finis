@@ -543,7 +543,7 @@ fi::ResDetails::ResDetails(const std::filesystem::path& path)
                                 case 8:
                                     for (int i = 0; i < size; i += sizeof(uint16_t))
                                     {
-                                        weight[i / 2] = get_normalized(castf(uint8_t*, data));
+                                        weight[i / 2] = get_normalized(castf(uint16_t*, data));
                                     }
                                     break;
                                 case 16:
@@ -751,7 +751,7 @@ fi::ResSkinDetails::ResSkinDetails(const ResDetails& res_details)
                     { inv_matrices_.push_back(*castf(glm::mat4*, data)); }, inv_mat_acc, model);
     }
 
-    skin_idx_.resize(res_details.material_idxs_.size(), -1);
+    joint_idx_.resize(res_details.material_idxs_.size(), -1);
     for (const auto& node : model.nodes)
     {
         if (node.skin != -1 && node.mesh != -1)
@@ -759,7 +759,7 @@ fi::ResSkinDetails::ResSkinDetails(const ResDetails& res_details)
             const ResMesh& mesh = res_details.meshes_[node.mesh];
             for (size_t i = 0; i < mesh.primitive_count_; i++)
             {
-                skin_idx_[mesh.primitive_idx_ + i] = skins_[node.skin].joint_idx_;
+                joint_idx_[mesh.primitive_idx_ + i] = skins_[node.skin].joint_idx_;
             }
         }
     }
@@ -769,13 +769,20 @@ fi::ResSkinDetails::ResSkinDetails(const ResDetails& res_details)
         joints_.push_back(-1);
     }
 
-    make_unique2(buffer_, sizeof_arr(skin_idx_) + 2 * sizeof_arr(inv_matrices_));
-    buffer_->inv_matrices_ = sizeof_arr(skin_idx_);
+    make_unique2(buffer_, sizeof_arr(joint_idx_) + 2 * sizeof_arr(inv_matrices_), DST);
+    buffer_->inv_matrices_ = sizeof_arr(joint_idx_);
     buffer_->joints_ = buffer_->inv_matrices_ + sizeof_arr(inv_matrices_);
+    Buffer<BufferBase::EmptyExtraInfo, vertex, seq_write> staging(buffer_->size(), SRC);
 
-    memcpy(buffer_->map_memory(), skin_idx_.data(), sizeof_arr(skin_idx_));
-    memcpy(buffer_->mapping() + buffer_->inv_matrices_, inv_matrices_.data(), sizeof_arr(inv_matrices_));
-    memcpy(buffer_->mapping() + buffer_->joints_, joints_.data(), sizeof_arr(joints_));
+    memcpy(staging.map_memory(), joint_idx_.data(), sizeof_arr(joint_idx_));
+    memcpy(staging.mapping() + buffer_->inv_matrices_, inv_matrices_.data(), sizeof_arr(inv_matrices_));
+    memcpy(staging.mapping() + buffer_->joints_, joints_.data(), sizeof_arr(joints_));
+
+    vk::CommandBuffer cmd = one_time_submit_cmd();
+    begin_cmd(cmd);
+    cmd.copyBuffer(staging, *buffer_, {{0, 0, buffer_->size()}});
+    cmd.end();
+    submit_one_time_cmd(cmd);
 
     vk::DescriptorSetLayoutCreateInfo layout_info{};
     std::array<vk::DescriptorSetLayoutBinding, 3> bindings = {};
@@ -812,13 +819,13 @@ void fi::ResSkinDetails::allocate_descriptor(vk::DescriptorPool des_pool)
 
     std::array<vk::DescriptorBufferInfo, 3> buffer_infos{};
     buffer_infos[0].buffer = *buffer_;
-    buffer_infos[0].offset = buffer_->skin_idx_;
-    buffer_infos[0].range = sizeof_arr(skin_idx_);
+    buffer_infos[0].offset = buffer_->joint_idx_;
+    buffer_infos[0].range = sizeof_arr(joint_idx_);
     buffer_infos[1].buffer = *buffer_;
     buffer_infos[1].offset = buffer_->inv_matrices_;
     buffer_infos[1].range = sizeof_arr(inv_matrices_);
     buffer_infos[2].buffer = *buffer_;
-    buffer_infos[2].offset = buffer_->skin_idx_;
+    buffer_infos[2].offset = buffer_->joints_;
     buffer_infos[2].range = sizeof_arr(joints_);
 
     vk::WriteDescriptorSet write{};

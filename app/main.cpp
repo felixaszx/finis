@@ -29,14 +29,17 @@ int main(int argc, char** argv)
     Semaphore submit;
     Fence frame_fence;
 
-    ResDetails test_model("res/models/sponza/Sponza.gltf");
+    ResDetails test_model("res/models/spartan_armour_mkv_-_halo_reach/scene.gltf");
     ResSkinDetails test_skins(test_model);
-    std::vector<ResAnimation> test_animations = load_res_animations(test_model);
     ResSceneDetails test_scene(test_model);
+    std::vector<ResAnimation> test_animations = load_res_animations(test_model);
+
+    test_scene.update_scene();
 
     std::vector<vk::DescriptorPoolSize> combinned_sizes;
     combinned_sizes.insert(combinned_sizes.end(), test_model.des_sizes_.begin(), test_model.des_sizes_.end());
     combinned_sizes.insert(combinned_sizes.end(), test_skins.des_sizes_.begin(), test_skins.des_sizes_.end());
+    combinned_sizes.insert(combinned_sizes.end(), test_scene.des_sizes_.begin(), test_scene.des_sizes_.end());
 
     vk::DescriptorPoolCreateInfo des_pool_info{};
     des_pool_info.setPoolSizes(combinned_sizes);
@@ -44,8 +47,10 @@ int main(int argc, char** argv)
     vk::DescriptorPool des_pool = g.device().createDescriptorPool(des_pool_info);
     test_model.allocate_descriptor(des_pool);
     test_skins.allocate_descriptor(des_pool);
+    test_scene.allocate_descriptor(des_pool);
 
-    std::vector<vk::DescriptorSetLayout> set_layouts = {test_model.set_layout_};
+    std::vector<vk::DescriptorSetLayout> set_layouts = {test_model.set_layout_, test_skins.set_layout_,
+                                                        test_scene.set_layout_};
     vk::PushConstantRange push_range{};
     push_range.size = 3 * sizeof(glm::mat4);
     push_range.stageFlags = vk::ShaderStageFlagBits::eVertex;
@@ -81,12 +86,31 @@ int main(int argc, char** argv)
     rendering.layerCount = 1;
     rendering.renderArea = vk::Rect2D{{}, {1920, 1080}};
 
+    CpuTimer frame_time;
+    frame_time.begin();
+
     while (true)
     {
-        std::vector<int> a;
         auto r = g.device().waitForFences(frame_fence, true, std::numeric_limits<uint64_t>::max());
+        frame_time.end();
+        frame_time.begin();
         uint32_t img_idx = sc.aquire_next_image(next_img);
         g.device().resetFences(frame_fence);
+
+        float curr_time = frame_time.since_init_second();
+        for (size_t node_idx = 0; node_idx < test_scene.nodes_.size(); node_idx++)
+        {
+            size_t key_frame_idx = test_animations[0].key_frames_idx_[node_idx];
+            if (key_frame_idx != -1)
+            {
+                ResKeyFrames& key_frame = test_animations[0].key_frames_[key_frame_idx];
+                key_frame.set_sample_time_stamp(curr_time, //
+                                                test_scene.nodes_[node_idx].translation_,
+                                                test_scene.nodes_[node_idx].rotation_,
+                                                test_scene.nodes_[node_idx].scale_);
+            }
+        }
+        test_scene.update_scene();
 
         while (fle::Global::check(), glfwGetWindowAttrib(g.window(), GLFW_ICONIFIED))
         {
@@ -110,6 +134,8 @@ int main(int argc, char** argv)
         cmds[0].beginRendering(rendering);
         cmds[0].bindPipeline(vk::PipelineBindPoint::eGraphics, pso);
         test_model.bind(cmds[0], 0, pso_layout, 0);
+        test_skins.bind(cmds[0], pso_layout, 1);
+        test_scene.bind(cmds[0], pso_layout, 2);
         cmds[0].pushConstants(pso_layout, vk::ShaderStageFlagBits::eVertex, 0, sizeof(push), &push);
         cmds[0].setViewport(0, vk::Viewport(0, 0, 1920, 1080, 0, 1));
         cmds[0].setScissor(0, vk::Rect2D({}, {1920, 1080}));

@@ -104,6 +104,25 @@ namespace fi
         Semaphore();
         ~Semaphore();
     };
+
+    class CpuTimer
+    {
+      private:
+        std::chrono::system_clock::time_point init_;
+        std::chrono::system_clock::time_point begin_;
+        std::chrono::system_clock::time_point end_;
+
+      public:
+        CpuTimer();
+        float since_init_second();
+        uint32_t since_init_ms();
+
+        void begin();
+        void end();
+
+        float get_duration_second();
+        uint32_t get_duration_ms();
+    };
 }; // namespace fi
 
 #endif // GRAPHICS_GRAPHICS_HPP

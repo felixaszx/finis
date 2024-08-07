@@ -79,7 +79,7 @@ namespace fi
 
         std::array<vk::DescriptorPoolSize, 2> des_sizes_{};
         vk::DescriptorSetLayout set_layout_{};
-        vk::DescriptorSet des_set_{};
+        vk::DescriptorSet des_set_{}; // bind to fragment shader
 
         struct DeviceBufferOffsets
         {
@@ -110,29 +110,29 @@ namespace fi
     struct ResSkin
     {
         std::string name_ = "";
-        size_t joint_idx_ = -1;
+        size_t joint_idx_ = 0;
         size_t joint_count_ = 0;
     };
 
     struct ResSkinDetails : private GraphicsObject
     {
-        std::array<vk::DescriptorPoolSize, 1> des_sizes_{};
-        vk::DescriptorSetLayout set_layout_{};
-        vk::DescriptorSet des_set_{};
 
         struct SkinOffsets
         {
-            vk::DeviceSize skin_idx_ = 0;
+            vk::DeviceSize joint_idx_ = 0;
             vk::DeviceSize inv_matrices_ = 0;
             vk::DeviceSize joints_ = 0;
         };
 
         std::vector<ResSkin> skins_{}; // index by skin
 
-        std::unique_ptr<Buffer<SkinOffsets, storage, seq_write>> buffer_{};
-        std::vector<uint32_t> skin_idx_{};      // indexed by prim
-        std::vector<glm::mat4> inv_matrices_{}; // indexed by skin_idx_[prim]
-        std::vector<uint32_t> joints_{};        // indexed by skin_idx_[prim], store node_idx
+        std::array<vk::DescriptorPoolSize, 1> des_sizes_{};
+        vk::DescriptorSetLayout set_layout_{};
+        vk::DescriptorSet des_set_{}; // bind to vertex shader
+        std::unique_ptr<Buffer<SkinOffsets, storage>> buffer_{};
+        std::vector<uint32_t> joint_idx_{};      // indexed by prim
+        std::vector<glm::mat4> inv_matrices_{}; // indexed by joint_idx_[prim] + shader_attribute
+        std::vector<uint32_t> joints_{};        // indexed by joint_idx_[prim] + shader_attribute, store as node_idx
 
         ResSkinDetails(const ResDetails& res_details);
         ~ResSkinDetails();

@@ -48,7 +48,7 @@ layout(location = 0) in struct
     vec2 tex_coord_;
     vec4 color_;
 } FRAG_DATA;
-layout(location = 6) in flat int MESH_IDX;
+layout(location = 6) in flat int PRIM_IDX;
 
 layout(set = 0, binding = 0) uniform sampler2D textures_arr[];
 layout(std430, set = 0, binding = 1) readonly buffer MATERIALS_
@@ -62,31 +62,11 @@ layout(std430, set = 0, binding = 2) readonly buffer MATERIAL_IDXS_
 }
 MATERIAL_IDXS;
 
-/*
-layout(std430, set = 1, binding = 0) readonly buffer SKIN_IDXS_
-{
-    uint skin_idx_[];
-}
-SKIN_IDXS;
-
-layout(std430, set = 1, binding = 1) readonly buffer JOINT_INV_MAT_
-{
-    mat4 mat_[];
-}
-JOINT_INV_MAT;
-
-layout(std430, set = 1, binding = 2) readonly buffer JOINT_
-{
-    mat4 mat_[];
-}
-JOINT;
-*/
-
 // Code
 
 void main()
 {
-    Material mat = MATERIALS.data_[MATERIAL_IDXS.mat_idx_[MESH_IDX]];
+    Material mat = MATERIALS.data_[MATERIAL_IDXS.mat_idx_[PRIM_IDX]];
     COLOR = FRAG_DATA.color_ * mat.color_factor_;
     POSITION = FRAG_DATA.position_;
     NORMAL = vec4(FRAG_DATA.normal_, 1);

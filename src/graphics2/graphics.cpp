@@ -281,3 +281,42 @@ fi::Semaphore::~Semaphore()
 {
     device().destroySemaphore(*this);
 }
+
+fi::CpuTimer::CpuTimer()
+    : init_(std::chrono::high_resolution_clock::now()),
+      begin_(init_),
+      end_(init_)
+{
+}
+
+float fi::CpuTimer::since_init_second()
+{
+    return std::chrono::duration<float, std::chrono::seconds::period> //
+        (std::chrono::high_resolution_clock::now() - init_).count();
+}
+
+uint32_t fi::CpuTimer::since_init_ms()
+{
+    return std::chrono::duration_cast<std::chrono::milliseconds> //
+        (std::chrono::high_resolution_clock::now() - init_).count();
+}
+
+void fi::CpuTimer::begin()
+{
+    begin_ = std::chrono::high_resolution_clock::now();
+}
+
+void fi::CpuTimer::end()
+{
+    end_ = std::chrono::high_resolution_clock::now();
+}
+
+float fi::CpuTimer::get_duration_second()
+{
+    return std::chrono::duration<float, std::chrono::seconds::period>(end_ - begin_).count();
+}
+
+uint32_t fi::CpuTimer::get_duration_ms()
+{
+    return std::chrono::duration_cast<std::chrono::milliseconds>(end_ - begin_).count();
+}

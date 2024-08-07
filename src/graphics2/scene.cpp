@@ -93,9 +93,41 @@ fi::ResSceneDetails::ResSceneDetails(const ResDetails& res_details)
         roots_.push_back(node_idx);
     }
 
+    vk::DescriptorSetLayoutCreateInfo layout_info{};
+    std::array<vk::DescriptorSetLayoutBinding, 2> bindings = {};
+    for (size_t b = 0; b < bindings.size(); b++)
+    {
+        bindings[b].binding = b;
+        bindings[b].descriptorCount = 1;
+        bindings[b].descriptorType = vk::DescriptorType::eStorageBuffer;
+        bindings[b].stageFlags = vk::ShaderStageFlagBits::eVertex;
+    }
+
+    layout_info.setBindings(bindings);
+    set_layout_ = device().createDescriptorSetLayout(layout_info);
+
+    des_sizes_[0].type = vk::DescriptorType::eStorageBuffer;
+    des_sizes_[0].descriptorCount = bindings.size();
+
     node_async.wait();
     children_async.wait();
     transform_async.wait();
+
+    make_unique2(buffer_, sizeof_arr(node_transform_idx_) + sizeof_arr(node_transform_));
+    buffer_->node_transform_ = sizeof_arr(node_transform_idx_);
+
+    memcpy(buffer_->map_memory(), node_transform_idx_.data(), sizeof_arr(node_transform_idx_));
+    memcpy(buffer_->mapping() + buffer_->node_transform_, node_transform_.data(), sizeof_arr(node_transform_));
+}
+
+fi::ResSceneDetails::~ResSceneDetails()
+{
+    device().destroyDescriptorSetLayout(set_layout_);
+}
+
+void fi::ResSceneDetails::update_data()
+{
+    memcpy(buffer_->mapping() + buffer_->node_transform_, node_transform_.data(), sizeof_arr(node_transform_));
 }
 
 void fi::ResSceneDetails::update_scene(const std::function<void(ResSceneNode& node, size_t node_idx)>& func,
@@ -105,6 +137,7 @@ void fi::ResSceneDetails::update_scene(const std::function<void(ResSceneNode& no
     {
         update_scene_helper(func, root_node_idx, root_transform);
     }
+    update_data();
 }
 void fi::ResSceneDetails::update_scene(const glm::mat4& root_transform)
 {
@@ -112,4 +145,33 @@ void fi::ResSceneDetails::update_scene(const glm::mat4& root_transform)
     {
         update_scene_helper(root_node_idx, root_transform);
     }
+    update_data();
+}
+
+void fi::ResSceneDetails::allocate_descriptor(vk::DescriptorPool des_pool)
+{
+    vk::DescriptorSetAllocateInfo alloc_info{};
+    alloc_info.descriptorPool = des_pool;
+    alloc_info.setSetLayouts(set_layout_);
+    des_set_ = device().allocateDescriptorSets(alloc_info)[0];
+
+    std::array<vk::DescriptorBufferInfo, 2> buffer_infos{};
+    buffer_infos[0].buffer = *buffer_;
+    buffer_infos[0].offset = buffer_->node_transform_idx_;
+    buffer_infos[0].range = sizeof_arr(node_transform_idx_);
+    buffer_infos[1].buffer = *buffer_;
+    buffer_infos[1].offset = buffer_->node_transform_;
+    buffer_infos[1].range = sizeof_arr(node_transform_);
+
+    vk::WriteDescriptorSet write{};
+    write.descriptorType = vk::DescriptorType::eStorageBuffer;
+    write.dstBinding = 0;
+    write.dstSet = des_set_;
+    write.setBufferInfo(buffer_infos);
+    device().updateDescriptorSets(write, {});
+}
+
+void fi::ResSceneDetails::bind(vk::CommandBuffer cmd, vk::PipelineLayout pipeline_layout, uint32_t set)
+{
+    cmd.bindDescriptorSets(vk::PipelineBindPoint::eGraphics, pipeline_layout, set, des_set_, {});
 }

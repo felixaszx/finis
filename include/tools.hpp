@@ -4,6 +4,7 @@
 #include <vector>
 #include <string>
 #include <memory>
+#include <chrono>
 
 #include <vulkan/vulkan.hpp>
 
@@ -29,6 +30,19 @@
 #define castc(type, value)  (const_cast<type>(value))
 #define castf(type, value)  ((type)(value))
 #define sizeof_arr(std_arr) (std_arr.size() * sizeof(std_arr[0]))
+
+namespace fi
+{
+    inline void begin_cmd(const vk::CommandBuffer& cmd,           //
+                          vk::CommandBufferUsageFlags flags = {}, //
+                          vk::CommandBufferInheritanceInfo* inheritance = nullptr)
+    {
+        vk::CommandBufferBeginInfo begin_info{};
+        begin_info.pInheritanceInfo = inheritance;
+        begin_info.flags = flags;
+        cmd.begin(begin_info);
+    }
+}
 
 template <typename T, typename Q>
 void sset(T& dst, const Q& src)
@@ -56,16 +70,6 @@ T max_of_all(const std::vector<T>& datas)
     }
 
     return max;
-}
-
-inline void begin_cmd(const vk::CommandBuffer& cmd,           //
-                      vk::CommandBufferUsageFlags flags = {}, //
-                      vk::CommandBufferInheritanceInfo* inheritance = nullptr)
-{
-    vk::CommandBufferBeginInfo begin_info{};
-    begin_info.pInheritanceInfo = inheritance;
-    begin_info.flags = flags;
-    cmd.begin(begin_info);
 }
 
 template <typename C>
