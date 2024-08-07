@@ -11,12 +11,12 @@ namespace fi
         glm::vec3 preset_translation_ = {0, 0, 0};
         glm::quat preset_rotation_ = {0, 0, 0, 1};
         glm::vec3 preset_scale_ = {1, 1, 1};
-        glm::mat4 preset_transform_ = glm::identity<glm::mat4>(); // set by node
+        glm::mat4 preset_transform_ = glm::identity<glm::mat4>(); // set by ResSceneDetails
 
-        glm::vec3 translation_ = {0, 0, 0};
+        glm::vec3 translation_ = {0, 0, 0}; // set by update_scene callback
         glm::quat rotation_ = {0, 0, 0, 1};
         glm::vec3 scale_ = {1, 1, 1};
-        glm::mat4 transform_ = glm::identity<glm::mat4>(); // set by ResSceneDetails
+        glm::mat4 transform_ = glm::identity<glm::mat4>(); // set by apply_transform
     };
 
     // support only 1 scene
@@ -34,7 +34,8 @@ namespace fi
 
         std::unique_ptr<Buffer<BufferBase::EmptyExtraInfo, storage, seq_write>> buffer_{};
         std::vector<uint32_t> node_transform_idx_{}; // indexed by prim
-        std::vector<glm::mat4> node_transform_{};    // indexed by node and node_transform_idx_[prim], calculated
+        std::vector<glm::mat4> node_transform_{};
+        // indexed by node and node_transform_idx_[prim], calculated by update_scene()
 
         std::vector<size_t> roots_;
 
