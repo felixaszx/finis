@@ -801,6 +801,10 @@ fi::ResSkinDetails::~ResSkinDetails()
 
 void fi::ResSkinDetails::allocate_descriptor(vk::DescriptorPool des_pool)
 {
+    if (skins_.empty())
+    {
+        return;
+    }
     vk::DescriptorSetAllocateInfo alloc_info{};
     alloc_info.descriptorPool = des_pool;
     alloc_info.setSetLayouts(set_layout_);
@@ -863,6 +867,11 @@ std::vector<fi::ResAnimation> fi::load_res_animations(const ResDetails& res_deta
     const gltf::Model& model = res_details.model();
     std::vector<ResAnimation> animations;
     animations.resize(model.animations.size());
+
+    if (animations.empty())
+    {
+        return {};
+    }
 
     std::vector<std::future<void>> animation_asyncs;
     animation_asyncs.reserve(animations.size());

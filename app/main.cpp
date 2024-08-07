@@ -83,6 +83,7 @@ int main(int argc, char** argv)
 
     while (true)
     {
+        std::vector<int> a;
         auto r = g.device().waitForFences(frame_fence, true, std::numeric_limits<uint64_t>::max());
         uint32_t img_idx = sc.aquire_next_image(next_img);
         g.device().resetFences(frame_fence);
