@@ -241,6 +241,15 @@ namespace fi
         }
         return result;
     }
+
+    struct ResMorphs
+    {
+        std::unique_ptr<Buffer<BufferBase::EmptyExtraInfo, storage, seq_write>> buffer_{};
+        std::unique_ptr<Buffer<BufferBase::EmptyExtraInfo, vertex, seq_write>> buffer2_{};
+
+        ResMorphs(const ResDetails& res_detail);
+        ~ResMorphs();
+    };
 }; // namespace fi
 
 #endif // GRAPHICS2_RES_UPLOADER_HPP
