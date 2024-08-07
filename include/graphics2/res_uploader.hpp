@@ -166,7 +166,7 @@ namespace fi
     struct ResKeyFrames
     {
         ResAnimationSampler<glm::vec3> translation_sampler_{glm::vec3(0, 0, 0)};
-        ResAnimationSampler<glm::quat> rotation_sampler_{glm::quat(1, 0, 0, 0)};
+        ResAnimationSampler<glm::quat> rotation_sampler_{glm::quat(0, 0, 0, 0)};
         ResAnimationSampler<glm::vec3> scale_sampler_{glm::vec3(1, 1, 1)};
 
         ResKeyFrame sample_time_stamp(float time_stamp);
