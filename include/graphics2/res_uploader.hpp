@@ -131,7 +131,7 @@ namespace fi
         std::unique_ptr<Buffer<SkinOffsets, storage, seq_write>> buffer_{};
         std::vector<uint32_t> skin_idx_{};      // indexed by prim
         std::vector<glm::mat4> inv_matrices_{}; // indexed by skin_idx_[prim]
-        std::vector<glm::mat4> joints_{};
+        std::vector<glm::mat4> joints_{};       // indexed by skin_idx_[prim]
 
         ResSkinDetails(const ResDetails& res_details);
         ~ResSkinDetails();
