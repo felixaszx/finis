@@ -98,18 +98,6 @@ int main(int argc, char** argv)
         g.device().resetFences(frame_fence);
 
         float curr_time = frame_time.since_init_second();
-        for (size_t node_idx = 0; node_idx < test_scene.nodes_.size(); node_idx++)
-        {
-            size_t key_frame_idx = test_animations[0].key_frames_idx_[node_idx];
-            if (key_frame_idx != -1)
-            {
-                ResKeyFrames& key_frame = test_animations[0].key_frames_[key_frame_idx];
-                key_frame.set_sample_time_stamp(curr_time, //
-                                                test_scene.nodes_[node_idx].translation_,
-                                                test_scene.nodes_[node_idx].rotation_,
-                                                test_scene.nodes_[node_idx].scale_);
-            }
-        }
         test_scene.update_scene();
 
         while (fle::Global::check(), glfwGetWindowAttrib(g.window(), GLFW_ICONIFIED))
