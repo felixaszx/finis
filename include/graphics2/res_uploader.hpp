@@ -109,6 +109,7 @@ namespace fi
 
     struct ResSkin
     {
+        std::string name_ = "";
         size_t joint_idx_ = -1;
         size_t joint_count_ = 0;
     };
@@ -131,12 +132,10 @@ namespace fi
         std::unique_ptr<Buffer<SkinOffsets, storage, seq_write>> buffer_{};
         std::vector<uint32_t> skin_idx_{};      // indexed by prim
         std::vector<glm::mat4> inv_matrices_{}; // indexed by skin_idx_[prim]
-        std::vector<glm::mat4> joints_{};       // indexed by skin_idx_[prim]
+        std::vector<uint32_t> joints_{};       // indexed by skin_idx_[prim], store node_idx
 
         ResSkinDetails(const ResDetails& res_details);
         ~ResSkinDetails();
-
-        void test() { gltf::Model m; }
 
         [[nodiscard]] bool empty() const { return skins_.empty(); }
         void allocate_descriptor(vk::DescriptorPool des_pool);
@@ -175,6 +174,7 @@ namespace fi
 
     struct ResAnimation
     {
+        std::string name_ = "";
         std::vector<size_t> key_frames_idx_{};   // indexed by node
         std::vector<ResKeyFrames> key_frames_{}; // indexed by key_frames_idx_[node]
     };

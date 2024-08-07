@@ -738,10 +738,15 @@ fi::ResSkinDetails::ResSkinDetails(const ResDetails& res_details)
     skins_.reserve(model.skins.size());
     for (const auto& skin : model.skins)
     {
-        skins_.emplace_back(joints_.size(), skin.joints.size());
-        joints_.resize(joints_.size() + skin.joints.size(), glm::identity<glm::mat4>());
+        skins_.emplace_back(skin.name, joints_.size(), skin.joints.size());
+        joints_.reserve(joints_.size() + skin.joints.size());
+        for (auto joint_in : skin.joints)
+        {
+            joints_.push_back(joint_in);
+        }
+
         const gltf::Accessor& inv_mat_acc = model.accessors[skin.inverseBindMatrices];
-        inv_matrices_.reserve(joints_.size());
+        inv_matrices_.reserve(inv_matrices_.size() + inv_mat_acc.count);
         iterate_acc([&](size_t idx, const unsigned char* data, size_t size)
                     { inv_matrices_.push_back(*castf(glm::mat4*, data)); }, inv_mat_acc, model);
     }
@@ -757,6 +762,11 @@ fi::ResSkinDetails::ResSkinDetails(const ResDetails& res_details)
                 skin_idx_[mesh.primitive_idx_ + i] = skins_[node.skin].joint_idx_;
             }
         }
+    }
+
+    while (sizeof_arr(joints_) % 16)
+    {
+        joints_.push_back(-1);
     }
 
     make_unique2(buffer_, sizeof_arr(skin_idx_) + 2 * sizeof_arr(inv_matrices_));
@@ -858,6 +868,7 @@ std::vector<fi::ResAnimation> fi::load_res_animations(const ResDetails& res_deta
     {
         ResAnimation& anim = animations.emplace_back();
         anim.key_frames_idx_.resize(model.nodes.size(), -1);
+        anim.name_ = anim_in.name;
 
         for (const auto& channel : anim_in.channels)
         {

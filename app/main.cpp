@@ -4,6 +4,7 @@
 #include "graphics2/graphics.hpp"
 #include "graphics2/swapchain.hpp"
 #include "graphics2/res_uploader.hpp"
+#include "graphics2/scene.hpp"
 #include "fltk/fl_ext.hpp"
 
 #include "test_pipeline.cpp"
@@ -28,20 +29,21 @@ int main(int argc, char** argv)
     Semaphore submit;
     Fence frame_fence;
 
-    ResDetails test_model("res/models/sponza/Sponza.gltf");
-    // ResSkinDetails test_skins(test_model);
+    ResDetails test_model("res/models/spartan_armour_mkv_-_halo_reach/scene.gltf");
+    ResSkinDetails test_skins(test_model);
     std::vector<ResAnimation> test_animations = load_res_animations(test_model);
+    ResSceneDetails test_scene(test_model);
 
     std::vector<vk::DescriptorPoolSize> combinned_sizes;
     combinned_sizes.insert(combinned_sizes.end(), test_model.des_sizes_.begin(), test_model.des_sizes_.end());
-    // combinned_sizes.insert(combinned_sizes.end(), test_skins.des_sizes_.begin(), test_skins.des_sizes_.end());
+    combinned_sizes.insert(combinned_sizes.end(), test_skins.des_sizes_.begin(), test_skins.des_sizes_.end());
 
     vk::DescriptorPoolCreateInfo des_pool_info{};
     des_pool_info.setPoolSizes(combinned_sizes);
     des_pool_info.maxSets = 100;
     vk::DescriptorPool des_pool = g.device().createDescriptorPool(des_pool_info);
     test_model.allocate_descriptor(des_pool);
-    // test_skins.allocate_descriptor(des_pool);
+    test_skins.allocate_descriptor(des_pool);
 
     std::vector<vk::DescriptorSetLayout> set_layouts = {test_model.set_layout_};
     vk::PushConstantRange push_range{};
