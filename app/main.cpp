@@ -31,7 +31,7 @@ int main(int argc, char** argv)
     Semaphore submit;
     Fence frame_fence;
 
-    ResDetails test_model("res/models/black_dragon_with_idle_animation/scene.gltf");
+    ResDetails test_model("res/models/sparta.glb");
     ResSkinDetails test_skins(test_model);
     ResSceneDetails test_scene(test_model);
     std::vector<ResAnimation> test_animations = load_res_animations(test_model);
