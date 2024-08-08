@@ -5,7 +5,7 @@ glm::mat4 get_node_transform(const fi::ResSceneNode& node, const glm::mat4& pare
     glm::mat4 translation = glm::translate(node.translation_);
     glm::mat4 rotation(node.rotation_);
     glm::mat4 scale = glm::scale(node.scale_);
-    return parents * translation * rotation * scale * node.preset_;
+    return parents * translation * rotation * scale;
 }
 
 void fi::ResSceneDetails::update_scene_helper(const std::function<void(ResSceneNode& node, size_t node_idx)>& func,
