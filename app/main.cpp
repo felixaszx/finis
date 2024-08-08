@@ -21,8 +21,8 @@ int main(int argc, char** argv)
     fle::Flow flow(0, 0, 800, 600);
     fltk.add(flow);
     fltk.resizable(flow);
-    fltk.show();
 
+    fltk.show();
     Graphics g(1920, 1080, "finis");
     Swapchain sc;
     sc.create();
