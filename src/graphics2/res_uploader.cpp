@@ -506,7 +506,7 @@ fi::ResDetails::ResDetails(const std::filesystem::path& path)
                     iterate_acc(
                         [&](size_t idx, const unsigned char* data, size_t size)
                         {
-                            glm::uvec4& joint = vtxs[idx].joint_;
+                            glm::uvec4& joint = vtxs[old_vtx_count + idx].joint_;
                             switch (size)
                             {
                                 case 4:

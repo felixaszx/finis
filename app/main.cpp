@@ -29,12 +29,10 @@ int main(int argc, char** argv)
     Semaphore submit;
     Fence frame_fence;
 
-    ResDetails test_model("res/models/spartan_armour_mkv_-_halo_reach/scene.gltf");
+    ResDetails test_model("res/models/phoenix_bird/scene.gltf");
     ResSkinDetails test_skins(test_model);
     ResSceneDetails test_scene(test_model);
     std::vector<ResAnimation> test_animations = load_res_animations(test_model);
-
-    test_scene.update_scene();
 
     std::vector<vk::DescriptorPoolSize> combinned_sizes;
     combinned_sizes.insert(combinned_sizes.end(), test_model.des_sizes_.begin(), test_model.des_sizes_.end());
@@ -72,12 +70,14 @@ int main(int argc, char** argv)
     cmd_alloc.level = vk::CommandBufferLevel::ePrimary;
     auto cmds = g.device().allocateCommandBuffers(cmd_alloc);
 
+    glm::vec3 camera_pos = {0, 0, -10};
     struct
     {
-        glm::mat4 model = glm::scale(glm::vec3(1, 1, 1));
-        glm::mat4 view = glm::lookAt(glm::vec3(0, 0, 0), glm::vec3(1, 0, 0), glm::vec3(0, 1, 0));
+        glm::mat4 model = {};
+        glm::mat4 view = {};
         glm::mat4 proj = glms::perspective(glm::radians(45.0f), float(1920) / 1080, 0.1f, 100000000000000000.0f);
     } push;
+    push.view = glm::lookAt(camera_pos, camera_pos + glm::vec3(0, 0, 1), glm::vec3(0, 1, 0));
 
     vk::RenderingInfo rendering{};
     rendering.setColorAttachments(color_infos);
@@ -96,9 +96,20 @@ int main(int argc, char** argv)
         frame_time.begin();
         uint32_t img_idx = sc.aquire_next_image(next_img);
         g.device().resetFences(frame_fence);
+        color_infos[2].imageView = sc.views_[img_idx];
 
         float curr_time = frame_time.since_init_second();
-        test_scene.update_scene();
+        for (size_t node_idx = 0; node_idx < test_scene.nodes_.size(); node_idx++)
+        {
+            size_t key_frame_idx = test_animations[0].key_frames_idx_[node_idx];
+            if (key_frame_idx != -1)
+            {
+                ResSceneNode& s_node = test_scene.nodes_[node_idx];
+                test_animations[0].key_frames_[key_frame_idx].set_sample_time_stamp(curr_time, s_node.translation_,
+                                                                                    s_node.rotation_, s_node.scale_);
+            }
+        }
+        test_scene.update_scene(glm::scale(glm::vec3(0.1, 0.1, 0.1)));
 
         while (fle::Global::check(), glfwGetWindowAttrib(g.window(), GLFW_ICONIFIED))
         {

@@ -60,22 +60,22 @@ void main()
 {
     PRIM_IDX = gl_DrawIDARB;
     mat4 node_transform = NODE_TRANSFORM.mat_[NODE_IDXS.node_idx_[PRIM_IDX]];
-    mat4 skin_transform = mat4(0.0);
-    for (int i = 0; i < 4; i++)
+    mat4 skin_transform = mat4(1.0);
+    uint skin_idx = JOINT_IDXS.joint_idx_[PRIM_IDX];
+    if (skin_idx != -1)
     {
-        float joint_weight = JOINT_WEIGHT[i];
-        mat4 joint_mat = mat4(1.0);
-        mat4 joint_inv_mat = mat4(1.0);
-        if (JOINT_IDX[i] != -1 && JOINT_IDXS.joint_idx_[PRIM_IDX] != -1)
+        skin_transform = mat4(0.0);
+        for (int i = 0; i < 4; i++)
         {
-            uint joint_idx = JOINT_IDXS.joint_idx_[PRIM_IDX] + JOINT_IDX[i];
-            joint_inv_mat = JOINT_INV_MAT.mat_[joint_idx];
-            joint_mat = NODE_TRANSFORM.mat_[JOINT.node_idx_[joint_idx]];
+            float joint_weight = JOINT_WEIGHT[i];
+            uint joint_idx = skin_idx + JOINT_IDX[i];
+            mat4 joint_mat = NODE_TRANSFORM.mat_[JOINT.node_idx_[joint_idx]];
+            mat4 joint_inv_mat = JOINT_INV_MAT.mat_[joint_idx];
+            skin_transform += joint_weight * joint_mat * joint_inv_mat;
         }
-        skin_transform += joint_weight * joint_mat * joint_inv_mat;
     }
 
-    mat4 model = node_transform;
+    mat4 model = node_transform * skin_transform;
     FRAG_DATA.position_ = model * vec4(POSITION, 1.0);
     FRAG_DATA.normal_ = normalize(mat3(transpose(inverse(model))) * NORMAL);
     FRAG_DATA.tangent_ = normalize(mat3(transpose(inverse(model))) * TANGENT.xyz);
