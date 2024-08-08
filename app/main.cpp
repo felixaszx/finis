@@ -87,13 +87,10 @@ int main(int argc, char** argv)
     rendering.renderArea = vk::Rect2D{{}, {1920, 1080}};
 
     CpuTimer frame_time;
-    frame_time.begin();
 
     while (true)
     {
         auto r = g.device().waitForFences(frame_fence, true, std::numeric_limits<uint64_t>::max());
-        frame_time.end();
-        frame_time.begin();
         uint32_t img_idx = sc.aquire_next_image(next_img);
         g.device().resetFences(frame_fence);
         color_infos[2].imageView = sc.views_[img_idx];
