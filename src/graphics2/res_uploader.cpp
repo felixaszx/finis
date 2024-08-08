@@ -308,9 +308,20 @@ fi::ResDetails::ResDetails(const std::filesystem::path& path)
 
         material.occlusion_map_idx_ = mat_in.occlusionTexture.index;
 
-        material.alpha_cutoff_ = mat_in.alphaCutoff;
-
         material.normal_map_idx_ = mat_in.normalTexture.index;
+
+        if (mat_in.alphaMode == "OPAQUE")
+        {
+            material.alpha_cutoff_ = 0;
+        }
+        else if (mat_in.alphaMode == "MASK")
+        {
+            material.alpha_cutoff_ = mat_in.alphaCutoff;
+        }
+        else
+        {
+            material.alpha_cutoff_ = -1;
+        }
 
 // extensions
 #define check_ext(name)                      \
