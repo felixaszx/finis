@@ -42,6 +42,19 @@ namespace fi
         begin_info.flags = flags;
         cmd.begin(begin_info);
     }
+
+};
+
+template <typename T>
+float get_normalized(T integer)
+{
+    return integer / (float)std::numeric_limits<T>::max();
+}
+
+template <typename T>
+float get_normalized(T* integer)
+{
+    return get_normalized(*integer);
 }
 
 template <typename T, typename Q>

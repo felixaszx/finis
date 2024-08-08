@@ -263,6 +263,69 @@ vk::Semaphore fi::create_vk_semaphore(vk::Device device)
     return device.createSemaphore(create_info);
 }
 
+void fi::iterate_acc(const std::function<void(size_t idx, const unsigned char* data, size_t size)>& cb, //
+                     const fi::gltf::Accessor& acc,                                                     //
+                     const fi::gltf::Model& model)
+{
+    const fi::gltf::BufferView& view = model.bufferViews[acc.bufferView];
+    const fi::gltf::Buffer& buffer = model.buffers[view.buffer];
+    size_t size = fi::gltf::GetComponentSizeInBytes(acc.componentType) //
+                  * fi::gltf::GetNumComponentsInType(acc.type);
+    size_t stride = view.byteStride ? view.byteStride : size;
+    size_t offset = view.byteOffset + acc.byteOffset;
+
+    if (acc.sparse.isSparse)
+    {
+        const fi::gltf::BufferView& sparse_view = model.bufferViews[acc.sparse.indices.bufferView];
+        const fi::gltf::Buffer& sparse_buffer = model.buffers[sparse_view.buffer];
+        const fi::gltf::BufferView& deviate_view = model.bufferViews[acc.sparse.values.bufferView];
+        const fi::gltf::Buffer& deviate_buffer = model.buffers[deviate_view.buffer];
+        size_t sparse_size = fi::gltf::GetComponentSizeInBytes(acc.sparse.indices.componentType);
+        size_t sparse_offset = sparse_view.byteOffset + acc.sparse.indices.byteOffset;
+        size_t deviate_offset = deviate_view.byteOffset + acc.sparse.values.byteOffset;
+
+        std::vector<size_t> deviate_idxs;
+        deviate_idxs.reserve(acc.sparse.count);
+        for (size_t i = 0; i < deviate_idxs.size(); i++)
+        {
+            const unsigned char* sparse_ptr = (sparse_buffer.data.data() + sparse_offset + sparse_size * i);
+            switch (sparse_size)
+            {
+                case 1:
+                    deviate_idxs.push_back(*sparse_ptr);
+                    break;
+                case 2:
+                    deviate_idxs.push_back(*(uint16_t*)sparse_ptr);
+                    break;
+                case 4:
+                    deviate_idxs.push_back(*(uint32_t*)sparse_ptr);
+                    break;
+            }
+        }
+
+        size_t deviate_idx = 0;
+        for (size_t b = 0; b < acc.count; b++)
+        {
+            if (deviate_idxs[deviate_idx] == b)
+            {
+                cb(b, deviate_buffer.data.data() + deviate_offset + deviate_idx * size, size);
+                deviate_idx++;
+            }
+            else
+            {
+                cb(b, buffer.data.data() + offset + b * stride, size);
+            }
+        }
+    }
+    else
+    {
+        for (size_t b = 0; b < acc.count; b++)
+        {
+            cb(b, buffer.data.data() + offset + b * stride, size);
+        }
+    }
+};
+
 fi::Fence::Fence(bool signal)
     : vk::Fence(create_vk_fence(device(), signal))
 {

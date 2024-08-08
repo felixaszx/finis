@@ -30,18 +30,6 @@ vk::Filter decode_filter_mode(int mode)
     return vk::Filter::eLinear;
 };
 
-template <typename T>
-float get_normalized(T integer)
-{
-    return integer / (float)std::numeric_limits<T>::max();
-}
-
-template <typename T>
-float get_normalized(T* integer)
-{
-    return get_normalized(*integer);
-}
-
 bool decode_mipmap_mode(int mode, vk::SamplerMipmapMode* out_mode)
 {
     switch (mode)
@@ -62,69 +50,6 @@ bool decode_mipmap_mode(int mode, vk::SamplerMipmapMode* out_mode)
             return true;
     }
     return false;
-};
-
-void iterate_acc(const std::function<void(size_t idx, const unsigned char* data, size_t size)>& cb, //
-                 const fi::gltf::Accessor& acc,                                                     //
-                 const fi::gltf::Model& model)
-{
-    const fi::gltf::BufferView& view = model.bufferViews[acc.bufferView];
-    const fi::gltf::Buffer& buffer = model.buffers[view.buffer];
-    size_t size = fi::gltf::GetComponentSizeInBytes(acc.componentType) //
-                  * fi::gltf::GetNumComponentsInType(acc.type);
-    size_t stride = view.byteStride ? view.byteStride : size;
-    size_t offset = view.byteOffset + acc.byteOffset;
-
-    if (acc.sparse.isSparse)
-    {
-        const fi::gltf::BufferView& sparse_view = model.bufferViews[acc.sparse.indices.bufferView];
-        const fi::gltf::Buffer& sparse_buffer = model.buffers[sparse_view.buffer];
-        const fi::gltf::BufferView& deviate_view = model.bufferViews[acc.sparse.values.bufferView];
-        const fi::gltf::Buffer& deviate_buffer = model.buffers[deviate_view.buffer];
-        size_t sparse_size = fi::gltf::GetComponentSizeInBytes(acc.sparse.indices.componentType);
-        size_t sparse_offset = sparse_view.byteOffset + acc.sparse.indices.byteOffset;
-        size_t deviate_offset = deviate_view.byteOffset + acc.sparse.values.byteOffset;
-
-        std::vector<size_t> deviate_idxs;
-        deviate_idxs.reserve(acc.sparse.count);
-        for (size_t i = 0; i < deviate_idxs.size(); i++)
-        {
-            const unsigned char* sparse_ptr = (sparse_buffer.data.data() + sparse_offset + sparse_size * i);
-            switch (sparse_size)
-            {
-                case 1:
-                    deviate_idxs.push_back(*sparse_ptr);
-                    break;
-                case 2:
-                    deviate_idxs.push_back(*castf(uint16_t*, sparse_ptr));
-                    break;
-                case 4:
-                    deviate_idxs.push_back(*castf(uint32_t*, sparse_ptr));
-                    break;
-            }
-        }
-
-        size_t deviate_idx = 0;
-        for (size_t b = 0; b < acc.count; b++)
-        {
-            if (deviate_idxs[deviate_idx] == b)
-            {
-                cb(b, deviate_buffer.data.data() + deviate_offset + deviate_idx * size, size);
-                deviate_idx++;
-            }
-            else
-            {
-                cb(b, buffer.data.data() + offset + b * stride, size);
-            }
-        }
-    }
-    else
-    {
-        for (size_t b = 0; b < acc.count; b++)
-        {
-            cb(b, buffer.data.data() + offset + b * stride, size);
-        }
-    }
 };
 
 fi::ResDetails::ResDetails(const std::filesystem::path& path)
@@ -679,7 +604,7 @@ void fi::ResDetails::draw(vk::CommandBuffer cmd)
 
 void fi::ResDetails::set_pipeline_create_details(std::vector<vk::VertexInputBindingDescription>& binding_des,
                                                  std::vector<vk::VertexInputAttributeDescription>& attrib_des,
-                                                 uint32_t buffer_binding)
+                                                 uint32_t buffer_binding, bool instancing)
 {
     binding_des.resize(1);
     binding_des[0].binding = buffer_binding;
@@ -708,6 +633,21 @@ void fi::ResDetails::set_pipeline_create_details(std::vector<vk::VertexInputBind
     attrib_des[4].offset = offsetof(ResVtx, color_);
     attrib_des[5].offset = offsetof(ResVtx, joint_);
     attrib_des[6].offset = offsetof(ResVtx, weight_);
+
+    if (instancing)
+    {
+        binding_des.resize(2);
+        binding_des[1].binding = buffer_binding + 1;
+        binding_des[1].inputRate = vk::VertexInputRate::eInstance;
+        binding_des[1].stride = sizeof(ResVtx);
+
+        attrib_des.resize(11);
+        for (int i = 0; i < 4; i++)
+        {
+            attrib_des[7 + i].format = vk::Format::eR32G32B32A32Sfloat;
+            attrib_des[7 + i].offset = i * sizeof(glm::vec4);
+        }
+    }
 }
 
 void fi::ResDetails::allocate_descriptor(vk::DescriptorPool des_pool)
@@ -850,110 +790,4 @@ void fi::ResSkinDetails::allocate_descriptor(vk::DescriptorPool des_pool)
 void fi::ResSkinDetails::bind(vk::CommandBuffer cmd, vk::PipelineLayout pipeline_layout, uint32_t set)
 {
     cmd.bindDescriptorSets(vk::PipelineBindPoint::eGraphics, pipeline_layout, set, des_set_, {});
-}
-
-template <typename OutT>
-void set_sampler(const fi::gltf::AnimationSampler& anim_sampler, fi::ResAnimationSampler<OutT>& res_sampler,
-                 const fi::gltf::Model& model)
-{
-    const fi::gltf::Accessor& in_acc = model.accessors[anim_sampler.input];
-    const fi::gltf::Accessor& out_acc = model.accessors[anim_sampler.output];
-    res_sampler.time_stamps_.reserve(in_acc.count);
-    res_sampler.output_.reserve(in_acc.count);
-
-    if (anim_sampler.interpolation == "LINEAR")
-    {
-        res_sampler.interporlation_method_ = 0;
-    }
-    else if (anim_sampler.interpolation == "STEP")
-    {
-        res_sampler.interporlation_method_ = 1;
-    }
-    else
-    {
-        res_sampler.interporlation_method_ = 2;
-    }
-
-    iterate_acc([&](size_t idx, const unsigned char* data, size_t size)
-                { res_sampler.time_stamps_.push_back(*castf(float*, data)); }, in_acc, model);
-    iterate_acc([&](size_t idx, const unsigned char* data, size_t size)
-                { res_sampler.output_.push_back(*castf(OutT*, data)); }, out_acc, model);
-}
-
-std::vector<fi::ResAnimation> fi::load_res_animations(const ResDetails& res_details)
-{
-    const gltf::Model& model = res_details.model();
-    std::vector<ResAnimation> animations;
-    animations.resize(model.animations.size());
-
-    if (animations.empty())
-    {
-        return {};
-    }
-
-    std::vector<std::future<void>> animation_asyncs;
-    animation_asyncs.reserve(animations.size());
-    for (size_t a = 0; a < animations.size(); a++)
-    {
-        animation_asyncs.emplace_back(std::async(
-            [&](const tinygltf::Animation& anim_in, size_t anim_idx)
-            {
-                ResAnimation& anim = animations[anim_idx];
-                anim.key_frames_idx_.resize(model.nodes.size(), -1);
-                anim.name_ = anim_in.name;
-
-                for (const auto& channel : anim_in.channels)
-                {
-                    size_t key_frame_idx = anim.key_frames_idx_[channel.target_node];
-                    if (key_frame_idx == -1)
-                    {
-                        anim.key_frames_.emplace_back();
-                        key_frame_idx = anim.key_frames_.size() - 1;
-                        anim.key_frames_idx_[channel.target_node] = key_frame_idx;
-                    }
-
-                    ResKeyFrames& key_frames = anim.key_frames_[key_frame_idx];
-                    const gltf::AnimationSampler& sampler = anim_in.samplers[channel.sampler];
-                    if (channel.target_path == "translation")
-                    {
-                        set_sampler(sampler, key_frames.translation_sampler_, model);
-                    }
-                    else if (channel.target_path == "rotation")
-                    {
-                        set_sampler(sampler, key_frames.rotation_sampler_, model);
-                    }
-                    else if (channel.target_path == "scale")
-                    {
-                        set_sampler(sampler, key_frames.scale_sampler_, model);
-                    }
-                    else
-                    {
-                        continue;
-                    }
-                }
-            },
-            model.animations[a], a));
-    }
-
-    for (auto& anim_fut : animation_asyncs)
-    {
-        anim_fut.wait();
-    }
-    return animations;
-}
-
-fi::ResKeyFrame fi::ResKeyFrames::sample_time_stamp(float time_stamp)
-{
-    return {translation_sampler_.sample_time_stamp(time_stamp, {0, 0, 0}), //
-            rotation_sampler_.sample_time_stamp(time_stamp, {0, 0, 0, 1}), //
-            scale_sampler_.sample_time_stamp(time_stamp, {1, 1, 1})};
-}
-
-void fi::ResKeyFrames::set_sample_time_stamp(float time_stamp, glm::vec3& translation, glm::quat& rotation,
-                                             glm::vec3& scale)
-{
-    ResKeyFrame key_frame = sample_time_stamp(time_stamp);
-    translation = key_frame.translation_;
-    rotation = key_frame.rotation_;
-    scale = key_frame.scale_;
 }

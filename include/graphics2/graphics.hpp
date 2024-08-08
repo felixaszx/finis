@@ -11,6 +11,7 @@
 #include <chrono>
 #include <future>
 #include <queue>
+#include <cstdint>
 
 #define GLFW_INCLUDE_VULKAN
 #include <GLFW/glfw3.h>
@@ -26,7 +27,7 @@
 
 namespace fi
 {
-    
+
     namespace gltf
     {
         using namespace tinygltf;
@@ -123,6 +124,10 @@ namespace fi
         float get_duration_second();
         uint32_t get_duration_ms();
     };
+
+    void iterate_acc(const std::function<void(size_t idx, const unsigned char* data, size_t size)>& cb, //
+                            const fi::gltf::Accessor& acc,                                                     //
+                            const fi::gltf::Model& model);
 }; // namespace fi
 
 #endif // GRAPHICS_GRAPHICS_HPP
