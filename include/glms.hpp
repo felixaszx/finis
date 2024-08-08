@@ -7,7 +7,7 @@
 #define GLM_FORCE_XYZW_ONLY
 #define GLM_ENABLE_EXPERIMENTAL
 
-#include <glm/glm.hpp>
+#include <glm/fwd.hpp>
 #include <glm/gtc/matrix_transform.hpp>
 #include <glm/gtc/type_ptr.hpp>
 #include <glm/gtx/rotate_vector.hpp>
@@ -32,6 +32,18 @@ namespace glms
             glm_types[i] = arr[i];
         }
     }
+
+    namespace literal
+    {
+        inline float operator""_dg(long double degree)
+        {
+            return glm::radians(degree);
+        }
+        inline float operator""_dg(unsigned long long degree)
+        {
+            return glm::radians(static_cast<float>(degree));
+        }
+    }; // namespace literal
 } // namespace glms
 
 #endif // INCLUDE_GLMS_HPP

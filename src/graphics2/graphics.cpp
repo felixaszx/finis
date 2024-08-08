@@ -3,6 +3,7 @@
 #define STB_IMAGE_IMPLEMENTATION
 #define STB_IMAGE_WRITE_IMPLEMENTATION
 #include "graphics2/graphics.hpp"
+#include <glm/glm.hpp>
 
 fi::Graphics::Graphics(int width, int height, const std::string& title)
 {

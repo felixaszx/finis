@@ -1,3 +1,4 @@
+#include <cmath>
 #include <iostream>
 
 #include "extensions/loader.hpp"
@@ -13,15 +14,12 @@ int main(int argc, char** argv)
 {
     using namespace fi;
     using namespace program;
+    using namespace glms::literal;
 
     fle::DoubleWindow fltk(800, 600, "");
     fltk.end();
     fle::Flow flow(0, 0, 800, 600);
     fltk.add(flow);
-    fle::Slider camera_y(0, 0, 1, 1);
-    flow.rule(camera_y, "=<=^");
-    camera_y.range(-5, 5);
-    camera_y.value(0);
     fltk.resizable(flow);
     fltk.show();
 
@@ -33,7 +31,7 @@ int main(int argc, char** argv)
     Semaphore submit;
     Fence frame_fence;
 
-    ResDetails test_model("res/models/sparta.glb");
+    ResDetails test_model("res/models/black_dragon_with_idle_animation/scene.gltf");
     ResSkinDetails test_skins(test_model);
     ResSceneDetails test_scene(test_model);
     std::vector<ResAnimation> test_animations = load_res_animations(test_model);
@@ -92,8 +90,9 @@ int main(int argc, char** argv)
     float prev_time = 0;
     float curr_time = frame_time.since_init_second();
 
-    glm::quat root_rotate = {0, 0, 1, 0};
-    glm::vec3 root_scale = {1, 1, 1};
+    glm::vec3 camera_pos = {0, 0, 0};
+    float pitch = 0;
+    float yaw = -90.0f;
     while (true)
     {
         auto r = g.device().waitForFences(frame_fence, true, std::numeric_limits<uint64_t>::max());
@@ -113,41 +112,56 @@ int main(int argc, char** argv)
                                                                                     s_node.rotation_, s_node.scale_);
             }
         }
+        test_scene.update_scene();
 
+        glm::vec3 camera_front = glm::normalize(glm::vec3{std::cos(yaw) * std::cos(pitch), //
+                                                          std::sin(pitch),                 //
+                                                          std::sin(yaw) * std::cos(pitch)});
         float delta_time = curr_time - prev_time;
         if (glfwGetKey(g.window(), GLFW_KEY_W))
         {
-            root_rotate = glm::rotate(root_rotate, delta_time * 15, {1, 0, 0});
+            camera_pos += camera_front * delta_time;
         }
         if (glfwGetKey(g.window(), GLFW_KEY_S))
         {
-            root_rotate = glm::rotate(root_rotate, delta_time * -15, {1, 0, 0});
+            camera_pos -= camera_front * delta_time;
         }
         if (glfwGetKey(g.window(), GLFW_KEY_A))
         {
-            root_rotate = glm::rotate(root_rotate, delta_time * 15, {0, -1, 0});
+            camera_pos -= glm::cross(camera_front, {0, 1, 0}) * delta_time;
         }
         if (glfwGetKey(g.window(), GLFW_KEY_D))
         {
-            root_rotate = glm::rotate(root_rotate, delta_time * -15, {0, -1, 0});
+            camera_pos += glm::cross(camera_front, {0, 1, 0}) * delta_time;
         }
-        if (glfwGetKey(g.window(), GLFW_KEY_MINUS))
+        if (glfwGetKey(g.window(), GLFW_KEY_SPACE))
         {
-            root_scale -= delta_time * 1;
+            camera_pos.y += delta_time;
         }
-        if (glfwGetKey(g.window(), GLFW_KEY_EQUAL))
+        if (glfwGetKey(g.window(), GLFW_KEY_LEFT_SHIFT))
         {
-            root_scale += delta_time * 1;
+            camera_pos.y -= delta_time;
         }
-        if (glfwGetKey(g.window(), GLFW_KEY_Q))
-        {
-            root_rotate = {0, 0, 1, 0};
-            root_scale = {1, 1, 1};
-        }
-        test_scene.update_scene(glm::mat4(root_rotate) * glm::scale(root_scale));
 
-        glm::vec3 camera_pos = {0, camera_y.value(), -3};
-        push.view = glm::lookAt(camera_pos, camera_pos + glm::vec3(0, 0, 1), glm::vec3(0, 1, 0));
+        float camera_speed = 2;
+        if (glfwGetKey(g.window(), GLFW_KEY_UP))
+        {
+            pitch += delta_time * camera_speed * 30.0_dg;
+        }
+        if (glfwGetKey(g.window(), GLFW_KEY_DOWN))
+        {
+            pitch -= delta_time * camera_speed * 30.0_dg;
+        }
+        if (glfwGetKey(g.window(), GLFW_KEY_LEFT))
+        {
+            yaw -= delta_time * camera_speed * 30.0_dg;
+        }
+        if (glfwGetKey(g.window(), GLFW_KEY_RIGHT))
+        {
+            yaw += delta_time * camera_speed * 30.0_dg;
+        }
+        push.view = glm::lookAt(camera_pos, camera_pos + camera_front, glm::vec3(0, 1, 0));
+
         while (fle::Global::check(), glfwGetWindowAttrib(g.window(), GLFW_ICONIFIED))
         {
             using namespace std::chrono_literals;

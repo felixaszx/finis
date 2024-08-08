@@ -26,7 +26,7 @@
 
 namespace fi
 {
-
+    
     namespace gltf
     {
         using namespace tinygltf;
