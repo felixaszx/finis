@@ -130,7 +130,7 @@ namespace fi
         vk::DescriptorSetLayout set_layout_{};
         vk::DescriptorSet des_set_{}; // bind to vertex shader
         std::unique_ptr<Buffer<SkinOffsets, storage>> buffer_{};
-        std::vector<uint32_t> joint_idx_{};      // indexed by prim
+        std::vector<uint32_t> joint_idx_{};     // indexed by prim
         std::vector<glm::mat4> inv_matrices_{}; // indexed by joint_idx_[prim] + shader_attribute
         std::vector<uint32_t> joints_{};        // indexed by joint_idx_[prim] + shader_attribute, store as node_idx
 
@@ -145,15 +145,11 @@ namespace fi
     template <typename OutT>
     struct ResAnimationSampler
     {
-        inline static OutT default_ = {};
-
         size_t interporlation_method_ = 0;
         std::vector<float> time_stamps_{};
         std::vector<OutT> output_{};
 
-        ResAnimationSampler(const OutT& default_val = {}) { default_ = default_val; }
-
-        OutT sample_time_stamp(float time_stamp);
+        OutT sample_time_stamp(float time_stamp, const OutT& alternative);
     };
 
     struct ResKeyFrame
@@ -165,9 +161,9 @@ namespace fi
 
     struct ResKeyFrames
     {
-        ResAnimationSampler<glm::vec3> translation_sampler_{glm::vec3(0, 0, 0)};
-        ResAnimationSampler<glm::quat> rotation_sampler_{glm::quat(0, 0, 0, 0)};
-        ResAnimationSampler<glm::vec3> scale_sampler_{glm::vec3(1, 1, 1)};
+        ResAnimationSampler<glm::vec3> translation_sampler_;
+        ResAnimationSampler<glm::quat> rotation_sampler_;
+        ResAnimationSampler<glm::vec3> scale_sampler_;
 
         ResKeyFrame sample_time_stamp(float time_stamp);
         void set_sample_time_stamp(float time_stamp, glm::vec3& translation, glm::quat& rotation, glm::vec3& scale);
@@ -183,14 +179,14 @@ namespace fi
     std::vector<ResAnimation> load_res_animations(const ResDetails& res_details);
 
     template <typename OutT>
-    inline OutT ResAnimationSampler<OutT>::sample_time_stamp(float time_stamp)
+    inline OutT ResAnimationSampler<OutT>::sample_time_stamp(float time_stamp, const OutT& alternative)
     {
-        OutT result = default_;
         if (output_.empty())
         {
-            return result;
+            return alternative;
         }
 
+        OutT result = output_[0];
         float curr_time = time_stamp;
         float prev_time = 0;
         float next_time = 0;
@@ -216,6 +212,11 @@ namespace fi
                 }
                 break;
             }
+        }
+
+        if (next_out == nullptr)
+        {
+            return *prev_out;
         }
 
         switch (interporlation_method_)

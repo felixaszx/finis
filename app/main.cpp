@@ -18,6 +18,10 @@ int main(int argc, char** argv)
     fltk.end();
     fle::Flow flow(0, 0, 800, 600);
     fltk.add(flow);
+    fle::Slider camera_y(0, 0, 1, 1);
+    flow.rule(camera_y, "=<=^");
+    camera_y.range(-5, 5);
+    camera_y.value(0);
     fltk.resizable(flow);
     fltk.show();
 
@@ -29,7 +33,7 @@ int main(int argc, char** argv)
     Semaphore submit;
     Fence frame_fence;
 
-    ResDetails test_model("res/models/phoenix_bird/scene.gltf");
+    ResDetails test_model("res/models/sparta/untitled.gltf");
     ResSkinDetails test_skins(test_model);
     ResSceneDetails test_scene(test_model);
     std::vector<ResAnimation> test_animations = load_res_animations(test_model);
@@ -70,14 +74,12 @@ int main(int argc, char** argv)
     cmd_alloc.level = vk::CommandBufferLevel::ePrimary;
     auto cmds = g.device().allocateCommandBuffers(cmd_alloc);
 
-    glm::vec3 camera_pos = {0, 0, -10};
     struct
     {
         glm::mat4 model = {};
         glm::mat4 view = {};
-        glm::mat4 proj = glms::perspective(glm::radians(45.0f), float(1920) / 1080, 0.1f, 100000000000000000.0f);
+        glm::mat4 proj = glms::perspective(glm::radians(45.0f), float(1920) / 1080, 0.1f, 1000.0f);
     } push;
-    push.view = glm::lookAt(camera_pos, camera_pos + glm::vec3(0, 0, 1), glm::vec3(0, 1, 0));
 
     vk::RenderingInfo rendering{};
     rendering.setColorAttachments(color_infos);
@@ -87,7 +89,11 @@ int main(int argc, char** argv)
     rendering.renderArea = vk::Rect2D{{}, {1920, 1080}};
 
     CpuTimer frame_time;
+    float prev_time = 0;
+    float curr_time = frame_time.since_init_second();
 
+    glm::quat root_rotate = {0, 0, 1, 0};
+    glm::vec3 root_scale = {1, 1, 1};
     while (true)
     {
         auto r = g.device().waitForFences(frame_fence, true, std::numeric_limits<uint64_t>::max());
@@ -95,7 +101,8 @@ int main(int argc, char** argv)
         g.device().resetFences(frame_fence);
         color_infos[2].imageView = sc.views_[img_idx];
 
-        float curr_time = frame_time.since_init_second();
+        prev_time = curr_time;
+        curr_time = frame_time.since_init_second();
         for (size_t node_idx = 0; node_idx < test_scene.nodes_.size(); node_idx++)
         {
             size_t key_frame_idx = test_animations[0].key_frames_idx_[node_idx];
@@ -106,8 +113,41 @@ int main(int argc, char** argv)
                                                                                     s_node.rotation_, s_node.scale_);
             }
         }
-        test_scene.update_scene(glm::scale(glm::vec3(0.1, 0.1, 0.1)));
 
+        float delta_time = curr_time - prev_time;
+        if (glfwGetKey(g.window(), GLFW_KEY_W))
+        {
+            root_rotate = glm::rotate(root_rotate, delta_time * 15, {1, 0, 0});
+        }
+        if (glfwGetKey(g.window(), GLFW_KEY_S))
+        {
+            root_rotate = glm::rotate(root_rotate, delta_time * -15, {1, 0, 0});
+        }
+        if (glfwGetKey(g.window(), GLFW_KEY_A))
+        {
+            root_rotate = glm::rotate(root_rotate, delta_time * 15, {0, -1, 0});
+        }
+        if (glfwGetKey(g.window(), GLFW_KEY_D))
+        {
+            root_rotate = glm::rotate(root_rotate, delta_time * -15, {0, -1, 0});
+        }
+        if (glfwGetKey(g.window(), GLFW_KEY_MINUS))
+        {
+            root_scale -= delta_time * 1;
+        }
+        if (glfwGetKey(g.window(), GLFW_KEY_EQUAL))
+        {
+            root_scale += delta_time * 1;
+        }
+        if (glfwGetKey(g.window(), GLFW_KEY_Q))
+        {
+            root_rotate = {0, 0, 1, 0};
+            root_scale = {1, 1, 1};
+        }
+        test_scene.update_scene(glm::mat4(root_rotate) * glm::scale(root_scale));
+
+        glm::vec3 camera_pos = {0, camera_y.value(), -3};
+        push.view = glm::lookAt(camera_pos, camera_pos + glm::vec3(0, 0, 1), glm::vec3(0, 1, 0));
         while (fle::Global::check(), glfwGetWindowAttrib(g.window(), GLFW_ICONIFIED))
         {
             using namespace std::chrono_literals;

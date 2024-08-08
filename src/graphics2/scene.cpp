@@ -1,31 +1,27 @@
 #include "graphics2/scene.hpp"
 
-void fi::ResSceneDetails::update_scene_helper(const std::function<void(ResSceneNode& node, size_t node_idx)>& func,
-                                              size_t curr, const glm::mat4& parent_transform)
+glm::mat4 get_node_transform(const fi::ResSceneNode& node, const glm::mat4& parents)
 {
-    func(nodes_[curr], curr);
-    glm::mat4 translation = glm::translate(nodes_[curr].translation_);
-    glm::mat4 rotation(nodes_[curr].rotation_);
-    glm::mat4 scale = glm::scale(nodes_[curr].scale_);
-    node_transform_[curr] = parent_transform                 //
-                            * translation * rotation * scale //
-                            * nodes_[curr].preset_transform_;
+    glm::mat4 translation = glm::translate(node.translation_);
+    glm::mat4 rotation(node.rotation_);
+    glm::mat4 scale = glm::scale(node.scale_);
+    return parents * translation * rotation * scale * node.preset_;
+}
 
+void fi::ResSceneDetails::update_scene_helper(const std::function<void(ResSceneNode& node, size_t node_idx)>& func,
+                                              size_t curr, const glm::mat4& parents)
+{
+    node_transform_[curr] = get_node_transform(nodes_[curr], parents);
+    func(nodes_[curr], curr);
     for (auto child_idx : node_children_[curr])
     {
         update_scene_helper(func, child_idx, node_transform_[curr]);
     }
 }
 
-void fi::ResSceneDetails::update_scene_helper(size_t curr, const glm::mat4& parent_transform)
+void fi::ResSceneDetails::update_scene_helper(size_t curr, const glm::mat4& parents)
 {
-    glm::mat4 translation = glm::translate(nodes_[curr].translation_);
-    glm::mat4 rotation(nodes_[curr].rotation_);
-    glm::mat4 scale = glm::scale(nodes_[curr].scale_);
-    node_transform_[curr] = parent_transform                 //
-                            * translation * rotation * scale //
-                            * nodes_[curr].preset_transform_;
-
+    node_transform_[curr] = get_node_transform(nodes_[curr], parents);
     for (auto child_idx : node_children_[curr])
     {
         update_scene_helper(child_idx, node_transform_[curr]);
@@ -35,6 +31,12 @@ void fi::ResSceneDetails::update_scene_helper(size_t curr, const glm::mat4& pare
 fi::ResSceneDetails::ResSceneDetails(const ResDetails& res_details)
 {
     const gltf::Model& model = res_details.model();
+    name_ = model.scenes[0].name;
+    roots_.reserve(model.scenes[0].nodes.size());
+    for (auto node_idx : model.scenes[0].nodes)
+    {
+        roots_.push_back(node_idx);
+    }
 
     std::future<void> node_async = std::async(
         [&]()
@@ -44,12 +46,12 @@ fi::ResSceneDetails::ResSceneDetails(const ResDetails& res_details)
             {
                 ResSceneNode& node = nodes_.emplace_back();
                 node.name_ = node_in.name;
-                glms::assign_value(node.preset_translation_, node_in.translation, node_in.translation.size());
-                glms::assign_value(node.preset_rotation_, node_in.rotation, node_in.rotation.size());
-                glms::assign_value(node.preset_scale_, node_in.scale, node_in.scale.size());
+                glms::assign_value(node.translation_, node_in.translation, node_in.translation.size());
+                glms::assign_value(node.rotation_, node_in.rotation, node_in.rotation.size());
+                glms::assign_value(node.scale_, node_in.scale, node_in.scale.size());
                 for (int i = 0; i < node_in.matrix.size(); i += 4)
                 {
-                    glms::assign_value(node.preset_transform_[i / 4], node_in.matrix.data() + i, 4);
+                    glms::assign_value(node.preset_[i / 4], node_in.matrix.data() + i, 4);
                 }
             }
         });
@@ -86,13 +88,6 @@ fi::ResSceneDetails::ResSceneDetails(const ResDetails& res_details)
             }
         });
 
-    name_ = model.scenes[0].name;
-    roots_.reserve(model.scenes[0].nodes.size());
-    for (auto node_idx : model.scenes[0].nodes)
-    {
-        roots_.push_back(node_idx);
-    }
-
     vk::DescriptorSetLayoutCreateInfo layout_info{};
     std::array<vk::DescriptorSetLayoutBinding, 2> bindings = {};
     for (size_t b = 0; b < bindings.size(); b++)
@@ -109,15 +104,14 @@ fi::ResSceneDetails::ResSceneDetails(const ResDetails& res_details)
     des_sizes_[0].type = vk::DescriptorType::eStorageBuffer;
     des_sizes_[0].descriptorCount = bindings.size();
 
-    node_async.wait();
-    children_async.wait();
     transform_async.wait();
-
     make_unique2(buffer_, sizeof_arr(node_transform_idx_) + sizeof_arr(node_transform_));
     buffer_->node_transform_ = sizeof_arr(node_transform_idx_);
-
     memcpy(buffer_->map_memory(), node_transform_idx_.data(), sizeof_arr(node_transform_idx_));
     memcpy(buffer_->mapping() + buffer_->node_transform_, node_transform_.data(), sizeof_arr(node_transform_));
+
+    node_async.wait();
+    children_async.wait();
 }
 
 fi::ResSceneDetails::~ResSceneDetails()

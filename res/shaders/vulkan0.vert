@@ -59,9 +59,9 @@ NODE_TRANSFORM;
 void main()
 {
     PRIM_IDX = gl_DrawIDARB;
-    mat4 node_transform = NODE_TRANSFORM.mat_[NODE_IDXS.node_idx_[PRIM_IDX]];
-    mat4 skin_transform = mat4(1.0);
+    mat4 skin_transform = NODE_TRANSFORM.mat_[NODE_IDXS.node_idx_[PRIM_IDX]];
     uint skin_idx = JOINT_IDXS.joint_idx_[PRIM_IDX];
+
     if (skin_idx != -1)
     {
         skin_transform = mat4(0.0);
@@ -75,7 +75,7 @@ void main()
         }
     }
 
-    mat4 model = node_transform * skin_transform;
+    mat4 model = skin_transform;
     FRAG_DATA.position_ = model * vec4(POSITION, 1.0);
     FRAG_DATA.normal_ = normalize(mat3(transpose(inverse(model))) * NORMAL);
     FRAG_DATA.tangent_ = normalize(mat3(transpose(inverse(model))) * TANGENT.xyz);

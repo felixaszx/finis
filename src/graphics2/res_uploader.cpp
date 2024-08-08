@@ -933,9 +933,9 @@ std::vector<fi::ResAnimation> fi::load_res_animations(const ResDetails& res_deta
 
 fi::ResKeyFrame fi::ResKeyFrames::sample_time_stamp(float time_stamp)
 {
-    return {translation_sampler_.sample_time_stamp(time_stamp), //
-            rotation_sampler_.sample_time_stamp(time_stamp),    //
-            scale_sampler_.sample_time_stamp(time_stamp)};
+    return {translation_sampler_.sample_time_stamp(time_stamp, {0, 0, 0}), //
+            rotation_sampler_.sample_time_stamp(time_stamp, {0, 0, 0, 1}), //
+            scale_sampler_.sample_time_stamp(time_stamp, {1, 1, 1})};
 }
 
 void fi::ResKeyFrames::set_sample_time_stamp(float time_stamp, glm::vec3& translation, glm::quat& rotation,

@@ -8,23 +8,21 @@ namespace fi
     struct ResSceneNode
     {
         std::string name_ = "";
-        glm::vec3 preset_translation_ = {0, 0, 0};
-        glm::quat preset_rotation_ = {0, 0, 0, 0};
-        glm::vec3 preset_scale_ = {1, 1, 1};
-        glm::mat4 preset_transform_ = glm::identity<glm::mat4>(); // set by ResSceneDetails
 
         glm::vec3 translation_ = {0, 0, 0};
-        glm::quat rotation_ = {0, 0, 0, 0};
+        glm::quat rotation_ = {0, 0, 0, 1};
         glm::vec3 scale_ = {1, 1, 1};
+        glm::mat4 preset_ = glm::identity<glm::mat4>(); // set by ResSceneDetails
     };
 
     // support only 1 scene
     struct ResSceneDetails : private GraphicsObject
     {
+
       private:
         void update_scene_helper(const std::function<void(ResSceneNode& node, size_t node_idx)>& func, size_t curr,
-                                 const glm::mat4& parent_transform);
-        void update_scene_helper(size_t curr, const glm::mat4& parent_transform);
+                                 const glm::mat4& parents);
+        void update_scene_helper(size_t curr, const glm::mat4& parents);
 
       public:
         struct SceneOffsets
