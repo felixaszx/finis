@@ -106,28 +106,41 @@ namespace fi
         ~Semaphore();
     };
 
-    class CpuTimer
+    class CpuClock
     {
+      public:
+        using Second = float;
+        using DoubleSecond = double;
+        using MilliSecond = size_t;
+
       private:
+        struct TimePoint
+        {
+            std::chrono::duration<size_t, std::chrono::milliseconds::period> duration_{};
+
+            TimePoint(const std::chrono::duration<size_t, std::chrono::milliseconds::period>& duration);
+
+            inline operator Second() { return duration_.count() / (Second)1000; };
+            inline operator DoubleSecond() { return duration_.count() / (DoubleSecond)1000; };
+            inline operator MilliSecond() { return duration_.count(); };
+        };
+
         std::chrono::system_clock::time_point init_;
         std::chrono::system_clock::time_point begin_;
         std::chrono::system_clock::time_point end_;
 
       public:
-        CpuTimer();
-        float since_init_second();
-        uint32_t since_init_ms();
+        CpuClock();
 
-        void begin();
-        void end();
-
-        float get_duration_second();
-        uint32_t get_duration_ms();
+        TimePoint get_elapsed();
+        TimePoint get_delta();
+        void start();
+        void reset();
     };
 
     void iterate_acc(const std::function<void(size_t idx, const unsigned char* data, size_t size)>& cb, //
-                            const fi::gltf::Accessor& acc,                                                     //
-                            const fi::gltf::Model& model);
+                     const fi::gltf::Accessor& acc,                                                     //
+                     const fi::gltf::Model& model);
 }; // namespace fi
 
 #endif // GRAPHICS_GRAPHICS_HPP

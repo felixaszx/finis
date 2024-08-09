@@ -21,7 +21,7 @@ int main(int argc, char** argv)
     fle::Flow flow(0, 0, 800, 600);
     fltk.add(flow);
     fltk.resizable(flow);
-    
+
     fltk.show();
     Graphics g(1920, 1080, "finis");
     Swapchain sc;
@@ -86,9 +86,9 @@ int main(int argc, char** argv)
     rendering.layerCount = 1;
     rendering.renderArea = vk::Rect2D{{}, {1920, 1080}};
 
-    CpuTimer frame_time;
+    CpuClock clock;
     float prev_time = 0;
-    float curr_time = frame_time.since_init_second();
+    CpuClock::Second curr_time = clock.get_elapsed();
 
     glm::vec3 camera_pos = {0, 0, 0};
     float pitch = 0;
@@ -101,7 +101,7 @@ int main(int argc, char** argv)
         color_infos[2].imageView = sc.views_[img_idx];
 
         prev_time = curr_time;
-        curr_time = frame_time.since_init_second();
+        curr_time = clock.get_elapsed();
         for (size_t node_idx = 0; node_idx < test_scene.nodes_.size(); node_idx++)
         {
             size_t key_frame_idx = test_animations[0].key_frames_idx_[node_idx];

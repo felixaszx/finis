@@ -346,41 +346,33 @@ fi::Semaphore::~Semaphore()
     device().destroySemaphore(*this);
 }
 
-fi::CpuTimer::CpuTimer()
+fi::CpuClock::CpuClock()
     : init_(std::chrono::high_resolution_clock::now()),
-      begin_(init_),
-      end_(init_)
+      begin_(init_)
 {
 }
 
-float fi::CpuTimer::since_init_second()
+fi::CpuClock::TimePoint fi::CpuClock::get_elapsed()
 {
-    return std::chrono::duration<float, std::chrono::seconds::period> //
-        (std::chrono::high_resolution_clock::now() - init_).count();
+    return {std::chrono::duration_cast<std::chrono::milliseconds>(std::chrono::high_resolution_clock::now() - init_)};
 }
 
-uint32_t fi::CpuTimer::since_init_ms()
+fi::CpuClock::TimePoint fi::CpuClock::get_delta()
 {
-    return std::chrono::duration_cast<std::chrono::milliseconds> //
-        (std::chrono::high_resolution_clock::now() - init_).count();
-}
+    return {std::chrono::duration_cast<std::chrono::milliseconds>(end_ - begin_)};
+};
 
-void fi::CpuTimer::begin()
+void fi::CpuClock::start()
 {
     begin_ = std::chrono::high_resolution_clock::now();
-}
+};
 
-void fi::CpuTimer::end()
+void fi::CpuClock::reset()
 {
     end_ = std::chrono::high_resolution_clock::now();
-}
+};
 
-float fi::CpuTimer::get_duration_second()
+fi::CpuClock::TimePoint::TimePoint(const std::chrono::duration<size_t, std::chrono::milliseconds::period>& duration)
+    : duration_{duration}
 {
-    return std::chrono::duration<float, std::chrono::seconds::period>(end_ - begin_).count();
-}
-
-uint32_t fi::CpuTimer::get_duration_ms()
-{
-    return std::chrono::duration_cast<std::chrono::milliseconds>(end_ - begin_).count();
 }
