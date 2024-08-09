@@ -14,7 +14,7 @@ namespace fi
     class ParticleSystem
     {
       private:
-        std::unique_ptr<Buffer<BufferBase::EmptyExtraInfo, vertex, storage, seq_write>> buffer_{};
+        std::unique_ptr<Buffer<BufferBase::EmptyExtraInfo, vertex, storage>> buffer_{};
 
       public:
     };
