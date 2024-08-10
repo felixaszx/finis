@@ -22,10 +22,10 @@ namespace fi
     struct ResSceneDetails : private GraphicsObject
     {
       private:
-        std::vector<ResSceneNode> nodes_{};                // indexed by node, cleared
         std::vector<std::vector<size_t>> node_children_{}; // indexed by node, cleared
         std::vector<std::vector<size_t>> node_layers_{};   // cleared
 
+        std::vector<ResSceneNode> nodes_{};    // indexed by node
         std::vector<size_t> nodes2_mapping_{}; // indexed by node
         std::vector<ResSceneNode> nodes2_{};   // indexed by nodes2_mapping_[node]
 
@@ -58,6 +58,7 @@ namespace fi
         void update_data();
         inline ResSceneNode& index_node(size_t node_idx) { return nodes2_[nodes2_mapping_[node_idx]]; }
         inline size_t node_size() { return nodes2_.size(); }
+        void reset_scene();
         void update_scene(const std::function<void(ResSceneNode& node, size_t node_idx)>& func,
                           const glm::mat4& root_transform = glm::identity<glm::mat4>());
         void update_scene(const glm::mat4& root_transform = glm::identity<glm::mat4>());

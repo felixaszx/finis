@@ -126,7 +126,6 @@ fi::ResSceneDetails::ResSceneDetails(const ResDetails& res_details)
         }
     }
 
-    free_container_memory(nodes_);
     free_container_memory(node_children_);
     free_container_memory(node_layers_);
     free_container_memory(roots_);
@@ -140,6 +139,17 @@ fi::ResSceneDetails::~ResSceneDetails()
 void fi::ResSceneDetails::update_data()
 {
     memcpy(buffer_->mapping() + buffer_->node_transform_, node_transform_.data(), sizeof_arr(node_transform_));
+}
+
+void fi::ResSceneDetails::reset_scene()
+{
+    for (ResSceneNode& node : nodes2_)
+    {
+        node.translation_ = nodes_[node.node_idx].translation_;
+        node.rotation_ = nodes_[node.node_idx].rotation_;
+        node.scale_ = nodes_[node.node_idx].scale_;
+    }
+    update_data();
 }
 
 void fi::ResSceneDetails::update_scene(const std::function<void(ResSceneNode& node, size_t node_idx)>& func,
