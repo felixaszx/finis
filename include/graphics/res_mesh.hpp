@@ -10,11 +10,13 @@ namespace fi
       private:
         struct DeviceBufferOffsets
         {
-            vk::DeviceSize vtx_buffer_ = 0;
-            vk::DeviceSize idx_buffer_ = 0;
-            vk::DeviceSize materials_ = 0;
-            vk::DeviceSize material_idxs_ = 0;
+            vk::DeviceSize vtx_ = 0;
+            vk::DeviceSize idx_ = 0;
             vk::DeviceSize draw_calls_ = 0;
+
+            vk::DeviceSize materials_ = 0;
+            vk::DeviceSize prim_details_ = 0;
+            vk::DeviceSize mesh_details_ = 0;
         };
 
       private:
@@ -29,9 +31,9 @@ namespace fi
         std::vector<vk::Sampler> samplers_{};
         std::vector<PrimMaterial> materials_{}; // indexed by PrimIdx
 
-        std::vector<ResMesh> meshes_{};           // indexed by MeshIdx
-        std::vector<PrimDetails> prim_details_{}; // indexed by PrimIdx
-        std::vector<MeshDetails> meshe_details{}; // indexed by MeshIdx
+        std::vector<ResMesh> meshes_{};            // indexed by MeshIdx
+        std::vector<PrimDetails> prim_details_{};  // indexed by PrimIdx
+        std::vector<MeshDetails> mesh_details_{}; // indexed by MeshIdx
 
         vk::DescriptorSetLayout set_layout_{};
         vk::DescriptorSet des_set_{}; // bind to fragment shader

@@ -5,6 +5,7 @@
 #include "graphics/graphics.hpp"
 #include "graphics/swapchain.hpp"
 #include "graphics/res_holder.hpp"
+#include "graphics/res_mesh.hpp"
 #include "fltk/fl_ext.hpp"
 
 int main(int argc, char** argv)
@@ -26,6 +27,8 @@ int main(int argc, char** argv)
     ResSceneDetails test_scenes;
     test_scenes.add_gltf("res/models/sparta.glb");
     test_scenes.add_gltf("res/models/pheonix.glb");
+
+    ResMeshDetails test_mesh(test_scenes);
 
     std::vector<vk::DescriptorPoolSize> pool_sizes;
     pool_sizes.insert(pool_sizes.end(),                            //

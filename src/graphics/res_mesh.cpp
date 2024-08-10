@@ -54,14 +54,8 @@ bool decode_mipmap_mode(int mode, vk::SamplerMipmapMode* out_mode)
 
 fi::ResMeshDetails::ResMeshDetails(ResSceneDetails& target)
 {
-    std::vector<PrimVtx> vtx;
-    std::vector<uint32_t> idx;
-    std::vector<vk::DrawIndexedIndirectCommand> draw_calls;
-    size_t old_vtx_count = 0;
-    size_t old_idx_count = 0;
-
     first_gltf_mesh_.reserve(target.models().size());
-    gltf_mesh_count_.reserve(first_gltf_mesh_.size());
+    gltf_mesh_count_.reserve(target.models().size());
     for (auto& model_p : target.models())
     {
         const gltf::Model& model = *model_p;
@@ -86,9 +80,9 @@ fi::ResMeshDetails::ResMeshDetails(ResSceneDetails& target)
 
         uint32_t first_tex = tex_imgs_.size();
         tex_imgs_.reserve(tex_imgs_.size() + model.textures.size());
-        tex_views_.reserve(tex_imgs_.size());
-        tex_allocs_.reserve(tex_imgs_.size());
-        tex_infos_.reserve(tex_imgs_.size());
+        tex_views_.reserve(tex_imgs_.size() + model.textures.size());
+        tex_allocs_.reserve(tex_imgs_.size() + model.textures.size());
+        tex_infos_.reserve(tex_imgs_.size() + model.textures.size());
         for (const auto& tex : model.textures)
         {
             const auto& img = model.images[tex.source];
@@ -281,18 +275,254 @@ fi::ResMeshDetails::ResMeshDetails(ResSceneDetails& target)
                 {
                     material.specular_color_ = val.GetNumberAsInt();
                 }
+            }
 
-                material.color_ += first_tex;
-                material.metalic_roughness_ += first_tex;
-                material.normal_ += first_tex;
-                material.emissive_ += first_tex;
-                material.occlusion_ += first_tex;
-                material.anistropy_ += first_tex;
-                material.specular_ += first_tex;
-                material.specular_color_ += first_tex;
-                material.sheen_color_ += first_tex;
-                material.sheen_roughtness_ += first_tex;
+            material.color_ += material.color_ == -1 ? 0 : first_tex;
+            material.metalic_roughness_ += (material.metalic_roughness_ == -1 ? 0 : first_tex);
+            material.normal_ += (material.normal_ == -1 ? 0 : first_tex);
+            material.emissive_ += (material.emissive_ == -1 ? 0 : first_tex);
+            material.occlusion_ += (material.occlusion_ == -1 ? 0 : first_tex);
+            material.anistropy_ += (material.anistropy_ == -1 ? 0 : first_tex);
+            material.specular_ += (material.specular_ == -1 ? 0 : first_tex);
+            material.specular_color_ += (material.specular_color_ == -1 ? 0 : first_tex);
+            material.sheen_color_ += (material.sheen_color_ == -1 ? 0 : first_tex);
+            material.sheen_roughtness_ += (material.sheen_roughtness_ == -1 ? 0 : first_tex);
+        }
+
+        std::vector<PrimVtx> vtxs;
+        std::vector<uint32_t> idxs;
+        std::vector<vk::DrawIndexedIndirectCommand> draw_calls;
+        size_t old_vtx_count = 0;
+        size_t old_idx_count = 0;
+
+        uint32_t first_mesh = meshes_.size();
+        uint32_t first_primitive = prim_details_.size();
+        meshes_.reserve(meshes_.size() + model.meshes.size());
+        mesh_details_.reserve(mesh_details_.size() + model.meshes.size());
+        for (const auto& mesh : model.meshes)
+        {
+            ResMesh& res_mesh = meshes_.emplace_back();
+            res_mesh.name_ = mesh.name;
+            res_mesh.first_prim_ = prim_details_.size();
+            res_mesh.prim_count_ = mesh.primitives.size();
+            res_mesh.details_ = &mesh_details_.emplace_back();
+            prim_details_.reserve(prim_details_.size() + mesh.primitives.size());
+
+            for (const auto& prim : mesh.primitives)
+            {
+                PrimDetails& prim_detail = prim_details_.emplace_back();
+                prim_detail.material_ = first_material + prim.material;
+                prim_detail.mesh_ = meshes_.size() - 1;
+
+                std::future<void> idx_async = std::async(
+                    [&]()
+                    {
+                        const gltf::Accessor& idx_acc = model.accessors[prim.indices];
+                        idxs.reserve(old_idx_count + idx_acc.count);
+                        iterate_acc(
+                            [&](size_t iter_idx, const unsigned char* data, size_t size)
+                            {
+                                if (size == 2)
+                                {
+                                    idxs.emplace_back(*castf(uint16_t*, data));
+                                }
+                                else
+                                {
+                                    idxs.emplace_back(*castf(uint32_t*, data));
+                                }
+                            },
+                            idx_acc, model);
+                        vk::DrawIndexedIndirectCommand& draw_call = draw_calls.emplace_back();
+                        draw_call.firstIndex = old_idx_count;
+                        draw_call.indexCount = idx_acc.count;
+                        draw_call.vertexOffset = old_vtx_count;
+                        draw_call.firstInstance = 0;
+                        draw_call.instanceCount = 1;
+                        old_idx_count = idxs.size();
+                    });
+                const gltf::Accessor& pos_acc = model.accessors[prim.attributes.at("POSITION")];
+                vtxs.resize(old_vtx_count + pos_acc.count);
+                std::future<void> position_async = std::async(
+                    [&]()
+                    {
+                        iterate_acc([&](size_t idx, const unsigned char* data, size_t size)
+                                    { glms::assign_value(vtxs[old_vtx_count + idx].position_, (float*)data, 3); }, //
+                                    pos_acc, model);
+                    });
+                std::future<void> normal_async = std::async(
+                    [&]()
+                    {
+                        auto result = prim.attributes.find("NORMAL");
+                        if (result == prim.attributes.end())
+                        {
+                            return;
+                        }
+                        const gltf::Accessor& acc = model.accessors[result->second];
+                        iterate_acc([&](size_t idx, const unsigned char* data, size_t size)
+                                    { glms::assign_value(vtxs[old_vtx_count + idx].normal_, (float*)data, 3); }, //
+                                    acc, model);
+                    });
+                std::future<void> tangent_async = std::async(
+                    [&]()
+                    {
+                        auto result = prim.attributes.find("TANGENT");
+                        if (result == prim.attributes.end())
+                        {
+                            return;
+                        }
+                        const gltf::Accessor& acc = model.accessors[result->second];
+                        iterate_acc([&](size_t idx, const unsigned char* data, size_t size)
+                                    { glms::assign_value(vtxs[old_vtx_count + idx].tangent_, (float*)data, 4); }, //
+                                    acc, model);
+                    });
+                std::future<void> tex_coord_async = std::async(
+                    [&]()
+                    {
+                        auto result = prim.attributes.find("TEXCOORD_0");
+                        if (result == prim.attributes.end())
+                        {
+                            return;
+                        }
+                        const gltf::Accessor& acc = model.accessors[result->second];
+                        iterate_acc(
+                            [&](size_t idx, const unsigned char* data, size_t size)
+                            {
+                                glm::vec2& tex_coord = vtxs[old_vtx_count + idx].tex_coord_;
+                                switch (size)
+                                {
+                                    case 2:
+                                        tex_coord[0] = get_normalized(castf(uint8_t*, data));
+                                        tex_coord[1] = get_normalized(castf(uint8_t*, data + sizeof(uint8_t)));
+                                        break;
+                                    case 4:
+                                        tex_coord[0] = get_normalized(castf(uint16_t*, data));
+                                        tex_coord[1] = get_normalized(castf(uint16_t*, data + sizeof(uint16_t)));
+                                        break;
+                                    case 8:
+                                        glms::assign_value(tex_coord, castf(float*, data), 2);
+                                        break;
+                                }
+                            }, //
+                            acc, model);
+                    });
+                std::future<void> color_async = std::async(
+                    [&]()
+                    {
+                        auto result = prim.attributes.find("COLOR_0");
+                        if (result == prim.attributes.end())
+                        {
+                            return;
+                        }
+                        const gltf::Accessor& acc = model.accessors[result->second];
+                        iterate_acc(
+                            [&](size_t idx, const unsigned char* data, size_t size)
+                            {
+                                glm::vec4& color = vtxs[old_vtx_count + idx].color_;
+                                color[3] = 1.0f;
+                                switch (size)
+                                {
+                                    case 3:
+                                    case 4:
+                                        for (int i = 0; i < size; i += sizeof(uint8_t))
+                                        {
+                                            color[i] = get_normalized(castf(uint8_t*, data + i));
+                                        }
+                                        break;
+                                    case 6:
+                                    case 8:
+                                        for (int i = 0; i < size; i += sizeof(uint16_t))
+                                        {
+                                            color[i / 2] = get_normalized(castf(uint16_t*, data + i));
+                                        }
+                                        break;
+                                    case 12:
+                                    case 16:
+                                        glms::assign_value(color, castf(float*, data), size / 4);
+                                        break;
+                                }
+                            }, //
+                            acc, model);
+                    });
+                std::future<void> joint_async = std::async(
+                    [&]()
+                    {
+                        auto result = prim.attributes.find("JOINTS_0");
+                        if (result == prim.attributes.end())
+                        {
+                            return;
+                        }
+                        const gltf::Accessor& acc = model.accessors[result->second];
+                        iterate_acc(
+                            [&](size_t idx, const unsigned char* data, size_t size)
+                            {
+                                glm::uvec4& joint = vtxs[old_vtx_count + idx].joint_;
+                                switch (size)
+                                {
+                                    case 4:
+                                        glms::assign_value(joint, castf(uint8_t*, data), 4);
+                                        break;
+                                    case 8:
+                                        glms::assign_value(joint, castf(uint16_t*, data), 4);
+                                        break;
+                                }
+                            }, //
+                            acc, model);
+                    });
+                std::future<void> weight_async = std::async(
+                    [&]()
+                    {
+                        auto result = prim.attributes.find("WEIGHTS_0");
+                        if (result == prim.attributes.end())
+                        {
+                            return;
+                        }
+                        const gltf::Accessor& acc = model.accessors[result->second];
+                        iterate_acc(
+                            [&](size_t idx, const unsigned char* data, size_t size)
+                            {
+                                glm::vec4& weight = vtxs[old_vtx_count + idx].weight_;
+                                switch (size)
+                                {
+                                    case 4:
+                                        for (int i = 0; i < size; i += sizeof(uint8_t))
+                                        {
+                                            weight[i] = get_normalized(castf(uint8_t*, data));
+                                        }
+                                        break;
+                                    case 8:
+                                        for (int i = 0; i < size; i += sizeof(uint16_t))
+                                        {
+                                            weight[i / 2] = get_normalized(castf(uint16_t*, data));
+                                        }
+                                        break;
+                                    case 16:
+                                        glms::assign_value(weight, castf(float*, data), 4);
+                                        break;
+                                }
+                            }, //
+                            acc, model);
+                    });
+
+                idx_async.wait();
+                position_async.wait();
+                normal_async.wait();
+                tangent_async.wait();
+                tex_coord_async.wait();
+                color_async.wait();
+                joint_async.wait();
+                weight_async.wait();
+                old_vtx_count = vtxs.size();
             }
         }
+
+        // calculateing padding for buffer
+        vk::DeviceSize ssbo_front_padding = draw_calls.size() % 16;
+        vk::DeviceSize mat_back_padding = 0;
+        vk::DeviceSize prim_back_padding = 0;
+        vk::DeviceSize mesh_back_padding = 0;
     }
+}
+
+fi::ResMeshDetails::~ResMeshDetails()
+{
 }

@@ -214,7 +214,7 @@ const std::array<vk::DescriptorPoolSize, 1>& fi::ResSceneDetails::descriptor_poo
     return des_sizes_;
 }
 
-const std::vector<std::unique_ptr<gltf::Model>>& fi::ResSceneDetails::models() const { return models_; }
+const std::vector<std::unique_ptr<fi::gltf::Model>>& fi::ResSceneDetails::models() const { return models_; }
 
 void fi::ResSceneDetails::bind(vk::CommandBuffer cmd, vk::PipelineLayout pipeline_layout, uint32_t set)
 {

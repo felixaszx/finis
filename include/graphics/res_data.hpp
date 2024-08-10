@@ -26,16 +26,16 @@ namespace fi
 
     struct PrimDetails
     {
-        MeshIdx mesh_idx_ = 0;
-        MaterialIdx material_idx_ = 0;
+        MeshIdx mesh_ = 0;
+        MaterialIdx material_ = 0;
     };
 
-    struct alignas(16) PrimMaterial
+    struct PrimMaterial
     {
         glm::vec4 color_factor_ = {1, 1, 1, 1};
-        glm::vec4 emissive_factor_ = {0, 0, 0, 1};    // [3] = emissive strength
-        glm::vec4 sheen_factor_ = {0, 0, 0, 0}; // [3] = sheen roughtness factor
-        glm::vec4 specular_factor_ = {1, 1, 1, 1};        // [3] = place holder
+        glm::vec4 emissive_factor_ = {0, 0, 0, 1}; // [3] = emissive strength
+        glm::vec4 sheen_factor_ = {0, 0, 0, 0};    // [3] = sheen roughtness factor
+        glm::vec4 specular_factor_ = {1, 1, 1, 1}; // [3] = place holder
 
         float alpha_cutoff_ = 0;
         float metalic_factor_ = 1.0f;
@@ -60,9 +60,9 @@ namespace fi
 
     struct MeshDetails
     {
-        SceneNodeIdx node_idx_ = 0;
-        SkinIdx skin_idx_ = -1;
-        uint32_t instance_details_idx_ = -1; // tbd
+        SceneNodeIdx node_ = 0;
+        SkinIdx skin_ = -1;
+        uint32_t instance_details_ = -1; // tbd
     };
 
     struct ResMesh
@@ -76,7 +76,7 @@ namespace fi
     struct ResSkeleton
     {
         std::string name_ = "";
-        SceneNodeIdx joint_idx_ = 0;
+        SceneNodeIdx joint_ = 0;
         uint32_t joint_count_ = 0;
     };
 
