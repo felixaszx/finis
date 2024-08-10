@@ -1,0 +1,6 @@
+#ifndef ENGINE_SCENE_HPP
+#define ENGINE_SCENE_HPP
+
+
+
+#endif // ENGINE_SCENE_HPP
