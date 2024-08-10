@@ -58,7 +58,6 @@ namespace fi
     {
       private:
         gltf::Model model_{};
-        void add_texture(unsigned char* pixels, uint32_t w, uint32_t h);
 
       public:
         inline const static char* EXTENSIONS[] = {"KHR_materials_emissive_strength", //
@@ -118,7 +117,6 @@ namespace fi
 
     struct ResSkinDetails : private GraphicsObject
     {
-
         struct SkinOffsets
         {
             vk::DeviceSize joint_idx_ = 0;

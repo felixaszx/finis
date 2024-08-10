@@ -9,6 +9,7 @@ set(CMAKE_SHARED_LIBRARY_PREFIX "")
 set(CMAKE_STATIC_LIBRARY_PREFIX "")
 set(CMAKE_RUNTIME_OUTPUT_DIRECTORY ${CMAKE_SOURCE_DIR}/exe)
 
+add_subdirectory(src/graphics)
 add_subdirectory(src/graphics2)
 add_subdirectory(src/extensions)
 
@@ -18,8 +19,7 @@ target_include_directories(finis PRIVATE ${CMAKE_SOURCE_DIR}/include)
 target_link_libraries(finis PRIVATE fltk)
 
 target_link_libraries(finis PRIVATE finis_extension)
-# target_link_libraries(finis PRIVATE finis_graphics)
-target_link_libraries(finis PRIVATE finis_graphics2)
+target_link_libraries(finis PRIVATE finis_graphics)
 
 add_executable(fltk_test fltk.cpp)
 target_include_directories(fltk_test PRIVATE ${CMAKE_SOURCE_DIR}/include)
