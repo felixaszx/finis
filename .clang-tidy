@@ -1,6 +1,7 @@
 Checks: "
         performance-*,
-        modernize-*
+        modernize-*,
+        -modernize-use-trailing-return-type
         "
 WarningsAsErrors: ''
 HeaderFilterRegex: ''
