@@ -310,3 +310,11 @@ void fi::ResKeyFrames::set_sample_time_stamp(float time_stamp, glm::vec3& transl
     rotation = key_frame.rotation_;
     scale = key_frame.scale_;
 }
+
+void fi::ResKeyFrames::set_sample_time_stamp(float time_stamp, ResSceneNode& node)
+{
+    ResKeyFrame key_frame = sample_time_stamp(time_stamp);
+    node.translation_ = key_frame.translation_;
+    node.rotation_ = key_frame.rotation_;
+    node.scale_ = key_frame.scale_;
+}

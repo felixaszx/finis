@@ -108,8 +108,7 @@ int main(int argc, char** argv)
             if (key_frame_idx != -1)
             {
                 ResSceneNode& s_node = test_scene.index_node(node_idx);
-                test_animations[0].key_frames_[key_frame_idx].set_sample_time_stamp(curr_time, s_node.translation_,
-                                                                                    s_node.rotation_, s_node.scale_);
+                test_animations[0].key_frames_[key_frame_idx].set_sample_time_stamp(curr_time, s_node);
             }
         }
         test_scene.update_scene();

@@ -90,6 +90,7 @@ namespace fi
 
         ResKeyFrame sample_time_stamp(float time_stamp);
         void set_sample_time_stamp(float time_stamp, glm::vec3& translation, glm::quat& rotation, glm::vec3& scale);
+        void set_sample_time_stamp(float time_stamp, ResSceneNode& node);
     };
 
     struct ResAnimation
