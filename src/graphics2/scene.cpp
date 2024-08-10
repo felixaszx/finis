@@ -8,23 +8,19 @@ glm::mat4 get_node_transform(const fi::ResSceneNode& node, const glm::mat4& pare
     return parents * translation * rotation * scale * node.preset_;
 }
 
-void fi::ResSceneDetails::update_scene_helper(const std::function<void(ResSceneNode& node, size_t node_idx)>& func,
-                                              size_t curr, const glm::mat4& parents)
+void fi::ResSceneDetails::build_scene_layer(size_t curr)
 {
-    node_transform_[curr] = get_node_transform(nodes_[curr], parents);
-    func(nodes_[curr], curr);
-    for (auto child_idx : node_children_[curr])
+    if (node_layers_.size() <= nodes_[curr].depth_)
     {
-        update_scene_helper(func, child_idx, node_transform_[curr]);
+        node_layers_.emplace_back();
     }
-}
+    node_layers_[nodes_[curr].depth_].push_back(curr);
 
-void fi::ResSceneDetails::update_scene_helper(size_t curr, const glm::mat4& parents)
-{
-    node_transform_[curr] = get_node_transform(nodes_[curr], parents);
-    for (auto child_idx : node_children_[curr])
+    for (size_t child_idx : node_children_[curr])
     {
-        update_scene_helper(child_idx, node_transform_[curr]);
+        nodes_[child_idx].parent_idx = curr;
+        nodes_[child_idx].depth_ = nodes_[curr].depth_ + 1;
+        build_scene_layer(child_idx);
     }
 }
 
@@ -46,6 +42,7 @@ fi::ResSceneDetails::ResSceneDetails(const ResDetails& res_details)
             {
                 ResSceneNode& node = nodes_.emplace_back();
                 node.name_ = node_in.name;
+                node.node_idx = nodes_.size() - 1;
                 glms::assign_value(node.translation_, node_in.translation, node_in.translation.size());
                 glms::assign_value(node.rotation_, node_in.rotation, node_in.rotation.size());
                 glms::assign_value(node.scale_, node_in.scale, node_in.scale.size());
@@ -112,6 +109,27 @@ fi::ResSceneDetails::ResSceneDetails(const ResDetails& res_details)
 
     node_async.wait();
     children_async.wait();
+
+    for (size_t root_idx : roots_)
+    {
+        build_scene_layer(root_idx);
+    }
+
+    nodes2_.reserve(nodes_.size());
+    nodes2_mapping_.resize(nodes_.size());
+    for (const std::vector<size_t>& layer : node_layers_)
+    {
+        for (size_t node_idx : layer)
+        {
+            nodes2_.push_back(nodes_[node_idx]);
+            nodes2_mapping_[node_idx] = nodes2_.size() - 1;
+        }
+    }
+
+    free_container_memory(nodes_);
+    free_container_memory(node_children_);
+    free_container_memory(node_layers_);
+    free_container_memory(roots_);
 }
 
 fi::ResSceneDetails::~ResSceneDetails()
@@ -127,17 +145,34 @@ void fi::ResSceneDetails::update_data()
 void fi::ResSceneDetails::update_scene(const std::function<void(ResSceneNode& node, size_t node_idx)>& func,
                                        const glm::mat4& root_transform)
 {
-    for (auto root_node_idx : roots_)
+    auto iter = nodes2_.begin();
+    while (iter->depth_ == 0 && iter != nodes2_.end())
     {
-        update_scene_helper(func, root_node_idx, root_transform);
+        func(*iter, iter->node_idx);
+        node_transform_[iter->node_idx] = get_node_transform(*iter, root_transform);
+        iter++;
+    }
+    while (iter != nodes2_.end())
+    {
+        func(*iter, iter->node_idx);
+        node_transform_[iter->node_idx] = get_node_transform(*iter, node_transform_[iter->parent_idx]);
+        iter++;
     }
     update_data();
 }
+
 void fi::ResSceneDetails::update_scene(const glm::mat4& root_transform)
 {
-    for (auto root_node_idx : roots_)
+    auto iter = nodes2_.begin();
+    while (iter->depth_ == 0 && iter != nodes2_.end())
     {
-        update_scene_helper(root_node_idx, root_transform);
+        node_transform_[iter->node_idx] = get_node_transform(*iter, root_transform);
+        iter++;
+    }
+    while (iter != nodes2_.end())
+    {
+        node_transform_[iter->node_idx] = get_node_transform(*iter, node_transform_[iter->parent_idx]);
+        iter++;
     }
     update_data();
 }
@@ -193,9 +228,9 @@ void set_sampler(const fi::gltf::AnimationSampler& anim_sampler, fi::ResAnimatio
     }
 
     fi::iterate_acc([&](size_t idx, const unsigned char* data, size_t size)
-                { res_sampler.time_stamps_.push_back(*castf(float*, data)); }, in_acc, model);
+                    { res_sampler.time_stamps_.push_back(*castf(float*, data)); }, in_acc, model);
     fi::iterate_acc([&](size_t idx, const unsigned char* data, size_t size)
-                { res_sampler.output_.push_back(*castf(OutT*, data)); }, out_acc, model);
+                    { res_sampler.output_.push_back(*castf(OutT*, data)); }, out_acc, model);
 }
 
 std::vector<fi::ResAnimation> fi::load_res_animations(const ResDetails& res_details)

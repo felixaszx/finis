@@ -7,6 +7,9 @@ namespace fi
 {
     struct ResSceneNode
     {
+        size_t depth_ = 0;
+        size_t parent_idx = -1;
+        size_t node_idx = 0;
         std::string name_ = "";
 
         glm::vec3 translation_ = {0, 0, 0};
@@ -18,11 +21,15 @@ namespace fi
     // support only 1 scene
     struct ResSceneDetails : private GraphicsObject
     {
-
       private:
-        void update_scene_helper(const std::function<void(ResSceneNode& node, size_t node_idx)>& func, size_t curr,
-                                 const glm::mat4& parents);
-        void update_scene_helper(size_t curr, const glm::mat4& parents);
+        std::vector<ResSceneNode> nodes_{};                // indexed by node, cleared
+        std::vector<std::vector<size_t>> node_children_{}; // indexed by node, cleared
+        std::vector<std::vector<size_t>> node_layers_{};   // cleared
+
+        std::vector<ResSceneNode> nodes2_{};   // indexed by nodes2_mapping_[node]
+        std::vector<size_t> nodes2_mapping_{}; // indexed by node
+
+        void build_scene_layer(size_t curr);
 
       public:
         struct SceneOffsets
@@ -32,12 +39,11 @@ namespace fi
         };
 
         std::string name_ = "";
-        std::vector<ResSceneNode> nodes_{};                // indexed by node
-        std::vector<std::vector<size_t>> node_children_{}; // indexed by node
 
         std::array<vk::DescriptorPoolSize, 1> des_sizes_{};
         vk::DescriptorSetLayout set_layout_{};
         vk::DescriptorSet des_set_{}; // bind to vertex shader
+
         std::unique_ptr<Buffer<SceneOffsets, storage, seq_write>> buffer_{};
         std::vector<uint32_t> node_transform_idx_{}; // indexed by prim
         std::vector<glm::mat4> node_transform_{};
@@ -50,6 +56,8 @@ namespace fi
 
         // calculate node_transform after the callback
         void update_data();
+        inline ResSceneNode& index_node(size_t node_idx) { return nodes2_[nodes2_mapping_[node_idx]]; }
+        inline size_t node_size() { return nodes2_.size(); }
         void update_scene(const std::function<void(ResSceneNode& node, size_t node_idx)>& func,
                           const glm::mat4& root_transform = glm::identity<glm::mat4>());
         void update_scene(const glm::mat4& root_transform = glm::identity<glm::mat4>());

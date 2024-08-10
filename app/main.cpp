@@ -31,7 +31,7 @@ int main(int argc, char** argv)
     Semaphore submit;
     Fence frame_fence;
 
-    ResDetails test_model("res/models/after_the_rain..._-_vr__sound.glb");
+    ResDetails test_model("res/models/sparta.glb");
     ResSkinDetails test_skins(test_model);
     ResSceneDetails test_scene(test_model);
     std::vector<ResAnimation> test_animations = load_res_animations(test_model);
@@ -49,8 +49,7 @@ int main(int argc, char** argv)
     test_skins.allocate_descriptor(des_pool);
     test_scene.allocate_descriptor(des_pool);
 
-    std::vector<vk::DescriptorSetLayout> set_layouts = {test_model.set_layout_,
-                                                        test_skins.set_layout_,
+    std::vector<vk::DescriptorSetLayout> set_layouts = {test_model.set_layout_, test_skins.set_layout_,
                                                         test_scene.set_layout_};
     vk::PushConstantRange push_range{};
     push_range.size = 3 * sizeof(glm::mat4);
@@ -103,12 +102,12 @@ int main(int argc, char** argv)
 
         prev_time = curr_time;
         curr_time = clock.get_elapsed();
-        for (size_t node_idx = 0; node_idx < test_scene.nodes_.size(); node_idx++)
+        for (size_t node_idx = 0; node_idx < test_scene.node_size(); node_idx++)
         {
             size_t key_frame_idx = test_animations[0].key_frames_idx_[node_idx];
             if (key_frame_idx != -1)
             {
-                ResSceneNode& s_node = test_scene.nodes_[node_idx];
+                ResSceneNode& s_node = test_scene.index_node(node_idx);
                 test_animations[0].key_frames_[key_frame_idx].set_sample_time_stamp(curr_time, s_node.translation_,
                                                                                     s_node.rotation_, s_node.scale_);
             }
