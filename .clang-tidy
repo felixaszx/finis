@@ -1,23 +1,6 @@
 Checks: "
         performance-*,
-        modernize-*,
-        cppcoreguidelines-*,
-        -modernize-use-trailing-return-type,
-        -cppcoreguidelines-slicing,
-        -cppcoreguidelines-special-member-functions,
-        -cppcoreguidelines-non-private-member-variables-in-classes,
-        -cppcoreguidelines-pro-bounds-pointer-arithmetic,
-        -cppcoreguidelines-avoid-non-const-global-variables,
-        -cppcoreguidelines-pro-bounds-constant-array-index,
-        -cppcoreguidelines-pro-type-cstyle-cast,
-        -cppcoreguidelines-avoid-magic-numbers,
-        -cppcoreguidelines-narrowing-conversions,
-        -modernize-deprecated-headers,
-        -modernize-use-using,
-        -modernize-avoid-c-arrays,
-        -cppcoreguidelines-avoid-c-arrays,
-        -cppcoreguidelines-owning-memory,
-        -cppcoreguidelines-macro-usage
+        modernize-*
         "
 WarningsAsErrors: ''
 HeaderFilterRegex: ''
