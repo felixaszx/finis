@@ -26,8 +26,8 @@ namespace fi
         std::vector<std::vector<size_t>> node_children_{}; // indexed by node, cleared
         std::vector<std::vector<size_t>> node_layers_{};   // cleared
 
-        std::vector<ResSceneNode> nodes2_{};   // indexed by nodes2_mapping_[node]
         std::vector<size_t> nodes2_mapping_{}; // indexed by node
+        std::vector<ResSceneNode> nodes2_{};   // indexed by nodes2_mapping_[node]
 
         void build_scene_layer(size_t curr);
 
@@ -88,6 +88,7 @@ namespace fi
         ResAnimationSampler<glm::quat> rotation_sampler_;
         ResAnimationSampler<glm::vec3> scale_sampler_;
 
+        // all in second
         ResKeyFrame sample_time_stamp(float time_stamp);
         void set_sample_time_stamp(float time_stamp, glm::vec3& translation, glm::quat& rotation, glm::vec3& scale);
         void set_sample_time_stamp(float time_stamp, ResSceneNode& node);
