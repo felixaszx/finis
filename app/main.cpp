@@ -31,7 +31,7 @@ int main(int argc, char** argv)
     Semaphore submit;
     Fence frame_fence;
 
-    ResDetails test_model("res/models/sparta.glb");
+    ResDetails test_model("res/models/after_the_rain..._-_vr__sound.glb");
     ResSkinDetails test_skins(test_model);
     ResSceneDetails test_scene(test_model);
     std::vector<ResAnimation> test_animations = load_res_animations(test_model);
@@ -49,7 +49,8 @@ int main(int argc, char** argv)
     test_skins.allocate_descriptor(des_pool);
     test_scene.allocate_descriptor(des_pool);
 
-    std::vector<vk::DescriptorSetLayout> set_layouts = {test_model.set_layout_, test_skins.set_layout_,
+    std::vector<vk::DescriptorSetLayout> set_layouts = {test_model.set_layout_,
+                                                        test_skins.set_layout_,
                                                         test_scene.set_layout_};
     vk::PushConstantRange push_range{};
     push_range.size = 3 * sizeof(glm::mat4);

@@ -639,7 +639,7 @@ void fi::ResDetails::set_pipeline_create_details(std::vector<vk::VertexInputBind
         binding_des.resize(2);
         binding_des[1].binding = buffer_binding + 1;
         binding_des[1].inputRate = vk::VertexInputRate::eInstance;
-        binding_des[1].stride = sizeof(ResVtx);
+        binding_des[1].stride = sizeof(glm::mat4);
 
         attrib_des.resize(11);
         for (int i = 0; i < 4; i++)
