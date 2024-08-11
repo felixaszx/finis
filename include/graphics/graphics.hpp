@@ -18,24 +18,15 @@
 #include <vulkan/vulkan.hpp>
 
 #include "glms.hpp"
-
 #include "vma/vk_mem_alloc.hpp"
 
-#define TINYGLTF_USE_CPP14
-#define TINYGLTF_NOEXCEPTION
-#include "tinygltf/tiny_gltf.h"
+#include "fastgltf/core.hpp"
+#include "fastgltf/tools.hpp"
+#include "fastgltf/glm_element_traits.hpp"
 
 namespace fi
 {
-
-    namespace gltf
-    {
-        using namespace tinygltf;
-        inline bool contains(int idx)
-        {
-            return idx != -1;
-        }
-    }; // namespace gltf
+    namespace gltf = fastgltf;
 
     struct Graphics;
     class GraphicsObject
@@ -64,8 +55,6 @@ namespace fi
         inline static vma::Allocator allocator_{};
         inline static GLFWwindow* window_{};
 
-        inline static gltf::TinyGLTF gltf_loader_{};
-
       public:
         static vk::Instance instance();
         static vk::SurfaceKHR surface();
@@ -78,7 +67,6 @@ namespace fi
         static GLFWwindow* window();
         static vk::CommandBuffer one_time_submit_cmd();
         static void submit_one_time_cmd(vk::CommandBuffer cmd);
-        static gltf::TinyGLTF& gltf_loader();
     };
 
     struct Graphics : public GraphicsObject
@@ -137,10 +125,6 @@ namespace fi
         void start();
         void reset();
     };
-
-    void iterate_acc(const std::function<void(size_t idx, const unsigned char* data, size_t size)>& cb, //
-                     const fi::gltf::Accessor& acc,                                                     //
-                     const fi::gltf::Model& model);
 }; // namespace fi
 
 #endif // GRAPHICS_GRAPHICS_HPP

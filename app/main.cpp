@@ -4,8 +4,6 @@
 #include "extensions/loader.hpp"
 #include "graphics/graphics.hpp"
 #include "graphics/swapchain.hpp"
-#include "graphics/res_holder.hpp"
-#include "graphics/res_mesh.hpp"
 #include "fltk/fl_ext.hpp"
 
 int main(int argc, char** argv)
@@ -23,23 +21,6 @@ int main(int argc, char** argv)
     Graphics g(1920, 1080, "finis");
     Swapchain sc;
     sc.create();
-
-    ResSceneDetails test_scenes;
-    test_scenes.add_gltf("res/models/sparta.glb");
-    test_scenes.add_gltf("res/models/pheonix.glb");
-
-    ResMeshDetails test_mesh(test_scenes);
-
-    std::vector<vk::DescriptorPoolSize> pool_sizes;
-    pool_sizes.insert(pool_sizes.end(),                            //
-                      test_scenes.descriptor_pool_sizes().begin(), //
-                      test_scenes.descriptor_pool_sizes().end());
-
-    vk::DescriptorPoolCreateInfo des_pool_info{};
-    des_pool_info.setPoolSizes(pool_sizes);
-    des_pool_info.maxSets = 100;
-    vk::DescriptorPool des_pool = g.device().createDescriptorPool(des_pool_info);
-    test_scenes.allocate_gpu_res(des_pool);
 
     Semaphore next_img;
     Semaphore submit;
@@ -161,7 +142,6 @@ int main(int argc, char** argv)
     g.device().waitIdle();
     sc.destory();
     g.device().destroyCommandPool(cmd_pool);
-    g.device().destroyDescriptorPool(des_pool);
 
     fltk.hide();
     fle::Global::check();

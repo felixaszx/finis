@@ -10,7 +10,6 @@ set(CMAKE_STATIC_LIBRARY_PREFIX "")
 set(CMAKE_RUNTIME_OUTPUT_DIRECTORY ${CMAKE_SOURCE_DIR}/exe)
 
 add_subdirectory(src/graphics)
-add_subdirectory(src/graphics2)
 add_subdirectory(src/extensions)
 
 file(GLOB_RECURSE SRC app/*.cpp )

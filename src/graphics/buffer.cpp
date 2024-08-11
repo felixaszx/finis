@@ -1,4 +1,4 @@
-#include "graphics2/buffer.hpp"
+#include "graphics/buffer.hpp"
 
 void fi::BufferBase::create_buffer(const vk::BufferCreateInfo& buffer_info, const vma::AllocationCreateInfo& alloc_info)
 {
@@ -86,6 +86,14 @@ void fi::indirect(vk::BufferCreateInfo& buffer_info, vma::AllocationCreateInfo& 
 void fi::seq_write(vk::BufferCreateInfo& buffer_info, vma::AllocationCreateInfo& alloc_info)
 {
     alloc_info.flags |= vma::AllocationCreateFlagBits::eHostAccessSequentialWrite;
+}
+
+void fi::host_coherent(vk::BufferCreateInfo& buffer_info, vma::AllocationCreateInfo& alloc_info)
+{
     alloc_info.preferredFlags |= vk::MemoryPropertyFlagBits::eHostCoherent;
-    alloc_info.usage = vma::MemoryUsage::eAutoPreferHost;
+}
+
+void fi::host_cached(vk::BufferCreateInfo& buffer_info, vma::AllocationCreateInfo& alloc_info)
+{
+    alloc_info.preferredFlags |= vk::MemoryPropertyFlagBits::eHostCached;
 }

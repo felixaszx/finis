@@ -1,4 +1,4 @@
-#include "graphics2/shader.hpp"
+#include "graphics/shader.hpp"
 
 fi::ShaderModule::ShaderModule(const std::string& file_name, //
                                vk::ShaderStageFlagBits stage)
