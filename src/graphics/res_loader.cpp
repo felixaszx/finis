@@ -155,7 +155,7 @@ void fi::ResDetails::lock_and_load()
                 }
             });
 
-        std::future<void> pos_fut = th_pool_.submit_task(
+        std::future<void> vtx_pos_fut = th_pool_.submit_task(
             [this, gltf, first_prim]()
             {
                 auto prim_info = primitives_.begin() + first_prim;
@@ -173,7 +173,7 @@ void fi::ResDetails::lock_and_load()
                 }
             });
 
-        std::future<void> normal_fut = th_pool_.submit_task(
+        std::future<void> vtx_normal_fut = th_pool_.submit_task(
             [this, gltf, first_prim]()
             {
                 auto prim_info = primitives_.begin() + first_prim;
@@ -195,7 +195,7 @@ void fi::ResDetails::lock_and_load()
                 }
             });
 
-        std::future<void> tangent_fut = th_pool_.submit_task(
+        std::future<void> vtx_tangent_fut = th_pool_.submit_task(
             [this, gltf, first_prim]()
             {
                 auto prim_info = primitives_.begin() + first_prim;
@@ -217,7 +217,7 @@ void fi::ResDetails::lock_and_load()
                 }
             });
 
-        std::future<void> texcoord_fut = th_pool_.submit_task(
+        std::future<void> vtx_texcoord_fut = th_pool_.submit_task(
             [this, gltf, first_prim]()
             {
                 auto prim_info = primitives_.begin() + first_prim;
@@ -239,7 +239,7 @@ void fi::ResDetails::lock_and_load()
                 }
             });
 
-        std::future<void> color_fut = th_pool_.submit_task(
+        std::future<void> vtx_color_fut = th_pool_.submit_task(
             [this, gltf, first_prim]()
             {
                 auto prim_info = primitives_.begin() + first_prim;
@@ -261,7 +261,7 @@ void fi::ResDetails::lock_and_load()
                 }
             });
 
-        std::future<void> joints_fut = th_pool_.submit_task(
+        std::future<void> vtx_joints_fut = th_pool_.submit_task(
             [this, gltf, first_prim]()
             {
                 auto prim_info = primitives_.begin() + first_prim;
@@ -283,7 +283,7 @@ void fi::ResDetails::lock_and_load()
                 }
             });
 
-        std::future<void> weights_fut = th_pool_.submit_task(
+        std::future<void> vtx_weights_fut = th_pool_.submit_task(
             [this, gltf, first_prim]()
             {
                 auto prim_info = primitives_.begin() + first_prim;
