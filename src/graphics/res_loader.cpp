@@ -1,4 +1,5 @@
 #include "graphics/res_loader.hpp"
+
 void fi::ResDetails::add_gltf_file(const std::filesystem::path& path)
 {
     if (locked_)
@@ -129,6 +130,7 @@ void fi::ResDetails::add_gltf_file(const std::filesystem::path& path)
 void fi::ResDetails::lock_and_load()
 {
     locked_ = true; // load geometric data
+    std::vector<std::future<void>> futs;
     for (size_t g = 0; g < gltf_.size(); g++)
     {
         gltf::Asset* gltf = &gltf_[g].get();
@@ -138,7 +140,7 @@ void fi::ResDetails::lock_and_load()
         TSMeshIdx first_mesh = first_mesh_[g];
         PrimIdx first_prim = first_prim_[g];
 
-        std::future<void> idx_fut = th_pool_.submit_task(
+        futs.emplace_back(th_pool_.submit_task(
             [this, gltf, first_prim]()
             {
                 auto draw_call_iter = draw_calls_.begin() + first_prim;
@@ -153,9 +155,9 @@ void fi::ResDetails::lock_and_load()
                     }
                     draw_call_iter++;
                 }
-            });
+            }));
 
-        std::future<void> vtx_pos_fut = th_pool_.submit_task(
+        futs.emplace_back(th_pool_.submit_task(
             [this, gltf, first_prim]()
             {
                 auto prim_info = primitives_.begin() + first_prim;
@@ -171,9 +173,9 @@ void fi::ResDetails::lock_and_load()
                     }
                     prim_info++;
                 }
-            });
+            }));
 
-        std::future<void> vtx_normal_fut = th_pool_.submit_task(
+        futs.emplace_back(th_pool_.submit_task(
             [this, gltf, first_prim]()
             {
                 auto prim_info = primitives_.begin() + first_prim;
@@ -193,9 +195,9 @@ void fi::ResDetails::lock_and_load()
                         prim_info++;
                     }
                 }
-            });
+            }));
 
-        std::future<void> vtx_tangent_fut = th_pool_.submit_task(
+        futs.emplace_back(th_pool_.submit_task(
             [this, gltf, first_prim]()
             {
                 auto prim_info = primitives_.begin() + first_prim;
@@ -215,9 +217,9 @@ void fi::ResDetails::lock_and_load()
                         prim_info++;
                     }
                 }
-            });
+            }));
 
-        std::future<void> vtx_texcoord_fut = th_pool_.submit_task(
+        futs.emplace_back(th_pool_.submit_task(
             [this, gltf, first_prim]()
             {
                 auto prim_info = primitives_.begin() + first_prim;
@@ -237,9 +239,9 @@ void fi::ResDetails::lock_and_load()
                         prim_info++;
                     }
                 }
-            });
+            }));
 
-        std::future<void> vtx_color_fut = th_pool_.submit_task(
+        futs.emplace_back(th_pool_.submit_task(
             [this, gltf, first_prim]()
             {
                 auto prim_info = primitives_.begin() + first_prim;
@@ -259,9 +261,9 @@ void fi::ResDetails::lock_and_load()
                         prim_info++;
                     }
                 }
-            });
+            }));
 
-        std::future<void> vtx_joints_fut = th_pool_.submit_task(
+        futs.emplace_back(th_pool_.submit_task(
             [this, gltf, first_prim]()
             {
                 auto prim_info = primitives_.begin() + first_prim;
@@ -281,9 +283,9 @@ void fi::ResDetails::lock_and_load()
                         prim_info++;
                     }
                 }
-            });
+            }));
 
-        std::future<void> vtx_weights_fut = th_pool_.submit_task(
+        futs.emplace_back(th_pool_.submit_task(
             [this, gltf, first_prim]()
             {
                 auto prim_info = primitives_.begin() + first_prim;
@@ -303,7 +305,10 @@ void fi::ResDetails::lock_and_load()
                         prim_info++;
                     }
                 }
-            });
+            }));
     }
-    th_pool_.wait();
+    for (const std::future<void>& fut : futs)
+    {
+        fut.wait();
+    }
 }
