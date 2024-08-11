@@ -54,6 +54,12 @@ bool decode_mipmap_mode(int mode, vk::SamplerMipmapMode* out_mode)
 
 fi::ResMeshDetails::ResMeshDetails(ResSceneDetails& target)
 {
+    std::vector<PrimVtx> vtxs;
+    std::vector<uint32_t> idxs;
+    std::vector<vk::DrawIndexedIndirectCommand> draw_calls;
+    size_t old_vtx_count = 0;
+    size_t old_idx_count = 0;
+
     first_gltf_mesh_.reserve(target.models().size());
     gltf_mesh_count_.reserve(target.models().size());
     for (auto& model_p : target.models())
@@ -289,12 +295,6 @@ fi::ResMeshDetails::ResMeshDetails(ResSceneDetails& target)
             material.sheen_roughtness_ += (material.sheen_roughtness_ == -1 ? 0 : first_tex);
         }
 
-        std::vector<PrimVtx> vtxs;
-        std::vector<uint32_t> idxs;
-        std::vector<vk::DrawIndexedIndirectCommand> draw_calls;
-        size_t old_vtx_count = 0;
-        size_t old_idx_count = 0;
-
         uint32_t first_mesh = meshes_.size();
         uint32_t first_primitive = prim_details_.size();
         meshes_.reserve(meshes_.size() + model.meshes.size());
@@ -514,13 +514,13 @@ fi::ResMeshDetails::ResMeshDetails(ResSceneDetails& target)
                 old_vtx_count = vtxs.size();
             }
         }
-
-        // calculateing padding for buffer
-        vk::DeviceSize ssbo_front_padding = draw_calls.size() % 16;
-        vk::DeviceSize mat_back_padding = 0;
-        vk::DeviceSize prim_back_padding = 0;
-        vk::DeviceSize mesh_back_padding = 0;
     }
+
+    // calculateing padding for buffer
+    vk::DeviceSize ssbo_front_padding = draw_calls.size() % 16;
+    vk::DeviceSize mat_back_padding = 0;
+    vk::DeviceSize prim_back_padding = 0;
+    vk::DeviceSize mesh_back_padding = 0;
 }
 
 fi::ResMeshDetails::~ResMeshDetails()
