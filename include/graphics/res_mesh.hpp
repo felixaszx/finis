@@ -31,8 +31,8 @@ namespace fi
         std::vector<vk::Sampler> samplers_{};
         std::vector<PrimMaterial> materials_{}; // indexed by PrimIdx
 
-        std::vector<ResMesh> meshes_{};            // indexed by MeshIdx
-        std::vector<PrimDetails> prim_details_{};  // indexed by PrimIdx
+        std::vector<ResMesh> meshes_{};           // indexed by MeshIdx
+        std::vector<PrimDetails> prim_details_{}; // indexed by PrimIdx
         std::vector<MeshDetails> mesh_details_{}; // indexed by MeshIdx
 
         vk::DescriptorSetLayout set_layout_{};
@@ -46,6 +46,8 @@ namespace fi
         ~ResMeshDetails();
 
         void allocate_gpu_res(vk::DescriptorPool des_pool);
+        ResMesh& index_mesh(size_t gltf_idx, MeshIdx mesh_idx);
+        MeshDetails& index_mesh_details(size_t gltf_idx, MeshIdx mesh_idx);
         void bind(vk::CommandBuffer cmd, uint32_t buffer_binding, vk::PipelineLayout pipeline_layout, uint32_t set);
         void draw(vk::CommandBuffer cmd);
 

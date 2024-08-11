@@ -516,13 +516,25 @@ fi::ResMeshDetails::ResMeshDetails(ResSceneDetails& target)
         }
     }
 
+    // update mesh details
+
     // calculateing padding for buffer
-    vk::DeviceSize ssbo_front_padding = draw_calls.size() % 16;
-    vk::DeviceSize mat_back_padding = 0;
-    vk::DeviceSize prim_back_padding = 0;
-    vk::DeviceSize mesh_back_padding = 0;
+    vk::DeviceSize ssbo_front_padding = sizeof_arr(draw_calls) % 16;
+    vk::DeviceSize mat_back_padding = sizeof_arr(materials_) % 16;
+    vk::DeviceSize prim_back_padding = sizeof_arr(prim_details_) % 16;
+    vk::DeviceSize mesh_back_padding = sizeof_arr(mesh_details_) % 16;
 }
 
 fi::ResMeshDetails::~ResMeshDetails()
 {
+}
+
+fi::ResMesh& fi::ResMeshDetails::index_mesh(size_t gltf_idx, MeshIdx mesh_idx)
+{
+    return meshes_[first_gltf_mesh_[gltf_idx] + mesh_idx];
+}
+
+fi::MeshDetails& fi::ResMeshDetails::index_mesh_details(size_t gltf_idx, MeshIdx mesh_idx)
+{
+    return mesh_details_[first_gltf_mesh_[gltf_idx] + mesh_idx];
 }
