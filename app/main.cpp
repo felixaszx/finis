@@ -4,6 +4,7 @@
 #include "extensions/loader.hpp"
 #include "graphics/graphics.hpp"
 #include "graphics/swapchain.hpp"
+#include "graphics/res_loader.hpp"
 #include "fltk/fl_ext.hpp"
 
 int main(int argc, char** argv)
@@ -21,6 +22,11 @@ int main(int argc, char** argv)
     Graphics g(1920, 1080, "finis");
     Swapchain sc;
     sc.create();
+
+    ResDetails test_res;
+    test_res.add_gltf_file("res/models/pheonix.glb");
+    test_res.add_gltf_file("res/models/sparta.glb");
+    test_res.lock_and_load();
 
     Semaphore next_img;
     Semaphore submit;
