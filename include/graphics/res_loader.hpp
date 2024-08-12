@@ -68,7 +68,7 @@ namespace fi
         std::vector<PrimInfo> primitives_{};           // indexed by PrimIdx
         std::vector<MaterialInfo> materials_{};        // indexed by TSMaterialIdx
 
-        ResDetails();
+        ~ResDetails();
 
         void add_gltf_file(const std::filesystem::path& path);
         void lock_and_load();

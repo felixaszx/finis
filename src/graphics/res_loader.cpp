@@ -1,7 +1,7 @@
 #define STB_IMAGE_IMPLEMENTATION
 #include "graphics/res_loader.hpp"
 
-fi::ResDetails::ResDetails()
+fi::ResDetails::~ResDetails()
 {
     for (TexIdx t = 0; t < tex_imgs_.size(); t++)
     {
@@ -407,6 +407,8 @@ void fi::ResDetails::lock_and_load()
             }));
     }
 
+    std::mutex queue_lock;
+
     for (size_t g = 0; g < gltf_.size(); g++)
     {
         gltf::Asset* gltf = &gltf_[g].get();
@@ -414,14 +416,14 @@ void fi::ResDetails::lock_and_load()
         TSSamplerIdx first_sampler = first_sampler_[g];
 
         futs.emplace_back(th_pool_.submit_task(
-            [this, gltf, first_tex, first_sampler]()
+            [this, gltf, first_tex, first_sampler, &queue_lock]()
             {
-                vk::CommandPoolCreateInfo tex_cmd_pool_info{vk::CommandPoolCreateFlagBits::eResetCommandBuffer,
-                                                            queue_indices(GRAPHICS)};
+                vk::CommandPoolCreateInfo tex_cmd_pool_info{vk::CommandPoolCreateFlagBits::eResetCommandBuffer};
                 vk::CommandPool tex_cmd_pool = device().createCommandPool(tex_cmd_pool_info);
-                vk::CommandBufferAllocateInfo cmd_alloc_info{tex_cmd_pool, {}, 2};
+                vk::CommandBufferAllocateInfo cmd_alloc_info{tex_cmd_pool, {}, 1};
                 vk::CommandBuffer tex_cmd = device().allocateCommandBuffers(cmd_alloc_info)[0];
-                Fence upload_completed(false);
+                Fence upload_completed(true);
+                device().resetFences(upload_completed);
 
                 auto extract_mipmaped = [](gltf::Filter filter)
                 {
@@ -509,12 +511,14 @@ void fi::ResDetails::lock_and_load()
                     const gltf::Image& img_g = gltf->images[gltf->textures[t_g].imageIndex.value()];
                     const gltf::BufferView& img_bufer_view = gltf->bufferViews[std::get<1>(img_g.data).bufferViewIndex];
                     const gltf::Buffer& img_bufer = gltf->buffers[img_bufer_view.bufferIndex];
+
                     int w = 0, h = 0, c = 0;
                     stbi_uc* pixels = stbi_load_from_memory(
                         (const unsigned char*)std::get<3>(img_bufer.data).bytes.data() + img_bufer_view.byteOffset,
                         img_bufer_view.byteLength, //
                         &w, &h, &c,                //
                         STBI_rgb_alpha);
+                    size_t img_size = w * h * 4;
 
                     bool mip_mapping = extract_mipmaped(gltf->samplers[gltf->textures[t_g].samplerIndex.value_or(0)] //
                                                             .minFilter.value_or(gltf::Filter::LinearMipMapLinear));
@@ -548,9 +552,9 @@ void fi::ResDetails::lock_and_load()
                         tex_views_[tex] = device().createImageView(view_info);
                     }
 
-                    Buffer<BufferBase::EmptyExtraInfo, seq_write, host_coherent, vertex> //
-                        staging(img_bufer_view.byteLength, SRC);
-                    memcpy(staging.map_memory(), pixels, img_bufer_view.byteLength);
+                    Buffer<BufferBase::EmptyExtraInfo, seq_write, host_coherent, vertex> staging(img_size, SRC);
+                    memcpy(staging.map_memory(), pixels, img_size);
+                    staging.unmap_memory();
                     stbi_image_free(pixels);
 
                     vk::ImageMemoryBarrier barrier{};
@@ -635,14 +639,16 @@ void fi::ResDetails::lock_and_load()
 
                     vk::SubmitInfo submit{};
                     submit.setCommandBuffers(tex_cmd);
+                    queue_lock.lock();
                     queues(GRAPHICS).submit(submit, upload_completed);
+                    queue_lock.unlock();
+                    auto r = device().waitForFences(upload_completed, true, std::numeric_limits<uint64_t>::max());
+                    device().resetFences(upload_completed);
 
                     vk::DescriptorImageInfo& tex_info = tex_infos_[tex];
                     tex_info.imageLayout = vk::ImageLayout::eShaderReadOnlyOptimal;
                     tex_info.imageView = tex_views_[tex];
                     tex_info.sampler = samplers_[first_sampler + gltf->textures[t_g].samplerIndex.value_or(0)];
-                    auto r = device().waitForFences(upload_completed, true, std::numeric_limits<uint64_t>::max());
-                    device().resetFences(upload_completed);
                 }
 
                 device().destroyCommandPool(tex_cmd_pool);
