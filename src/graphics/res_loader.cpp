@@ -96,35 +96,35 @@ void fi::ResDetails::add_gltf_file(const std::filesystem::path& path)
             PrimInfo& prim_info = primitives_.emplace_back();
             prim_info.mesh_idx_ = m;
             prim_info.material_ = first_material_.back() + (uint32_t)prim.materialIndex.value_or(0);
-            prim_info.first_position_ = old_vtx_count_;
+            prim_info.first_position_ = old_vtx_count_ * 3;
             if (normals_attrib != prim.attributes.end())
             {
-                prim_info.first_normal_ = old_normals_count_;
+                prim_info.first_normal_ = old_normals_count_ * 3;
                 old_normals_count_ += gltf.accessors[normals_attrib->accessorIndex].count;
             }
             if (tangents_attrib != prim.attributes.end())
             {
-                prim_info.first_tangent_ = old_tangents_count_;
+                prim_info.first_tangent_ = old_tangents_count_ * 4;
                 old_tangents_count_ += gltf.accessors[tangents_attrib->accessorIndex].count;
             }
             if (texcoord_attrib != prim.attributes.end())
             {
-                prim_info.first_texcoord_ = old_texcoords_count_;
+                prim_info.first_texcoord_ = old_texcoords_count_ * 2;
                 old_texcoords_count_ += gltf.accessors[texcoord_attrib->accessorIndex].count;
             }
             if (colors_attrib != prim.attributes.end())
             {
-                prim_info.first_color_ = old_colors_count_;
+                prim_info.first_color_ = old_colors_count_ * 4;
                 old_colors_count_ += gltf.accessors[colors_attrib->accessorIndex].count;
             }
             if (joints_attrib != prim.attributes.end())
             {
-                prim_info.first_joint_ = old_joints_count_;
+                prim_info.first_joint_ = old_joints_count_ * 4;
                 old_joints_count_ += gltf.accessors[joints_attrib->accessorIndex].count;
             }
             if (weights_attrib != prim.attributes.end())
             {
-                prim_info.first_weight_ = old_weights_count_;
+                prim_info.first_weight_ = old_weights_count_ * 4;
                 old_weights_count_ += gltf.accessors[weights_attrib->accessorIndex].count;
             }
 
@@ -142,6 +142,7 @@ void fi::ResDetails::add_gltf_file(const std::filesystem::path& path)
     vtx_joints_.resize(old_joints_count_);
     vtx_weights_.resize(old_weights_count_);
 }
+
 void fi::ResDetails::lock_and_load()
 {
     locked_ = true; // load geometric data
@@ -407,8 +408,8 @@ void fi::ResDetails::lock_and_load()
             }));
     }
 
+    // load textures
     std::mutex queue_lock;
-
     for (size_t g = 0; g < gltf_.size(); g++)
     {
         gltf::Asset* gltf = &gltf_[g].get();
@@ -654,6 +655,32 @@ void fi::ResDetails::lock_and_load()
                 device().destroyCommandPool(tex_cmd_pool);
             }));
     }
+
+    // copy vtxs datas
+    while (idxs_.empty() && sizeof_arr(idxs_) % 16)
+    {
+    };
+    while (vtx_positions_.empty() && sizeof_arr(vtx_positions_) % 16)
+    {
+    };
+    while (vtx_normals_.empty() && sizeof_arr(vtx_normals_) % 16)
+    {
+    };
+    while (vtx_tangents_.empty() && sizeof_arr(vtx_tangents_) % 16)
+    {
+    };
+    while (vtx_texcoords_.empty() && sizeof_arr(vtx_texcoords_) % 16)
+    {
+    };
+    while (vtx_colors_.empty() && sizeof_arr(vtx_colors_) % 16)
+    {
+    };
+    while (vtx_joints_.empty() && sizeof_arr(vtx_joints_) % 16)
+    {
+    };
+    while (vtx_weights_.empty() && sizeof_arr(vtx_weights_) % 16)
+    {
+    };
 
     for (const std::future<void>& fut : futs)
     {

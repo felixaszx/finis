@@ -19,17 +19,17 @@ namespace fi
         bool locked_ = false;
         // threading helpers
         bs::thread_pool th_pool_;
-        size_t old_vtx_count_ = 0;
+        size_t old_vtx_count_ = 0; // in scalar offset
         size_t old_idx_count_ = 0;
-        size_t old_normals_count_{};
-        size_t old_tangents_count_{};
-        size_t old_texcoords_count_{};
-        size_t old_colors_count_{};
-        size_t old_joints_count_{};
-        size_t old_weights_count_{};
-        size_t old_target_positions_count_{}; // tbd
-        size_t old_target_normals_count_{};   // tbd
-        size_t old_target_tangents_count_{};  // tbd
+        size_t old_normals_count_ = 0;
+        size_t old_tangents_count_ = 0;
+        size_t old_texcoords_count_ = 0;
+        size_t old_colors_count_ = 0;
+        size_t old_joints_count_ = 0;
+        size_t old_weights_count_ = 0;
+        size_t old_target_positions_count = 0; // tbd
+        size_t old_target_normals_count_ = 0;  // tbd
+        size_t old_target_tangents_count_ = 0; // tbd
 
         std::vector<uint32_t> idxs_{};                             // indexed by size_t
         std::vector<glm::vec3> vtx_positions_{};                   // indexed by size_t
