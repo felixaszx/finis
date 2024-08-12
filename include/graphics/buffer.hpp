@@ -38,6 +38,7 @@ namespace fi
     void vertex(vk::BufferCreateInfo& buffer_info, vma::AllocationCreateInfo& alloc_info);
     void indirect(vk::BufferCreateInfo& buffer_info, vma::AllocationCreateInfo& alloc_info);
     void seq_write(vk::BufferCreateInfo& buffer_info, vma::AllocationCreateInfo& alloc_info);
+    void hosted(vk::BufferCreateInfo& buffer_info, vma::AllocationCreateInfo& alloc_info);
     void host_coherent(vk::BufferCreateInfo& buffer_info, vma::AllocationCreateInfo& alloc_info);
     void host_cached(vk::BufferCreateInfo& buffer_info, vma::AllocationCreateInfo& alloc_info);
 

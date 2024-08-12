@@ -33,8 +33,8 @@ namespace fi
         inline void operator--() { idx_--; }
         inline void operator+=(const uint32_t& offset) { idx_ += offset; }
         inline void operator-=(const uint32_t& offset) { idx_ -= offset; }
-        inline uint32_t operator+(const uint32_t& offset) { return idx_ + offset; }
-        inline uint32_t operator-(const uint32_t& offset) { return idx_ - offset; }
+        inline uint32_t operator+(const uint32_t& offset) const { return idx_ + offset; }
+        inline uint32_t operator-(const uint32_t& offset) const { return idx_ - offset; }
     };
 
     class TSIdxIdx : public TSIdx
@@ -83,11 +83,15 @@ namespace fi
         MorphTargetIdx morph_target_ = EMPTY;
     };
 
-    struct alignas(16) MorphTargetInfo
+    struct alignas(16) MorphTargetInfo // tbd
     {
         VtxIdx first_position_ = EMPTY;
         VtxIdx first_normal_ = EMPTY;
         VtxIdx first_tangent_ = EMPTY;
+
+        uint32_t position_morph_count = 0;
+        uint32_t normal_morph_count = 0;
+        uint32_t tangent_morph_count = 0;
     };
 
     struct alignas(16) MeshInfo
@@ -101,29 +105,29 @@ namespace fi
     struct alignas(16) MaterialInfo
     {
         glm::vec4 color_factor_ = {1, 1, 1, 1};
-        glm::vec4 emissive_factor_ = {0, 0, 0, 1};    // [3] = emissive strength
-        glm::vec4 sheen_color_factor_ = {0, 0, 0, 0}; // [3] = sheen roughtness factor
-        glm::vec4 spec_factor_ = {1, 1, 1, 1};        // [3] = place holder
+        glm::vec4 emissive_factor_ = {0, 0, 0, 1};       // [3] = emissive strength
+        glm::vec4 sheen_color_factor_ = {0, 0, 0, 0};    // [3] = sheen roughtness factor
+        glm::vec4 specular_color_factor_ = {1, 1, 1, 1}; // [3] = specular factor
 
         float alpha_cutoff_ = 0;
-        float metalic_ = 1.0f;
-        float roughtness_ = 1.0f;
-        TexIdx color_texture_idx_ = EMPTY;
+        float metalic_factor_ = 1.0f;
+        float roughtness_factor_ = 1.0f;
+        TexIdx color_ = EMPTY;
         TexIdx metalic_roughtness_ = EMPTY;
 
-        TexIdx normal_map_idx_ = EMPTY;
-        TexIdx emissive_map_idx_ = EMPTY;
-        TexIdx occlusion_map_idx_ = EMPTY;
+        TexIdx normal_ = EMPTY;
+        TexIdx emissive_ = EMPTY;
+        TexIdx occlusion_ = EMPTY;
 
-        float anistropy_rotation_ = 0;
-        float anistropy_strength_ = 0;
-        TexIdx anistropy_map_idx_ = EMPTY;
+        float anisotropy_rotation_ = 0;
+        float anisotropy_strength_ = 0;
+        TexIdx anisotropy_ = EMPTY;
 
-        TexIdx spec_map_idx_ = EMPTY;
-        TexIdx spec_color_map_idx_ = EMPTY;
+        TexIdx specular_ = EMPTY;
+        TexIdx spec_color_ = EMPTY;
 
-        TexIdx sheen_color_map_idx_ = EMPTY;
-        TexIdx sheen_roughtness_map_idx_ = EMPTY;
+        TexIdx sheen_color_ = EMPTY;
+        TexIdx sheen_roughtness_ = EMPTY;
     };
 
     using NodeTransform = glm::mat4;

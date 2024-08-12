@@ -235,11 +235,11 @@ vk::CommandBuffer fi::GraphicsObject::one_time_submit_cmd()
 
 void fi::GraphicsObject::submit_one_time_cmd(vk::CommandBuffer cmd)
 {
+    Fence fence;
     vk::SubmitInfo submit{};
     submit.setCommandBuffers(cmd);
-    queues_[GRAPHICS].submit(submit);
-    queues_[GRAPHICS].waitIdle();
-    device().freeCommandBuffers(one_time_submit_pool_, cmd);
+    queues_[GRAPHICS].submit(submit, fence);
+    auto r = device_.waitForFences(fence, true, std::numeric_limits<uint64_t>::max());
 }
 
 vk::Fence fi::create_vk_fence(vk::Device device, bool signal)

@@ -88,6 +88,11 @@ void fi::seq_write(vk::BufferCreateInfo& buffer_info, vma::AllocationCreateInfo&
     alloc_info.flags |= vma::AllocationCreateFlagBits::eHostAccessSequentialWrite;
 }
 
+void fi::hosted(vk::BufferCreateInfo& buffer_info, vma::AllocationCreateInfo& alloc_info)
+{
+    alloc_info.usage = vma::MemoryUsage::eAutoPreferHost;
+}
+
 void fi::host_coherent(vk::BufferCreateInfo& buffer_info, vma::AllocationCreateInfo& alloc_info)
 {
     alloc_info.preferredFlags |= vk::MemoryPropertyFlagBits::eHostCoherent;
