@@ -3,33 +3,49 @@
 
 // Declares
 
-#define NO_TEXTURE -1
-struct Material
+#define EMPTY -1
+
+struct PrimInfo
+{
+    uint first_position_;
+    uint first_normal_;
+    uint first_tangent_;
+    uint first_texcoord_;
+    uint first_color_;
+    uint first_joint_;
+    uint first_weight_;
+    uint material_;
+
+    uint mesh_idx_;
+    uint morph_target_;
+};
+
+struct MaterialInfo
 {
     vec4 color_factor_;
-    vec4 emissive_factor_;    // [3] = emissive strength
-    vec4 sheen_color_factor_; // [3] = sheen roughtness factor
-    vec4 spec_factor_;        // [3] = place holder
+    vec4 emissive_factor_;       // [3] = emissive strength
+    vec4 sheen_color_factor_;    // [3] = sheen roughtness factor
+    vec4 specular_color_factor_; // [3] = specular factor
 
     float alpha_cutoff_;
-    float metalic_;
-    float roughtness_;
-    uint color_texture_idx_;
+    float metalic_factor_;
+    float roughtness_factor_;
+    uint color_;
     uint metalic_roughtness_;
 
-    uint normal_map_idx_;
-    uint emissive_map_idx_;
-    uint occlusion_map_idx_;
+    uint normal_;
+    uint emissive_;
+    uint occlusion_;
 
-    float anistropy_rotation_;
-    float anistropy_strength_;
-    uint anistropy_map_idx_;
+    float anisotropy_rotation_;
+    float anisotropy_strength_;
+    uint anisotropy_;
 
-    uint spec_map_idx_;
-    uint spec_color_map_idx_;
+    uint specular_;
+    uint spec_color_;
 
-    uint sheen_color_map_idx_;
-    uint sheen_roughtness_map_idx_;
+    uint sheen_color_;
+    uint sheen_roughtness_;
 };
 
 // Datas
@@ -50,40 +66,41 @@ layout(location = 0) in struct
 } FRAG_DATA;
 layout(location = 6) in flat int PRIM_IDX;
 
-layout(set = 0, binding = 0) uniform sampler2D textures_arr[];
-layout(std430, set = 0, binding = 1) readonly buffer MATERIALS_
+layout(std430, set = 0, binding = 13) readonly buffer _PRIMITIVES
 {
-    Material data_[];
+    PrimInfo data_[];
+}
+PRIMITIVES;
+layout(std430, set = 0, binding = 14) readonly buffer MATERIALS_
+{
+    MaterialInfo data_[];
 }
 MATERIALS;
-layout(std430, set = 0, binding = 2) readonly buffer MATERIAL_IDXS_
-{
-    uint mat_idx_[];
-}
-MATERIAL_IDXS;
+layout(set = 0, binding = 15) uniform sampler2D textures_arr[];
 
 // Code
 
 void main()
 {
-    Material mat = MATERIALS.data_[MATERIAL_IDXS.mat_idx_[PRIM_IDX]];
-    COLOR = FRAG_DATA.color_ * mat.color_factor_;
+    PrimInfo prim_info = PRIMITIVES.data_[PRIM_IDX];
+    MaterialInfo mat = MATERIALS.data_[prim_info.material_];
     POSITION = FRAG_DATA.position_;
+    COLOR = FRAG_DATA.color_ * mat.color_factor_;
     NORMAL = vec4(FRAG_DATA.normal_, 1);
 
     // texture mapping
-    if (mat.color_texture_idx_ != NO_TEXTURE)
+    if (mat.color_ != EMPTY)
     {
-        COLOR *= texture(textures_arr[mat.color_texture_idx_], FRAG_DATA.tex_coord_);
+        COLOR *= texture(textures_arr[mat.color_], FRAG_DATA.tex_coord_);
         if (COLOR.a < mat.alpha_cutoff_)
         {
             discard;
         }
     }
 
-    if (mat.normal_map_idx_ != NO_TEXTURE)
+    if (mat.normal_ != EMPTY)
     {
-        vec3 mapped_normal = texture(textures_arr[mat.normal_map_idx_], FRAG_DATA.tex_coord_).rgb;
+        vec3 mapped_normal = texture(textures_arr[mat.normal_], FRAG_DATA.tex_coord_).rgb;
         mapped_normal = normalize(mapped_normal * 2.0 - 1.0);
         NORMAL.rgb = normalize(mat3(FRAG_DATA.tangent_, FRAG_DATA.bitangent_, FRAG_DATA.normal_) * mapped_normal);
     }

@@ -68,22 +68,22 @@ namespace fi
         struct BufferOffsets
         {
             vk::DeviceSize idx_ = 0;
-            vk::DeviceSize vtx_positions_ = 0;
-            vk::DeviceSize vtx_normals_ = 0;
-            vk::DeviceSize vtx_tangents_ = 0;
-            vk::DeviceSize vtx_texcoords_ = 0;
-            vk::DeviceSize vtx_colors_ = 0;
-            vk::DeviceSize vtx_joints_ = 0;
-            vk::DeviceSize vtx_weights_ = 0;
-            vk::DeviceSize target_positions_ = 0;
-            vk::DeviceSize target_normals_ = 0;
-            vk::DeviceSize target_tangents_ = 0;
-            vk::DeviceSize draw_calls_ = 0;
+            vk::DeviceSize vtx_positions_ = 0;    // binding 0
+            vk::DeviceSize vtx_normals_ = 0;      // binding 1
+            vk::DeviceSize vtx_tangents_ = 0;     // binding 2
+            vk::DeviceSize vtx_texcoords_ = 0;    // binding 3
+            vk::DeviceSize vtx_colors_ = 0;       // binding 4
+            vk::DeviceSize vtx_joints_ = 0;       // binding 5
+            vk::DeviceSize vtx_weights_ = 0;      // binding 6
+            vk::DeviceSize target_positions_ = 0; // binding 7
+            vk::DeviceSize target_normals_ = 0;   // binding 8
+            vk::DeviceSize target_tangents_ = 0;  // binding 9
 
-            vk::DeviceSize meshes_ = 0;
-            vk::DeviceSize morph_targets_ = 0;
-            vk::DeviceSize primitives_ = 0;
-            vk::DeviceSize materials_ = 0;
+            vk::DeviceSize draw_calls_ = 0;    // binding 10
+            vk::DeviceSize meshes_ = 0;        // binding 11
+            vk::DeviceSize morph_targets_ = 0; // binding 12
+            vk::DeviceSize primitives_ = 0;    // binding 13
+            vk::DeviceSize materials_ = 0;     // binding 14
         };
 
       public:

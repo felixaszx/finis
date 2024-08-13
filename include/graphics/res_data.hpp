@@ -68,7 +68,7 @@ namespace fi
     {
     };
 
-    struct alignas(16) PrimInfo
+    struct PrimInfo
     {
         VtxIdx first_position_ = EMPTY;
         VtxIdx first_normal_ = EMPTY;
@@ -83,18 +83,18 @@ namespace fi
         MorphTargetIdx morph_target_ = EMPTY;
     };
 
-    struct alignas(16) MorphTargetInfo // tbd
+    struct MorphTargetInfo // tbd
     {
         VtxIdx first_position_ = EMPTY;
         VtxIdx first_normal_ = EMPTY;
         VtxIdx first_tangent_ = EMPTY;
 
-        uint32_t position_morph_count = 0;
-        uint32_t normal_morph_count = 0;
-        uint32_t tangent_morph_count = 0;
+        uint32_t position_morph_count_ = 0;
+        uint32_t normal_morph_count_ = 0;
+        uint32_t tangent_morph_count_ = 0;
     };
 
-    struct alignas(16) MeshInfo
+    struct MeshInfo
     {
         NodeIdx node_ = EMPTY;
         MorphWeightIdx morph_weight_ = EMPTY;
@@ -133,7 +133,7 @@ namespace fi
 
     using NodeTransform = glm::mat4;
 
-    struct alignas(16) InstancesInfo
+    struct InstancesInfo
     {
         // tbd
     };

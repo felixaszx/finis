@@ -146,17 +146,17 @@ void fi::ResDetails::add_gltf_file(const std::filesystem::path& path)
                 {
                     if (attrib.name == "POSITION")
                     {
-                        morph_targets_[prim_info.morph_target_].position_morph_count++;
+                        morph_targets_[prim_info.morph_target_].position_morph_count_++;
                         added_target_positions += gltf.accessors[attrib.accessorIndex].count;
                     }
                     else if (attrib.name == "NORMAL")
                     {
-                        morph_targets_[prim_info.morph_target_].normal_morph_count++;
+                        morph_targets_[prim_info.morph_target_].normal_morph_count_++;
                         added_target_nornmal += gltf.accessors[attrib.accessorIndex].count;
                     }
                     else if (attrib.name == "TANGENT")
                     {
-                        morph_targets_[prim_info.morph_target_].tangent_morph_count++;
+                        morph_targets_[prim_info.morph_target_].tangent_morph_count_++;
                         added_target_tangent += gltf.accessors[attrib.accessorIndex].count;
                     }
                 }
@@ -222,8 +222,8 @@ void fi::ResDetails::lock_and_load()
                         fastgltf::iterateAccessorWithIndex<uint32_t>(
                             *gltf, accessor, //
                             [&](uint32_t idx, size_t iter) { idxs_[draw_call_iter->firstIndex + iter] = idx; });
+                        draw_call_iter++;
                     }
-                    draw_call_iter++;
                 }
             }));
 
@@ -240,8 +240,8 @@ void fi::ResDetails::lock_and_load()
                             *gltf, pos_acc, //
                             [&](const gltf::math::fvec3& position, size_t iter)
                             { glms::assign_value(vtx_positions_[prim_info->first_position_ / 3 + iter], position); });
+                        prim_info++;
                     }
-                    prim_info++;
                 }
             }));
 
@@ -485,8 +485,8 @@ void fi::ResDetails::lock_and_load()
                                         *gltf, acc, //
                                         [&](const gltf::math::fvec3& position, size_t iter)
                                         {
-                                            size_t pos_idx = morph_info.first_position_ / 3           //
-                                                             + morph_info.position_morph_count * iter //
+                                            size_t pos_idx = morph_info.first_position_ / 3            //
+                                                             + morph_info.position_morph_count_ * iter //
                                                              + target_idx;
                                             glms::assign_value(target_positions_[pos_idx], position);
                                         });
@@ -521,8 +521,8 @@ void fi::ResDetails::lock_and_load()
                                         *gltf, acc, //
                                         [&](const gltf::math::fvec3& normal, size_t iter)
                                         {
-                                            size_t normal_idx = morph_info.first_normal_ / 3           //
-                                                                + morph_info.normal_morph_count * iter //
+                                            size_t normal_idx = morph_info.first_normal_ / 3            //
+                                                                + morph_info.normal_morph_count_ * iter //
                                                                 + target_idx;
                                             glms::assign_value(target_normals_[normal_idx], normal);
                                         });
@@ -557,8 +557,8 @@ void fi::ResDetails::lock_and_load()
                                         *gltf, acc, //
                                         [&](const gltf::math::fvec4& tangent, size_t iter)
                                         {
-                                            size_t tangent_idx = morph_info.first_tangent_ / 3           //
-                                                                 + morph_info.tangent_morph_count * iter //
+                                            size_t tangent_idx = morph_info.first_tangent_ / 4            //
+                                                                 + morph_info.tangent_morph_count_ * iter //
                                                                  + target_idx;
                                             glms::assign_value(target_tangents_[tangent_idx], tangent);
                                         });
@@ -833,49 +833,49 @@ void fi::ResDetails::lock_and_load()
         idxs_.push_back(-1);
     }
     size_t vtx_positions_padding = sizeof_arr(vtx_positions_) % 16 //
-                                       ? 16 - sizeof_arr(vtx_positions_)
+                                       ? 16 - sizeof_arr(vtx_positions_) % 16
                                        : (vtx_positions_.empty() ? 16 : 0);
     size_t vtx_normals_padding = sizeof_arr(vtx_normals_) % 16 //
-                                     ? 16 - sizeof_arr(vtx_normals_)
+                                     ? 16 - sizeof_arr(vtx_normals_) % 16
                                      : (vtx_normals_.empty() ? 16 : 0);
     size_t vtx_tangents_padding = sizeof_arr(vtx_tangents_) % 16 //
-                                      ? 16 - sizeof_arr(vtx_tangents_)
+                                      ? 16 - sizeof_arr(vtx_tangents_) % 16
                                       : (vtx_tangents_.empty() ? 16 : 0);
     size_t vtx_texcoords_padding = sizeof_arr(vtx_texcoords_) % 16 //
-                                       ? 16 - sizeof_arr(vtx_texcoords_)
+                                       ? 16 - sizeof_arr(vtx_texcoords_) % 16
                                        : (vtx_texcoords_.empty() ? 16 : 0);
     size_t vtx_colors_padding = sizeof_arr(vtx_colors_) % 16 //
-                                    ? 16 - sizeof_arr(vtx_colors_)
+                                    ? 16 - sizeof_arr(vtx_colors_) % 16
                                     : (vtx_colors_.empty() ? 16 : 0);
     size_t vtx_joints_padding = sizeof_arr(vtx_joints_) % 16 //
-                                    ? 16 - sizeof_arr(vtx_joints_)
+                                    ? 16 - sizeof_arr(vtx_joints_) % 16
                                     : (vtx_joints_.empty() ? 16 : 0);
     size_t vtx_weights_padding = sizeof_arr(vtx_weights_) % 16 //
-                                     ? 16 - sizeof_arr(vtx_weights_)
+                                     ? 16 - sizeof_arr(vtx_weights_) % 16
                                      : (vtx_weights_.empty() ? 16 : 0);
     size_t target_positions_padding = sizeof_arr(target_positions_) % 16 //
-                                          ? 16 - sizeof_arr(target_positions_)
+                                          ? 16 - sizeof_arr(target_positions_) % 16
                                           : (target_positions_.empty() ? 16 : 0);
     size_t target_normals_padding = sizeof_arr(target_normals_) % 16 //
-                                        ? 16 - sizeof_arr(target_normals_)
+                                        ? 16 - sizeof_arr(target_normals_) % 16
                                         : (target_normals_.empty() ? 16 : 0);
     size_t target_tangents_padding = sizeof_arr(target_tangents_) % 16 //
-                                         ? 16 - sizeof_arr(target_tangents_)
+                                         ? 16 - sizeof_arr(target_tangents_) % 16
                                          : (target_tangents_.empty() ? 16 : 0);
     size_t draw_calls_padding = sizeof_arr(draw_calls_) % 16 //
-                                    ? 16 - sizeof_arr(draw_calls_)
+                                    ? 16 - sizeof_arr(draw_calls_) % 16
                                     : (draw_calls_.empty() ? 16 : 0);
     size_t meshes_padding = sizeof_arr(meshes_) % 16 //
-                                ? 16 - sizeof_arr(meshes_)
+                                ? 16 - sizeof_arr(meshes_) % 16
                                 : (meshes_.empty() ? 16 : 0);
     size_t morph_targets_padding = sizeof_arr(morph_targets_) % 16 //
-                                       ? 16 - sizeof_arr(morph_targets_)
+                                       ? 16 - sizeof_arr(morph_targets_) % 16
                                        : (morph_targets_.empty() ? 16 : 0);
     size_t primitives_padding = sizeof_arr(primitives_) % 16 //
-                                    ? 16 - sizeof_arr(primitives_)
+                                    ? 16 - sizeof_arr(primitives_) % 16
                                     : (primitives_.empty() ? 16 : 0);
     size_t materials_padding = sizeof_arr(materials_) % 16 //
-                                   ? 16 - sizeof_arr(materials_)
+                                   ? 16 - sizeof_arr(materials_) % 16
                                    : (materials_.empty() ? 16 : 0);
 
     make_unique2(buffer_,
