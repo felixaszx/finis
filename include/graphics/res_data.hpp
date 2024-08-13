@@ -97,9 +97,10 @@ namespace fi
     struct alignas(16) MeshInfo
     {
         NodeIdx node_ = EMPTY;
+        MorphWeightIdx morph_weight_ = EMPTY;
+
         NodeIdx first_joint = EMPTY;
         InstanceIdx instances_ = EMPTY;
-        MorphWeightIdx morph_weight_ = EMPTY;
     };
 
     struct alignas(16) MaterialInfo
