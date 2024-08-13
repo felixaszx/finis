@@ -819,10 +819,10 @@ void fi::ResDetails::lock_and_load()
             }));
     }
 
-    // copy vtxs datas
-
     for (const std::future<void>& fut : futs)
     {
         fut.wait();
     }
+
+    // copy data to gpu
 }
