@@ -61,6 +61,7 @@ void fi::ResDetails::add_gltf_file(const std::filesystem::path& path)
     first_material_.emplace_back(materials_.size());
     first_mesh_.emplace_back(meshes_.size());
     first_prim_.emplace_back(primitives_.size());
+    first_morph_target_.emplace_back(morph_targets_.size());
 
     tex_imgs_.resize(tex_imgs_.size() + gltf.textures.size());
     tex_views_.resize(tex_imgs_.size());
@@ -128,6 +129,53 @@ void fi::ResDetails::add_gltf_file(const std::filesystem::path& path)
                 old_weights_count_ += gltf.accessors[weights_attrib->accessorIndex].count;
             }
 
+            if (!prim.targets.empty())
+            {
+                prim_info.morph_target_ = morph_targets_.size();
+                morph_targets_.emplace_back();
+            }
+
+            size_t added_target_positions = 0;
+            size_t added_target_nornmal = 0;
+            size_t added_target_tangent = 0;
+            for (const auto& target : prim.targets)
+            {
+                for (const auto& attrib : target)
+                {
+                    if (attrib.name == "POSITION")
+                    {
+                        morph_targets_[prim_info.morph_target_].position_morph_count++;
+                        added_target_positions += gltf.accessors[attrib.accessorIndex].count;
+                    }
+                    else if (attrib.name == "NORMAL")
+                    {
+                        morph_targets_[prim_info.morph_target_].normal_morph_count++;
+                        added_target_nornmal += gltf.accessors[attrib.accessorIndex].count;
+                    }
+                    else if (attrib.name == "TANGENT")
+                    {
+                        morph_targets_[prim_info.morph_target_].tangent_morph_count++;
+                        added_target_tangent += gltf.accessors[attrib.accessorIndex].count;
+                    }
+                }
+            }
+
+            if (added_target_positions)
+            {
+                morph_targets_[prim_info.morph_target_].first_position_ = old_target_positions_count * 3;
+                old_target_positions_count += added_target_positions;
+            }
+            if (added_target_nornmal)
+            {
+                morph_targets_[prim_info.morph_target_].first_normal_ = old_target_normals_count_ * 3;
+                old_target_normals_count_ += added_target_nornmal;
+            }
+            if (added_target_tangent)
+            {
+                morph_targets_[prim_info.morph_target_].first_tangent_ = old_target_tangents_count_ * 4;
+                old_target_tangents_count_ += added_target_tangent;
+            }
+
             old_vtx_count_ += pos_acc.count;
             old_idx_count_ += idx_acc.count;
         }
@@ -141,11 +189,16 @@ void fi::ResDetails::add_gltf_file(const std::filesystem::path& path)
     vtx_colors_.resize(old_colors_count_);
     vtx_joints_.resize(old_joints_count_);
     vtx_weights_.resize(old_weights_count_);
+    target_positions_.resize(old_target_positions_count);
+    target_normals_.resize(old_target_normals_count_);
+    target_tangents_.resize(old_target_tangents_count_);
 }
 
 void fi::ResDetails::lock_and_load()
 {
-    locked_ = true; // load geometric data
+    locked_ = true;
+
+    // load geometric data
     std::vector<std::future<void>> futs;
     for (size_t g = 0; g < gltf_.size(); g++)
     {
@@ -184,7 +237,7 @@ void fi::ResDetails::lock_and_load()
                         fastgltf::iterateAccessorWithIndex<gltf::math::fvec3>(
                             *gltf, pos_acc, //
                             [&](const gltf::math::fvec3& position, size_t iter)
-                            { glms::assign_value(vtx_positions_[prim_info->first_position_ + iter], position); });
+                            { glms::assign_value(vtx_positions_[prim_info->first_position_ / 3 + iter], position); });
                     }
                     prim_info++;
                 }
@@ -205,7 +258,7 @@ void fi::ResDetails::lock_and_load()
                             fastgltf::iterateAccessorWithIndex<gltf::math::fvec3>(
                                 *gltf, acc, //
                                 [&](const gltf::math::fvec3& normal, size_t iter)
-                                { glms::assign_value(vtx_normals_[prim_info->first_normal_ + iter], normal); });
+                                { glms::assign_value(vtx_normals_[prim_info->first_normal_ / 3 + iter], normal); });
                         }
                         prim_info++;
                     }
@@ -227,7 +280,7 @@ void fi::ResDetails::lock_and_load()
                             fastgltf::iterateAccessorWithIndex<gltf::math::fvec4>(
                                 *gltf, acc, //
                                 [&](const gltf::math::fvec4& tangent, size_t iter)
-                                { glms::assign_value(vtx_tangents_[prim_info->first_tangent_ + iter], tangent); });
+                                { glms::assign_value(vtx_tangents_[prim_info->first_tangent_ / 4 + iter], tangent); });
                         }
                         prim_info++;
                     }
@@ -248,8 +301,10 @@ void fi::ResDetails::lock_and_load()
                             const gltf::Accessor& acc = gltf->accessors[texcoord_attrib->accessorIndex];
                             fastgltf::iterateAccessorWithIndex<gltf::math::fvec2>(
                                 *gltf, acc, //
-                                [&](const gltf::math::fvec2& tex_coord, size_t iter)
-                                { glms::assign_value(vtx_texcoords_[prim_info->first_texcoord_ + iter], tex_coord); });
+                                [&](const gltf::math::fvec2& tex_coord, size_t iter) {
+                                    glms::assign_value(vtx_texcoords_[prim_info->first_texcoord_ / 2 + iter],
+                                                       tex_coord);
+                                });
                         }
                         prim_info++;
                     }
@@ -271,7 +326,7 @@ void fi::ResDetails::lock_and_load()
                             fastgltf::iterateAccessorWithIndex<gltf::math::fvec4>(
                                 *gltf, acc, //
                                 [&](const gltf::math::fvec4& color, size_t iter)
-                                { glms::assign_value(vtx_colors_[prim_info->first_color_ + iter], color); });
+                                { glms::assign_value(vtx_colors_[prim_info->first_color_ / 4 + iter], color); });
                         }
                         prim_info++;
                     }
@@ -293,7 +348,7 @@ void fi::ResDetails::lock_and_load()
                             fastgltf::iterateAccessorWithIndex<gltf::math::uvec4>(
                                 *gltf, acc, //
                                 [&](const gltf::math::uvec4& joints, size_t iter)
-                                { glms::assign_value(vtx_joints_[prim_info->first_joint_ + iter], joints); });
+                                { glms::assign_value(vtx_joints_[prim_info->first_joint_ / 4 + iter], joints); });
                         }
                         prim_info++;
                     }
@@ -315,7 +370,7 @@ void fi::ResDetails::lock_and_load()
                             fastgltf::iterateAccessorWithIndex<gltf::math::fvec4>(
                                 *gltf, acc, //
                                 [&](const gltf::math::fvec4& weights, size_t iter)
-                                { glms::assign_value(vtx_weights_[prim_info->first_weight_ + iter], weights); });
+                                { glms::assign_value(vtx_weights_[prim_info->first_weight_ / 4 + iter], weights); });
                         }
                         prim_info++;
                     }
@@ -403,6 +458,114 @@ void fi::ResDetails::lock_and_load()
                         material.spec_color_ = specular->specularColorTexture //
                                                    ? first_tex + specular->specularColorTexture->textureIndex
                                                    : EMPTY;
+                    }
+                }
+            }));
+
+        futs.emplace_back(th_pool_.submit_task(
+            [this, gltf, first_prim]()
+            {
+                auto prim_info = primitives_.begin() + first_prim;
+                for (TSMeshIdx m_g(0); m_g < gltf->meshes.size(); m_g++)
+                {
+                    for (const gltf::Primitive& prim : gltf->meshes[m_g].primitives)
+                    {
+                        size_t target_idx = 0;
+                        for (const auto& target : prim.targets)
+                        {
+                            for (const auto& attrib : target)
+                            {
+                                if (attrib.name == "POSITION")
+                                {
+                                    MorphTargetInfo& morph_info = morph_targets_[prim_info->morph_target_];
+                                    const gltf::Accessor& acc = gltf->accessors[attrib.accessorIndex];
+                                    fastgltf::iterateAccessorWithIndex<gltf::math::fvec3>(
+                                        *gltf, acc, //
+                                        [&](const gltf::math::fvec3& position, size_t iter)
+                                        {
+                                            size_t pos_idx = morph_info.first_position_ / 3           //
+                                                             + morph_info.position_morph_count * iter //
+                                                             + target_idx;
+                                            glms::assign_value(target_positions_[pos_idx], position);
+                                        });
+                                    target_idx++;
+                                    break;
+                                }
+                            }
+                        }
+                        prim_info++;
+                    }
+                }
+            }));
+
+        futs.emplace_back(th_pool_.submit_task(
+            [this, gltf, first_prim]()
+            {
+                auto prim_info = primitives_.begin() + first_prim;
+                for (TSMeshIdx m_g(0); m_g < gltf->meshes.size(); m_g++)
+                {
+                    for (const gltf::Primitive& prim : gltf->meshes[m_g].primitives)
+                    {
+                        size_t target_idx = 0;
+                        for (const auto& target : prim.targets)
+                        {
+                            for (const auto& attrib : target)
+                            {
+                                if (attrib.name == "NORMAL")
+                                {
+                                    MorphTargetInfo& morph_info = morph_targets_[prim_info->morph_target_];
+                                    const gltf::Accessor& acc = gltf->accessors[attrib.accessorIndex];
+                                    fastgltf::iterateAccessorWithIndex<gltf::math::fvec3>(
+                                        *gltf, acc, //
+                                        [&](const gltf::math::fvec3& normal, size_t iter)
+                                        {
+                                            size_t normal_idx = morph_info.first_normal_ / 3           //
+                                                                + morph_info.normal_morph_count * iter //
+                                                                + target_idx;
+                                            glms::assign_value(target_normals_[normal_idx], normal);
+                                        });
+                                    target_idx++;
+                                    break;
+                                }
+                            }
+                        }
+                        prim_info++;
+                    }
+                }
+            }));
+
+        futs.emplace_back(th_pool_.submit_task(
+            [this, gltf, first_prim]()
+            {
+                auto prim_info = primitives_.begin() + first_prim;
+                for (TSMeshIdx m_g(0); m_g < gltf->meshes.size(); m_g++)
+                {
+                    for (const gltf::Primitive& prim : gltf->meshes[m_g].primitives)
+                    {
+                        size_t target_idx = 0;
+                        for (const auto& target : prim.targets)
+                        {
+                            for (const auto& attrib : target)
+                            {
+                                if (attrib.name == "TANGENT")
+                                {
+                                    MorphTargetInfo& morph_info = morph_targets_[prim_info->morph_target_];
+                                    const gltf::Accessor& acc = gltf->accessors[attrib.accessorIndex];
+                                    fastgltf::iterateAccessorWithIndex<gltf::math::fvec4>(
+                                        *gltf, acc, //
+                                        [&](const gltf::math::fvec4& tangent, size_t iter)
+                                        {
+                                            size_t tangent_idx = morph_info.first_tangent_ / 3           //
+                                                                 + morph_info.tangent_morph_count * iter //
+                                                                 + target_idx;
+                                            glms::assign_value(target_tangents_[tangent_idx], tangent);
+                                        });
+                                    target_idx++;
+                                    break;
+                                }
+                            }
+                        }
+                        prim_info++;
                     }
                 }
             }));
@@ -657,30 +820,6 @@ void fi::ResDetails::lock_and_load()
     }
 
     // copy vtxs datas
-    while (idxs_.empty() && sizeof_arr(idxs_) % 16)
-    {
-    };
-    while (vtx_positions_.empty() && sizeof_arr(vtx_positions_) % 16)
-    {
-    };
-    while (vtx_normals_.empty() && sizeof_arr(vtx_normals_) % 16)
-    {
-    };
-    while (vtx_tangents_.empty() && sizeof_arr(vtx_tangents_) % 16)
-    {
-    };
-    while (vtx_texcoords_.empty() && sizeof_arr(vtx_texcoords_) % 16)
-    {
-    };
-    while (vtx_colors_.empty() && sizeof_arr(vtx_colors_) % 16)
-    {
-    };
-    while (vtx_joints_.empty() && sizeof_arr(vtx_joints_) % 16)
-    {
-    };
-    while (vtx_weights_.empty() && sizeof_arr(vtx_weights_) % 16)
-    {
-    };
 
     for (const std::future<void>& fut : futs)
     {

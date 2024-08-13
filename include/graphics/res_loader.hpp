@@ -28,9 +28,9 @@ namespace fi
         size_t old_colors_count_ = 0;
         size_t old_joints_count_ = 0;
         size_t old_weights_count_ = 0;
-        size_t old_target_positions_count = 0; // tbd
-        size_t old_target_normals_count_ = 0;  // tbd
-        size_t old_target_tangents_count_ = 0; // tbd
+        size_t old_target_positions_count = 0;
+        size_t old_target_normals_count_ = 0;
+        size_t old_target_tangents_count_ = 0;
 
         // indexed by size_t in scalar offset
         std::vector<uint32_t> idxs_{};
@@ -41,9 +41,9 @@ namespace fi
         std::vector<glm::vec4> vtx_colors_{};
         std::vector<glm::uvec4> vtx_joints_{};
         std::vector<glm::vec4> vtx_weights_{};
-        std::vector<glm::vec3> target_positions_{};                // tbd
-        std::vector<glm::vec3> target_normals_{};                  // tbd
-        std::vector<glm::vec4> target_tangents_{};                 // tbd
+        std::vector<glm::vec3> target_positions_{};                // tbd AOS style
+        std::vector<glm::vec3> target_normals_{};                  // tbd AOS style
+        std::vector<glm::vec4> target_tangents_{};                 // tbd AOS style
         std::vector<vk::DrawIndexedIndirectCommand> draw_calls_{}; // indexed by PrimIdx
 
         // hlper infos
