@@ -46,7 +46,7 @@ namespace fi
         std::vector<glm::vec4> target_tangents_{};                 // tbd AOS style
         std::vector<vk::DrawIndexedIndirectCommand> draw_calls_{}; // indexed by PrimIdx
 
-        // hlper infos
+        // helper infos
         std::vector<PrimIdx> first_prim_{};
         std::vector<gltf::Expected<gltf::GltfDataBuffer>> gltf_file_{};
         std::vector<gltf::Expected<gltf::Asset>> gltf_{};
@@ -62,6 +62,28 @@ namespace fi
         std::vector<vma::Allocation> tex_allocs_{};
         std::vector<vk::DescriptorImageInfo> tex_infos_{};
         std::vector<vk::Sampler> samplers_{};
+
+        // defines
+        struct BufferOffsets
+        {
+            vk::DeviceSize idx_ = 0;
+            vk::DeviceSize vtx_positions_ = 0;
+            vk::DeviceSize vtx_normals_ = 0;
+            vk::DeviceSize vtx_tangents_ = 0;
+            vk::DeviceSize vtx_texcoords_ = 0;
+            vk::DeviceSize vtx_colors_ = 0;
+            vk::DeviceSize vtx_joints_ = 0;
+            vk::DeviceSize vtx_weights_ = 0;
+            vk::DeviceSize target_positions_ = 0;
+            vk::DeviceSize target_normals_ = 0;
+            vk::DeviceSize target_tangents_ = 0;
+            vk::DeviceSize draw_calls_ = 0;
+
+            vk::DeviceSize meshes_ = 0;
+            vk::DeviceSize morph_targets_ = 0;
+            vk::DeviceSize primitives_ = 0;
+            vk::DeviceSize materials_ = 0;
+        };
 
       public:
         // gpu storage, set by other calls
