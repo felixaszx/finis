@@ -24,9 +24,15 @@ int main(int argc, char** argv)
     sc.create();
 
     ResDetails test_res;
-    test_res.add_gltf_file("res/models/MorphPrimitivesTest.glb");
+    test_res.add_gltf_file("res/models/sponza.glb");
+    test_res.add_gltf_file("res/models/sparta.glb");
     test_res.add_gltf_file("res/models/MorphPrimitivesTest.glb");
     test_res.lock_and_load();
+
+    vk::DescriptorPoolCreateInfo des_pool_info{{}, 100};
+    des_pool_info.setPoolSizes(test_res.des_sizes_);
+    vk::DescriptorPool des_pool = g.device().createDescriptorPool(des_pool_info);
+    test_res.allocate_descriptor(des_pool);
 
     Semaphore next_img;
     Semaphore submit;
@@ -144,8 +150,9 @@ int main(int argc, char** argv)
         g.queues(GraphicsObject::GRAPHICS).submit(submit_info, frame_fence);
         sc.present(submit_sems);
     }
-
     g.device().waitIdle();
+
+    g.device().destroyDescriptorPool(des_pool);
     sc.destory();
     g.device().destroyCommandPool(cmd_pool);
 

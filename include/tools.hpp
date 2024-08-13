@@ -86,7 +86,7 @@ T max_of_all(const std::vector<T>& datas)
 }
 
 template <typename C>
-void free_container_memory(C& container)
+void free_stl_container(C& container)
 {
     C().swap(container);
 }

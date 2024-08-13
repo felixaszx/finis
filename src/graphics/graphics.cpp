@@ -236,6 +236,8 @@ vk::CommandBuffer fi::GraphicsObject::one_time_submit_cmd()
 void fi::GraphicsObject::submit_one_time_cmd(vk::CommandBuffer cmd)
 {
     Fence fence;
+    device_.resetFences(fence);
+
     vk::SubmitInfo submit{};
     submit.setCommandBuffers(cmd);
     queues_[GRAPHICS].submit(submit, fence);

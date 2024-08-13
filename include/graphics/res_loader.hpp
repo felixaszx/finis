@@ -57,6 +57,7 @@ namespace fi
         std::vector<TSMorphTargetIdx> first_morph_target_{};
 
         // storage
+        uint32_t draw_call_count_ = 0;
         std::vector<vk::Image> tex_imgs_{};
         std::vector<vk::ImageView> tex_views_{};
         std::vector<vma::Allocation> tex_allocs_{};
@@ -86,16 +87,25 @@ namespace fi
         };
 
       public:
+        // descriptors
+        std::array<vk::DescriptorPoolSize, 2> des_sizes_{};
+        vk::DescriptorSetLayout set_layout_{};
+        vk::DescriptorSet des_set_{}; // binding order is the same as BufferOffsets, textures binding is 15
+
         // gpu storage, set by other calls
         std::vector<MeshInfo> meshes_{};               // indexed by TSMeshIdx
         std::vector<MorphTargetInfo> morph_targets_{}; // indexed by TSMorphTarget
         std::vector<PrimInfo> primitives_{};           // indexed by PrimIdx
         std::vector<MaterialInfo> materials_{};        // indexed by TSMaterialIdx
+        std::unique_ptr<Buffer<BufferOffsets, storage, indirect, index>> buffer_;
 
         ~ResDetails();
 
         void add_gltf_file(const std::filesystem::path& path);
         void lock_and_load();
+        void allocate_descriptor(vk::DescriptorPool des_pool);
+        void bind_res(vk::CommandBuffer cmd, vk::PipelineLayout pipeline_layout, uint32_t des_set);
+        void draw(vk::CommandBuffer cmd);
     };
 }; // namespace fi
 

@@ -13,6 +13,8 @@ fi::ResDetails::~ResDetails()
     {
         device().destroySampler(sampler);
     }
+
+    device().destroyDescriptorSetLayout(set_layout_);
 }
 
 void fi::ResDetails::add_gltf_file(const std::filesystem::path& path)
@@ -586,7 +588,7 @@ void fi::ResDetails::lock_and_load()
                 vk::CommandPool tex_cmd_pool = device().createCommandPool(tex_cmd_pool_info);
                 vk::CommandBufferAllocateInfo cmd_alloc_info{tex_cmd_pool, {}, 1};
                 vk::CommandBuffer tex_cmd = device().allocateCommandBuffers(cmd_alloc_info)[0];
-                Fence upload_completed(true);
+                Fence upload_completed;
                 device().resetFences(upload_completed);
 
                 auto extract_mipmaped = [](gltf::Filter filter)
@@ -806,13 +808,14 @@ void fi::ResDetails::lock_and_load()
                     queue_lock.lock();
                     queues(GRAPHICS).submit(submit, upload_completed);
                     queue_lock.unlock();
-                    auto r = device().waitForFences(upload_completed, true, std::numeric_limits<uint64_t>::max());
-                    device().resetFences(upload_completed);
 
                     vk::DescriptorImageInfo& tex_info = tex_infos_[tex];
                     tex_info.imageLayout = vk::ImageLayout::eShaderReadOnlyOptimal;
                     tex_info.imageView = tex_views_[tex];
                     tex_info.sampler = samplers_[first_sampler + gltf->textures[t_g].samplerIndex.value_or(0)];
+
+                    auto r = device().waitForFences(upload_completed, true, std::numeric_limits<uint64_t>::max());
+                    device().resetFences(upload_completed);
                 }
 
                 device().destroyCommandPool(tex_cmd_pool);
@@ -825,4 +828,232 @@ void fi::ResDetails::lock_and_load()
     }
 
     // copy data to gpu
+    while (sizeof_arr(idxs_) % 16)
+    {
+        idxs_.push_back(-1);
+    }
+    size_t vtx_positions_padding = sizeof_arr(vtx_positions_) % 16 //
+                                       ? 16 - sizeof_arr(vtx_positions_)
+                                       : (vtx_positions_.empty() ? 16 : 0);
+    size_t vtx_normals_padding = sizeof_arr(vtx_normals_) % 16 //
+                                     ? 16 - sizeof_arr(vtx_normals_)
+                                     : (vtx_normals_.empty() ? 16 : 0);
+    size_t vtx_tangents_padding = sizeof_arr(vtx_tangents_) % 16 //
+                                      ? 16 - sizeof_arr(vtx_tangents_)
+                                      : (vtx_tangents_.empty() ? 16 : 0);
+    size_t vtx_texcoords_padding = sizeof_arr(vtx_texcoords_) % 16 //
+                                       ? 16 - sizeof_arr(vtx_texcoords_)
+                                       : (vtx_texcoords_.empty() ? 16 : 0);
+    size_t vtx_colors_padding = sizeof_arr(vtx_colors_) % 16 //
+                                    ? 16 - sizeof_arr(vtx_colors_)
+                                    : (vtx_colors_.empty() ? 16 : 0);
+    size_t vtx_joints_padding = sizeof_arr(vtx_joints_) % 16 //
+                                    ? 16 - sizeof_arr(vtx_joints_)
+                                    : (vtx_joints_.empty() ? 16 : 0);
+    size_t vtx_weights_padding = sizeof_arr(vtx_weights_) % 16 //
+                                     ? 16 - sizeof_arr(vtx_weights_)
+                                     : (vtx_weights_.empty() ? 16 : 0);
+    size_t target_positions_padding = sizeof_arr(target_positions_) % 16 //
+                                          ? 16 - sizeof_arr(target_positions_)
+                                          : (target_positions_.empty() ? 16 : 0);
+    size_t target_normals_padding = sizeof_arr(target_normals_) % 16 //
+                                        ? 16 - sizeof_arr(target_normals_)
+                                        : (target_normals_.empty() ? 16 : 0);
+    size_t target_tangents_padding = sizeof_arr(target_tangents_) % 16 //
+                                         ? 16 - sizeof_arr(target_tangents_)
+                                         : (target_tangents_.empty() ? 16 : 0);
+    size_t draw_calls_padding = sizeof_arr(draw_calls_) % 16 //
+                                    ? 16 - sizeof_arr(draw_calls_)
+                                    : (draw_calls_.empty() ? 16 : 0);
+    size_t meshes_padding = sizeof_arr(meshes_) % 16 //
+                                ? 16 - sizeof_arr(meshes_)
+                                : (meshes_.empty() ? 16 : 0);
+    size_t morph_targets_padding = sizeof_arr(morph_targets_) % 16 //
+                                       ? 16 - sizeof_arr(morph_targets_)
+                                       : (morph_targets_.empty() ? 16 : 0);
+    size_t primitives_padding = sizeof_arr(primitives_) % 16 //
+                                    ? 16 - sizeof_arr(primitives_)
+                                    : (primitives_.empty() ? 16 : 0);
+    size_t materials_padding = sizeof_arr(materials_) % 16 //
+                                   ? 16 - sizeof_arr(materials_)
+                                   : (materials_.empty() ? 16 : 0);
+
+    make_unique2(buffer_,
+                 sizeof_arr(idxs_)                                              //
+                     + sizeof_arr(vtx_positions_) + vtx_positions_padding       //
+                     + sizeof_arr(vtx_normals_) + vtx_normals_padding           //
+                     + sizeof_arr(vtx_tangents_) + vtx_tangents_padding         //
+                     + sizeof_arr(vtx_texcoords_) + vtx_texcoords_padding       //
+                     + sizeof_arr(vtx_colors_) + vtx_colors_padding             //
+                     + sizeof_arr(vtx_joints_) + vtx_joints_padding             //
+                     + sizeof_arr(vtx_weights_) + vtx_weights_padding           //
+                     + sizeof_arr(target_positions_) + target_positions_padding //
+                     + sizeof_arr(target_normals_) + target_normals_padding     //
+                     + sizeof_arr(target_tangents_) + target_tangents_padding   //
+                     + sizeof_arr(draw_calls_) + draw_calls_padding             //
+                     + sizeof_arr(meshes_) + meshes_padding                     //
+                     + sizeof_arr(morph_targets_) + morph_targets_padding       //
+                     + sizeof_arr(primitives_) + primitives_padding             //
+                     + sizeof_arr(materials_) + materials_padding,
+                 DST);
+    buffer_->vtx_positions_ = sizeof_arr(idxs_);
+    buffer_->vtx_normals_ = buffer_->vtx_positions_ + sizeof_arr(vtx_positions_) + vtx_positions_padding;
+    buffer_->vtx_tangents_ = buffer_->vtx_normals_ + sizeof_arr(vtx_normals_) + vtx_normals_padding;
+    buffer_->vtx_texcoords_ = buffer_->vtx_tangents_ + sizeof_arr(vtx_tangents_) + vtx_tangents_padding;
+    buffer_->vtx_colors_ = buffer_->vtx_texcoords_ + sizeof_arr(vtx_texcoords_) + vtx_texcoords_padding;
+    buffer_->vtx_joints_ = buffer_->vtx_colors_ + sizeof_arr(vtx_colors_) + vtx_colors_padding;
+    buffer_->vtx_weights_ = buffer_->vtx_joints_ + sizeof_arr(vtx_joints_) + vtx_joints_padding;
+    buffer_->target_positions_ = buffer_->vtx_weights_ + sizeof_arr(vtx_weights_) + vtx_weights_padding;
+    buffer_->target_normals_ = buffer_->target_positions_ + sizeof_arr(target_positions_) + target_positions_padding;
+    buffer_->target_tangents_ = buffer_->target_normals_ + sizeof_arr(target_normals_) + target_normals_padding;
+    buffer_->draw_calls_ = buffer_->target_tangents_ + sizeof_arr(target_tangents_) + target_tangents_padding;
+    buffer_->meshes_ = buffer_->draw_calls_ + sizeof_arr(draw_calls_) + draw_calls_padding;
+    buffer_->morph_targets_ = buffer_->meshes_ + sizeof_arr(meshes_) + meshes_padding;
+    buffer_->primitives_ = buffer_->morph_targets_ + sizeof_arr(morph_targets_) + morph_targets_padding;
+    buffer_->materials_ = buffer_->primitives_ + sizeof_arr(primitives_) + primitives_padding;
+
+    Buffer<BufferBase::EmptyExtraInfo, vertex, seq_write, host_cached> staging(buffer_->size(), SRC);
+    staging.map_memory();
+    memcpy(staging.mapping() + buffer_->idx_, idxs_.data(), sizeof_arr(idxs_));
+    memcpy(staging.mapping() + buffer_->vtx_positions_, vtx_positions_.data(), sizeof_arr(vtx_positions_));
+    memcpy(staging.mapping() + buffer_->vtx_normals_, vtx_normals_.data(), sizeof_arr(vtx_normals_));
+    memcpy(staging.mapping() + buffer_->vtx_tangents_, vtx_tangents_.data(), sizeof_arr(vtx_tangents_));
+    memcpy(staging.mapping() + buffer_->vtx_texcoords_, vtx_texcoords_.data(), sizeof_arr(vtx_texcoords_));
+    memcpy(staging.mapping() + buffer_->vtx_colors_, vtx_colors_.data(), sizeof_arr(vtx_colors_));
+    memcpy(staging.mapping() + buffer_->vtx_joints_, vtx_joints_.data(), sizeof_arr(vtx_joints_));
+    memcpy(staging.mapping() + buffer_->vtx_weights_, vtx_weights_.data(), sizeof_arr(vtx_weights_));
+    memcpy(staging.mapping() + buffer_->target_positions_, target_positions_.data(), sizeof_arr(target_positions_));
+    memcpy(staging.mapping() + buffer_->target_normals_, target_normals_.data(), sizeof_arr(target_normals_));
+    memcpy(staging.mapping() + buffer_->target_tangents_, target_tangents_.data(), sizeof_arr(target_tangents_));
+    memcpy(staging.mapping() + buffer_->draw_calls_, draw_calls_.data(), sizeof_arr(draw_calls_));
+    memcpy(staging.mapping() + buffer_->meshes_, meshes_.data(), sizeof_arr(meshes_));
+    memcpy(staging.mapping() + buffer_->morph_targets_, morph_targets_.data(), sizeof_arr(morph_targets_));
+    memcpy(staging.mapping() + buffer_->primitives_, primitives_.data(), sizeof_arr(primitives_));
+    memcpy(staging.mapping() + buffer_->materials_, materials_.data(), sizeof_arr(materials_));
+    staging.flush_cache();
+    staging.unmap_memory();
+
+    vk::CommandBuffer cmd = one_time_submit_cmd();
+    begin_cmd(cmd);
+    cmd.copyBuffer(staging, *buffer_, {{0, 0, buffer_->size()}});
+    cmd.end();
+    submit_one_time_cmd(cmd);
+
+    vk::DescriptorSetLayoutCreateInfo layout_info{};
+    std::array<vk::DescriptorSetLayoutBinding, 16> bindings = {};
+    for (uint32_t b = 0; b < bindings.size(); b++)
+    {
+        bindings[b].binding = b;
+        bindings[b].descriptorCount = 1;
+        bindings[b].descriptorType = vk::DescriptorType::eStorageBuffer;
+        bindings[b].stageFlags = vk::ShaderStageFlagBits::eAll;
+    }
+    bindings[15].descriptorCount = tex_infos_.size();
+    bindings[15].descriptorType = vk::DescriptorType::eCombinedImageSampler;
+    bindings[15].stageFlags = vk::ShaderStageFlagBits::eFragment;
+    layout_info.setBindings(bindings);
+    set_layout_ = device().createDescriptorSetLayout(layout_info);
+
+    des_sizes_[0].type = vk::DescriptorType::eCombinedImageSampler;
+    des_sizes_[0].descriptorCount = tex_infos_.size();
+    des_sizes_[1].type = vk::DescriptorType::eStorageBuffer;
+    des_sizes_[1].descriptorCount = 15;
+}
+
+void fi::ResDetails::bind_res(vk::CommandBuffer cmd, vk::PipelineLayout pipeline_layout, uint32_t des_set)
+{
+    cmd.bindDescriptorSets(vk::PipelineBindPoint::eGraphics, pipeline_layout, des_set, des_set_, {});
+    cmd.bindIndexBuffer(*buffer_, buffer_->idx_, vk::IndexType::eUint32);
+}
+
+void fi::ResDetails::draw(vk::CommandBuffer cmd)
+{
+    cmd.drawIndexedIndirect(*buffer_,             //
+                            buffer_->draw_calls_, //
+                            draw_call_count_,     //
+                            sizeof(vk::DrawIndexedIndirectCommand));
+}
+
+void fi::ResDetails::allocate_descriptor(vk::DescriptorPool des_pool)
+{
+    if (!locked_)
+    {
+        return;
+    }
+
+    vk::DescriptorSetAllocateInfo alloc_info{};
+    alloc_info.descriptorPool = des_pool;
+    alloc_info.setSetLayouts(set_layout_);
+    des_set_ = device().allocateDescriptorSets(alloc_info)[0];
+
+    vk::WriteDescriptorSet write_textures{};
+    write_textures.dstSet = des_set_;
+    write_textures.dstBinding = 15;
+    write_textures.descriptorType = vk::DescriptorType::eCombinedImageSampler;
+    write_textures.setImageInfo(tex_infos_);
+
+    std::array<vk::DescriptorBufferInfo, 15> ssbo_infos{};
+    for (auto& ssbo : ssbo_infos)
+    {
+        ssbo.buffer = *buffer_;
+    }
+    ssbo_infos[0].offset = buffer_->vtx_positions_;
+    ssbo_infos[1].offset = buffer_->vtx_normals_;
+    ssbo_infos[2].offset = buffer_->vtx_tangents_;
+    ssbo_infos[3].offset = buffer_->vtx_texcoords_;
+    ssbo_infos[4].offset = buffer_->vtx_colors_;
+    ssbo_infos[5].offset = buffer_->vtx_joints_;
+    ssbo_infos[6].offset = buffer_->vtx_weights_;
+    ssbo_infos[7].offset = buffer_->target_positions_;
+    ssbo_infos[8].offset = buffer_->target_normals_;
+    ssbo_infos[9].offset = buffer_->target_tangents_;
+    ssbo_infos[10].offset = buffer_->draw_calls_;
+    ssbo_infos[11].offset = buffer_->meshes_;
+    ssbo_infos[12].offset = buffer_->morph_targets_;
+    ssbo_infos[13].offset = buffer_->primitives_;
+    ssbo_infos[14].offset = buffer_->materials_;
+
+    ssbo_infos[0].range = buffer_->vtx_normals_ - buffer_->vtx_positions_;
+    ssbo_infos[1].range = buffer_->vtx_tangents_ - buffer_->vtx_normals_;
+    ssbo_infos[2].range = buffer_->vtx_texcoords_ - buffer_->vtx_tangents_;
+    ssbo_infos[3].range = buffer_->vtx_colors_ - buffer_->vtx_texcoords_;
+    ssbo_infos[4].range = buffer_->vtx_joints_ - buffer_->vtx_colors_;
+    ssbo_infos[5].range = buffer_->vtx_weights_ - buffer_->vtx_joints_;
+    ssbo_infos[6].range = buffer_->target_positions_ - buffer_->vtx_weights_;
+    ssbo_infos[7].range = buffer_->target_normals_ - buffer_->target_positions_;
+    ssbo_infos[8].range = buffer_->target_tangents_ - buffer_->target_normals_;
+    ssbo_infos[9].range = buffer_->draw_calls_ - buffer_->target_tangents_;
+    ssbo_infos[10].range = buffer_->meshes_ - buffer_->draw_calls_;
+    ssbo_infos[11].range = buffer_->morph_targets_ - buffer_->meshes_;
+    ssbo_infos[12].range = buffer_->primitives_ - buffer_->morph_targets_;
+    ssbo_infos[13].range = buffer_->materials_ - buffer_->primitives_;
+    ssbo_infos[14].range = buffer_->size() - buffer_->materials_;
+
+    vk::WriteDescriptorSet write_ssbos{};
+    write_ssbos.dstSet = des_set_;
+    write_ssbos.dstBinding = 0;
+    write_ssbos.descriptorType = vk::DescriptorType::eStorageBuffer;
+    write_ssbos.setBufferInfo(ssbo_infos);
+    device().updateDescriptorSets({write_textures, write_ssbos}, {});
+
+    free_stl_container(idxs_);
+    free_stl_container(vtx_positions_);
+    free_stl_container(vtx_normals_);
+    free_stl_container(vtx_tangents_);
+    free_stl_container(vtx_texcoords_);
+    free_stl_container(vtx_colors_);
+    free_stl_container(vtx_joints_);
+    free_stl_container(vtx_weights_);
+    free_stl_container(target_positions_);
+    free_stl_container(target_normals_);
+    free_stl_container(target_tangents_);
+
+    free_stl_container(meshes_);
+    free_stl_container(morph_targets_);
+    free_stl_container(primitives_);
+    free_stl_container(materials_);
+    free_stl_container(tex_infos_);
+
+    draw_call_count_ = draw_calls_.size();
+    free_stl_container(draw_calls_);
 }
