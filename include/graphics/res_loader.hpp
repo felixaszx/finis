@@ -19,7 +19,8 @@ namespace fi
         bool locked_ = false;
         // threading helpers
         bs::thread_pool th_pool_;
-        size_t old_vtx_count_ = 0; // in scalar offset
+        // indexed by size_t in vector offsets
+        size_t old_vtx_count_ = 0;
         size_t old_idx_count_ = 0;
         size_t old_normals_count_ = 0;
         size_t old_tangents_count_ = 0;
@@ -31,17 +32,18 @@ namespace fi
         size_t old_target_normals_count_ = 0;  // tbd
         size_t old_target_tangents_count_ = 0; // tbd
 
-        std::vector<uint32_t> idxs_{};                             // indexed by size_t
-        std::vector<glm::vec3> vtx_positions_{};                   // indexed by size_t
-        std::vector<glm::vec3> vtx_normals_{};                     // indexed by size_t
-        std::vector<glm::vec4> vtx_tangents_{};                    // indexed by size_t
-        std::vector<glm::vec2> vtx_texcoords_{};                   // indexed by size_t
-        std::vector<glm::vec4> vtx_colors_{};                      // indexed by size_t
-        std::vector<glm::uvec4> vtx_joints_{};                     // indexed by size_t
-        std::vector<glm::vec4> vtx_weights_{};                     // indexed by size_t
-        std::vector<glm::vec3> target_positions_{};                // indexed by size_t // tbd
-        std::vector<glm::vec3> target_normals_{};                  // indexed by size_t // tbd
-        std::vector<glm::vec4> target_tangents_{};                 // indexed by size_t // tbd
+        // indexed by size_t in scalar offset
+        std::vector<uint32_t> idxs_{};
+        std::vector<glm::vec3> vtx_positions_{};
+        std::vector<glm::vec3> vtx_normals_{};
+        std::vector<glm::vec4> vtx_tangents_{};
+        std::vector<glm::vec2> vtx_texcoords_{};
+        std::vector<glm::vec4> vtx_colors_{};
+        std::vector<glm::uvec4> vtx_joints_{};
+        std::vector<glm::vec4> vtx_weights_{};
+        std::vector<glm::vec3> target_positions_{};                // tbd
+        std::vector<glm::vec3> target_normals_{};                  // tbd
+        std::vector<glm::vec4> target_tangents_{};                 // tbd
         std::vector<vk::DrawIndexedIndirectCommand> draw_calls_{}; // indexed by PrimIdx
 
         // hlper infos

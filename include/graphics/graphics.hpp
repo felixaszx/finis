@@ -18,6 +18,13 @@
 #include <vulkan/vulkan.hpp>
 
 #include "glms.hpp"
+#define VMA_LEAK_LOG_FORMAT(format, ...) \
+    do                                   \
+    {                                    \
+        printf((format), __VA_ARGS__);   \
+        printf("\n");                    \
+    }                                    \
+    while (false)
 #include "vma/vk_mem_alloc.hpp"
 
 #include "fastgltf/core.hpp"
