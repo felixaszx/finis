@@ -52,7 +52,7 @@ fi::ResStructure::ResStructure(ResDetails& res_details)
     tmp_children.reserve(transforms_.size());
 
     futs.emplace_back(th_pool.submit_task(
-        [&tmp_nodes, &res_details]()
+        [&tmp_nodes, &res_details, this]()
         {
             auto first_mesh_iter = res_details.first_mesh_.begin();
             for (const auto& gltf : res_details.gltf_)
@@ -69,7 +69,19 @@ fi::ResStructure::ResStructure(ResDetails& res_details)
 
                     if (node_in.meshIndex)
                     {
-                        res_details.meshes_[node_in.meshIndex.value() + *first_mesh_iter].node_ = node.self_idx_;
+                        MeshInfo& mesh_info = res_details.meshes_[node_in.meshIndex.value() + *first_mesh_iter];
+                        mesh_info.node_ = node.self_idx_;
+
+                        const auto& target_weight = gltf->meshes[node_in.meshIndex.value() + *first_mesh_iter].weights;
+                        if (!target_weight.empty())
+                        {
+                            mesh_info.morph_weight_ = target_weights_.size();
+                            target_weights_.reserve(target_weights_.size() + target_weight.size());
+                            for (auto weight : target_weight)
+                            {
+                                target_weights_.push_back(weight);
+                            }
+                        }
                     }
                 }
                 first_mesh_iter++;
@@ -121,7 +133,7 @@ fi::ResStructure::ResStructure(ResDetails& res_details)
     }
 
     vk::DescriptorSetLayoutCreateInfo layout_info{};
-    std::array<vk::DescriptorSetLayoutBinding, 1> bindings = {};
+    std::array<vk::DescriptorSetLayoutBinding, 2> bindings = {};
     for (size_t b = 0; b < bindings.size(); b++)
     {
         bindings[b].binding = b;
@@ -135,7 +147,18 @@ fi::ResStructure::ResStructure(ResDetails& res_details)
     des_sizes_[0].type = vk::DescriptorType::eStorageBuffer;
     des_sizes_[0].descriptorCount = bindings.size();
 
-    make_unique2(buffer_, sizeof_arr(transforms_));
+    if (target_weights_.empty())
+    {
+        target_weights_.resize(4, std::numeric_limits<float>::min());
+    }
+
+    while (sizeof_arr(target_weights_) % 16)
+    {
+        target_weights_.push_back(std::numeric_limits<float>::min());
+    }
+
+    make_unique2(buffer_, sizeof_arr(transforms_) + sizeof_arr(target_weights_));
+    buffer_->target_weights_ = sizeof_arr(transforms_);
     buffer_->map_memory();
     update_structure();
 }
@@ -162,6 +185,7 @@ void fi::ResStructure::update_data(size_t gltf_idx)
                     : range - offset;
     }
     memcpy(buffer_->mapping() + offset, transforms_.data() + offset, range);
+    memcpy(buffer_->mapping() + buffer_->target_weights_, target_weights_.data(), sizeof_arr(target_weights_));
 }
 
 void fi::ResStructure::update_structure(const glm::mat4& transform, size_t gltf_idx)
@@ -194,10 +218,13 @@ void fi::ResStructure::allocate_descriptor(vk::DescriptorPool des_pool)
     alloc_info.setSetLayouts(set_layout_);
     des_set_ = device().allocateDescriptorSets(alloc_info)[0];
 
-    std::array<vk::DescriptorBufferInfo, 1> buffer_infos{};
+    std::array<vk::DescriptorBufferInfo, 2> buffer_infos{};
     buffer_infos[0].buffer = *buffer_;
-    buffer_infos[0].offset = 0;
+    buffer_infos[0].offset = buffer_->transforms_;
     buffer_infos[0].range = sizeof_arr(transforms_);
+    buffer_infos[1].buffer = *buffer_;
+    buffer_infos[1].offset = buffer_->target_weights_;
+    buffer_infos[1].range = sizeof_arr(target_weights_);
 
     vk::WriteDescriptorSet write{};
     write.descriptorType = vk::DescriptorType::eStorageBuffer;

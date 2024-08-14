@@ -28,13 +28,20 @@ namespace fi
         // storages
         std::vector<TSNodeIdx> node_mappings_{};
         std::vector<NodeInfo> nodes_{};
-        std::vector<NodeTransform> transforms_{};
+        std::vector<NodeTransform> transforms_{}; // binding 0
+        std::vector<float> target_weights_{};     // binding 1
+
+        struct BufferOffsets
+        {
+            vk::DeviceSize transforms_ = 0;
+            vk::DeviceSize target_weights_ = 0;
+        };
 
       public:
         std::array<vk::DescriptorPoolSize, 1> des_sizes_{};
         vk::DescriptorSetLayout set_layout_{};
-        vk::DescriptorSet des_set_{}; // only one binding
-        std::unique_ptr<Buffer<BufferBase::EmptyExtraInfo, storage, seq_write, host_coherent>> buffer_;
+        vk::DescriptorSet des_set_{};
+        std::unique_ptr<Buffer<BufferOffsets, storage, seq_write, host_coherent>> buffer_;
 
         ResStructure(ResDetails& res_details);
         ~ResStructure();

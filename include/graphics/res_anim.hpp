@@ -6,9 +6,10 @@
 
 namespace fi
 {
-    class ResAnimations
+    class ResAnimation
     {
       private:
+        // storages
         std::vector<float> morph_weights_{};
 
       public:

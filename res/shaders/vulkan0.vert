@@ -98,6 +98,10 @@ layout(std430, set = 1, binding = 0) readonly buffer _NODE_TRANSFORMS
 {
     mat4 NODE_TRANSFORMS[];
 };
+layout(std430, set = 1, binding = 1) readonly buffer _TARGET_WEIGHTS
+{
+    float TARGET_WEIGHTS[];
+};
 
 // out put
 layout(location = 0) out struct1
@@ -127,6 +131,7 @@ void main()
     MeshInfo mesh_info = MESHES[prim_info.mesh_idx_];
     MorphTargetInfo morph_info = MORPH_TARGETS[prim_info.morph_target_];
 
+    // pull vtx datas
     vec3 position = {POSITION[prim_info.first_position_ + gl_VertexIndex * 3 + 0], //
                      POSITION[prim_info.first_position_ + gl_VertexIndex * 3 + 1], //
                      POSITION[prim_info.first_position_ + gl_VertexIndex * 3 + 2]};
@@ -159,6 +164,42 @@ void main()
                          COLOR[prim_info.first_color_ + gl_VertexIndex * 4 + 1],
                          COLOR[prim_info.first_color_ + gl_VertexIndex * 4 + 2],
                          COLOR[prim_info.first_color_ + gl_VertexIndex * 4 + 3]);
+        }
+    }
+
+    // calculate morph targets
+    {
+        if (morph_info.first_position_ != EMPTY)
+        {
+            for (int t = 0; t < morph_info.position_morph_count_; t++)
+            {
+                position += TARGET_WEIGHTS[mesh_info.morph_weight_ + t]                                       //
+                            * vec3(TARGET_POSITION[prim_info.first_position_ + (gl_VertexIndex + t) * 3 + 0], //
+                                   TARGET_POSITION[prim_info.first_position_ + (gl_VertexIndex + t) * 3 + 1], //
+                                   TARGET_POSITION[prim_info.first_position_ + (gl_VertexIndex + t) * 3 + 2]);
+            }
+        }
+
+        if (morph_info.first_normal_ != EMPTY)
+        {
+            for (int t = 0; t < morph_info.normal_morph_count_; t++)
+            {
+                normal += TARGET_WEIGHTS[mesh_info.morph_weight_ + t]                                   //
+                          * vec3(TARGET_NORMAL[prim_info.first_normal_ + (gl_VertexIndex + t) * 3 + 0], //
+                                 TARGET_NORMAL[prim_info.first_normal_ + (gl_VertexIndex + t) * 3 + 1], //
+                                 TARGET_NORMAL[prim_info.first_normal_ + (gl_VertexIndex + t) * 3 + 2]);
+            }
+        }
+
+        if (morph_info.first_tangent_ != EMPTY)
+        {
+            for (int t = 0; t < morph_info.tangent_morph_count_; t++)
+            {
+                normal += TARGET_WEIGHTS[mesh_info.morph_weight_ + t]                                     //
+                          * vec3(TARGET_TANGENT[prim_info.first_tangent_ + (gl_VertexIndex + t) * 3 + 0], //
+                                 TARGET_TANGENT[prim_info.first_tangent_ + (gl_VertexIndex + t) * 3 + 1], //
+                                 TARGET_TANGENT[prim_info.first_tangent_ + (gl_VertexIndex + t) * 3 + 2]);
+            }
         }
     }
 
