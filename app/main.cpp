@@ -28,8 +28,7 @@ int main(int argc, char** argv)
     sc.create();
 
     ResDetails test_res;
-    test_res.add_gltf_file("res/models/sparta.glb");
-    test_res.add_gltf_file("res/models/pheonix.glb");
+    test_res.add_gltf_file("res/models/MorphPrimitivesTest.glb");
     ResStructure test_structure(test_res);
     test_res.lock_and_load();
 
