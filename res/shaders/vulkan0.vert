@@ -90,6 +90,11 @@ layout(std430, set = 0, binding = 13) readonly buffer _PRIMITIVES
     PrimInfo PRIMITIVES[];
 };
 
+layout(std430, set = 1, binding = 0) readonly buffer _NODE_TRANSFORMS
+{
+    mat4 NODE_TRANSFORMS[];
+};
+
 layout(location = 0) out struct1
 {
     vec4 position_;
@@ -98,7 +103,8 @@ layout(location = 0) out struct1
     vec3 bitangent_;
     vec2 tex_coord_;
     vec4 color_;
-} FRAG_DATA;
+}
+FRAG_DATA;
 layout(location = 6) out flat int PRIM_IDX;
 
 layout(push_constant) uniform PUSHES_
@@ -150,7 +156,7 @@ void main()
                      COLOR[prim_info.first_color_ + gl_VertexIndex * 4 + 3]);
     }
 
-    mat4 model = PUSHES.model_;
+    mat4 model = NODE_TRANSFORMS[mesh_info.node_];
     FRAG_DATA.position_ = model * vec4(position, 1.0);
     FRAG_DATA.normal_ = normalize(mat3(transpose(inverse(model))) * normal);
     FRAG_DATA.tangent_ = normalize(mat3(transpose(inverse(model))) * tangent.xyz);

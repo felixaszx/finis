@@ -197,7 +197,13 @@ void fi::ResDetails::add_gltf_file(const std::filesystem::path& path)
 
 void fi::ResDetails::lock_and_load()
 {
+    if (locked_)
+    {
+        return;
+    }
     locked_ = true;
+    // threading helpers
+    bs::thread_pool th_pool;
 
     // load geometric data
     std::vector<std::future<void>> futs;
@@ -209,7 +215,7 @@ void fi::ResDetails::lock_and_load()
         TSMeshIdx first_mesh = first_mesh_[g];
         PrimIdx first_prim = first_prim_[g];
 
-        futs.emplace_back(th_pool_.submit_task(
+        futs.emplace_back(th_pool.submit_task(
             [this, gltf, first_prim]()
             {
                 auto draw_call_iter = draw_calls_.begin() + first_prim;
@@ -226,7 +232,7 @@ void fi::ResDetails::lock_and_load()
                 }
             }));
 
-        futs.emplace_back(th_pool_.submit_task(
+        futs.emplace_back(th_pool.submit_task(
             [this, gltf, first_prim]()
             {
                 auto prim_info = primitives_.begin() + first_prim;
@@ -244,7 +250,7 @@ void fi::ResDetails::lock_and_load()
                 }
             }));
 
-        futs.emplace_back(th_pool_.submit_task(
+        futs.emplace_back(th_pool.submit_task(
             [this, gltf, first_prim]()
             {
                 auto prim_info = primitives_.begin() + first_prim;
@@ -266,7 +272,7 @@ void fi::ResDetails::lock_and_load()
                 }
             }));
 
-        futs.emplace_back(th_pool_.submit_task(
+        futs.emplace_back(th_pool.submit_task(
             [this, gltf, first_prim]()
             {
                 auto prim_info = primitives_.begin() + first_prim;
@@ -288,7 +294,7 @@ void fi::ResDetails::lock_and_load()
                 }
             }));
 
-        futs.emplace_back(th_pool_.submit_task(
+        futs.emplace_back(th_pool.submit_task(
             [this, gltf, first_prim]()
             {
                 auto prim_info = primitives_.begin() + first_prim;
@@ -312,7 +318,7 @@ void fi::ResDetails::lock_and_load()
                 }
             }));
 
-        futs.emplace_back(th_pool_.submit_task(
+        futs.emplace_back(th_pool.submit_task(
             [this, gltf, first_prim]()
             {
                 auto prim_info = primitives_.begin() + first_prim;
@@ -334,7 +340,7 @@ void fi::ResDetails::lock_and_load()
                 }
             }));
 
-        futs.emplace_back(th_pool_.submit_task(
+        futs.emplace_back(th_pool.submit_task(
             [this, gltf, first_prim]()
             {
                 auto prim_info = primitives_.begin() + first_prim;
@@ -356,7 +362,7 @@ void fi::ResDetails::lock_and_load()
                 }
             }));
 
-        futs.emplace_back(th_pool_.submit_task(
+        futs.emplace_back(th_pool.submit_task(
             [this, gltf, first_prim]()
             {
                 auto prim_info = primitives_.begin() + first_prim;
@@ -378,7 +384,7 @@ void fi::ResDetails::lock_and_load()
                 }
             }));
 
-        futs.emplace_back(th_pool_.submit_task(
+        futs.emplace_back(th_pool.submit_task(
             [this, gltf, first_tex, first_material]()
             {
                 for (MaterialIdx m(0); m < gltf->materials.size(); m++)
@@ -463,7 +469,7 @@ void fi::ResDetails::lock_and_load()
                 }
             }));
 
-        futs.emplace_back(th_pool_.submit_task(
+        futs.emplace_back(th_pool.submit_task(
             [this, gltf, first_prim]()
             {
                 auto prim_info = primitives_.begin() + first_prim;
@@ -499,7 +505,7 @@ void fi::ResDetails::lock_and_load()
                 }
             }));
 
-        futs.emplace_back(th_pool_.submit_task(
+        futs.emplace_back(th_pool.submit_task(
             [this, gltf, first_prim]()
             {
                 auto prim_info = primitives_.begin() + first_prim;
@@ -535,7 +541,7 @@ void fi::ResDetails::lock_and_load()
                 }
             }));
 
-        futs.emplace_back(th_pool_.submit_task(
+        futs.emplace_back(th_pool.submit_task(
             [this, gltf, first_prim]()
             {
                 auto prim_info = primitives_.begin() + first_prim;
@@ -580,7 +586,7 @@ void fi::ResDetails::lock_and_load()
         TSTexIdx first_tex = first_tex_[g];
         TSSamplerIdx first_sampler = first_sampler_[g];
 
-        futs.emplace_back(th_pool_.submit_task(
+        futs.emplace_back(th_pool.submit_task(
             [this, gltf, first_tex, first_sampler, &queue_lock]()
             {
                 vk::CommandPoolCreateInfo tex_cmd_pool_info{vk::CommandPoolCreateFlagBits::eResetCommandBuffer};
@@ -961,6 +967,11 @@ void fi::ResDetails::bind_res(vk::CommandBuffer cmd, vk::PipelineLayout pipeline
 {
     cmd.bindDescriptorSets(vk::PipelineBindPoint::eGraphics, pipeline_layout, des_set, des_set_, {});
     cmd.bindIndexBuffer(*buffer_, buffer_->idx_, vk::IndexType::eUint32);
+}
+
+bool fi::ResDetails::locked() const
+{
+    return locked_;
 }
 
 void fi::ResDetails::draw(vk::CommandBuffer cmd)

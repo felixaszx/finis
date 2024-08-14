@@ -24,7 +24,7 @@ namespace fi
         uint32_t idx_ = EMPTY;
 
       public:
-        TSIdx(const uint32_t& idx)
+        TSIdx(const uint32_t& idx = EMPTY)
             : idx_(idx)
         {
         }

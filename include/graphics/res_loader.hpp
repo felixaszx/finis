@@ -17,8 +17,6 @@ namespace fi
     {
       private:
         bool locked_ = false;
-        // threading helpers
-        bs::thread_pool th_pool_;
         // indexed by size_t in vector offsets
         size_t old_vtx_count_ = 0;
         size_t old_idx_count_ = 0;
@@ -45,15 +43,6 @@ namespace fi
         std::vector<glm::vec3> target_normals_{};                  // tbd AOS style
         std::vector<glm::vec4> target_tangents_{};                 // tbd AOS style
         std::vector<vk::DrawIndexedIndirectCommand> draw_calls_{}; // indexed by PrimIdx
-
-        // helper infos
-        std::vector<PrimIdx> first_prim_{};
-        std::vector<gltf::Expected<gltf::Asset>> gltf_{};
-        std::vector<TSTexIdx> first_tex_{};
-        std::vector<TSSamplerIdx> first_sampler_{};
-        std::vector<TSMaterialIdx> first_material_{};
-        std::vector<TSMeshIdx> first_mesh_{};
-        std::vector<TSMorphTargetIdx> first_morph_target_{};
 
         // storage
         uint32_t draw_call_count_ = 0;
@@ -86,6 +75,15 @@ namespace fi
         };
 
       public:
+        // helper infos
+        std::vector<PrimIdx> first_prim_{};
+        std::vector<gltf::Expected<gltf::Asset>> gltf_{};
+        std::vector<TSTexIdx> first_tex_{};
+        std::vector<TSSamplerIdx> first_sampler_{};
+        std::vector<TSMaterialIdx> first_material_{};
+        std::vector<TSMeshIdx> first_mesh_{};
+        std::vector<TSMorphTargetIdx> first_morph_target_{};
+
         // descriptors
         std::array<vk::DescriptorPoolSize, 2> des_sizes_{};
         vk::DescriptorSetLayout set_layout_{};
@@ -105,6 +103,7 @@ namespace fi
         void allocate_descriptor(vk::DescriptorPool des_pool);
         void bind_res(vk::CommandBuffer cmd, vk::PipelineLayout pipeline_layout, uint32_t des_set);
         void draw(vk::CommandBuffer cmd);
+        bool locked() const;
     };
 }; // namespace fi
 
