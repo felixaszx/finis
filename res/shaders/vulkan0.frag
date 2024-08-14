@@ -27,7 +27,7 @@ struct MaterialInfo
     vec4 sheen_color_factor_;    // [3] = sheen roughtness factor
     vec4 specular_color_factor_; // [3] = specular factor
 
-    float alpha_cutoff_;
+    float alpha_cutoff_; // -1 means blend, 0 means opaque, otherwise means mask
     float metalic_factor_;
     float roughtness_factor_;
     uint color_;

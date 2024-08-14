@@ -110,7 +110,7 @@ namespace fi
         glm::vec4 sheen_color_factor_ = {0, 0, 0, 0};    // [3] = sheen roughtness factor
         glm::vec4 specular_color_factor_ = {1, 1, 1, 1}; // [3] = specular factor
 
-        float alpha_cutoff_ = 0;
+        float alpha_cutoff_ = 0; // -1 means blend, 0 means opaque, otherwise means mask
         float metalic_factor_ = 1.0f;
         float roughtness_factor_ = 1.0f;
         TexIdx color_ = EMPTY;
