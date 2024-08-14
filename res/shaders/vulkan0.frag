@@ -68,22 +68,20 @@ layout(location = 6) in flat int PRIM_IDX;
 
 layout(std430, set = 0, binding = 13) readonly buffer _PRIMITIVES
 {
-    PrimInfo data_[];
-}
-PRIMITIVES;
-layout(std430, set = 0, binding = 14) readonly buffer MATERIALS_
+    PrimInfo PRIMITIVES[];
+};
+layout(std430, set = 0, binding = 14) readonly buffer _MATERIALS
 {
-    MaterialInfo data_[];
-}
-MATERIALS;
+    MaterialInfo MATERIALS[];
+};
 layout(set = 0, binding = 15) uniform sampler2D textures_arr[];
 
 // Code
 
 void main()
 {
-    PrimInfo prim_info = PRIMITIVES.data_[PRIM_IDX];
-    MaterialInfo mat = MATERIALS.data_[prim_info.material_];
+    PrimInfo prim_info = PRIMITIVES[PRIM_IDX];
+    MaterialInfo mat = MATERIALS[prim_info.material_];
     POSITION = FRAG_DATA.position_;
     COLOR = FRAG_DATA.color_ * mat.color_factor_;
     NORMAL = vec4(FRAG_DATA.normal_, 1);

@@ -25,13 +25,12 @@ void fi::ResDetails::add_gltf_file(const std::filesystem::path& path)
     }
 
     // load gltf
-    gltf_file_.emplace_back(fastgltf::GltfDataBuffer::FromPath(path));
-    if (!gltf_file_.back())
+    auto gltf_file = fastgltf::GltfDataBuffer::FromPath(path);
+    if (!gltf_file)
     {
         throw std::runtime_error(std::format("Fail to load {}, Error code {}\n", //
                                              path.generic_string(),              //
-                                             gltf::getErrorMessage(gltf_file_.back().error())));
-        gltf_file_.pop_back();
+                                             gltf::getErrorMessage(gltf_file.error())));
         return;
     }
 
@@ -41,7 +40,7 @@ void fi::ResDetails::add_gltf_file(const std::filesystem::path& path)
                         gltf::Extensions::KHR_materials_ior |               //
                         gltf::Extensions::KHR_materials_sheen |             //
                         gltf::Extensions::KHR_materials_specular);
-    gltf_.emplace_back(parser.loadGltf(gltf_file_.back().get(),                   //
+    gltf_.emplace_back(parser.loadGltf(gltf_file.get(),                           //
                                        path.parent_path(),                        //
                                        gltf::Options::LoadExternalBuffers |       //
                                            gltf::Options::LoadExternalImages |    //
@@ -656,19 +655,17 @@ void fi::ResDetails::lock_and_load()
                     const gltf::Sampler& sampler = gltf->samplers[s_g];
                     TSSamplerIdx s(first_sampler + s_g);
                     vk::SamplerCreateInfo sampler_info{};
+                    sampler_info.anisotropyEnable = true;
+                    sampler_info.maxAnisotropy = 4;
                     sampler_info.addressModeU = extract_wrapping(sampler.wrapS);
                     sampler_info.addressModeV = extract_wrapping(sampler.wrapT);
                     sampler_info.addressModeW = vk::SamplerAddressMode::eRepeat;
-                    sampler_info.mipmapMode =
-                        extract_mipmap_mode(sampler.minFilter.value_or(gltf::Filter::LinearMipMapLinear));
-                    sampler_info.minFilter =
-                        extract_filter(sampler.minFilter.value_or(gltf::Filter::LinearMipMapLinear));
-                    sampler_info.magFilter =
-                        extract_filter(sampler.magFilter.value_or(gltf::Filter::LinearMipMapLinear));
-                    sampler_info.maxLod =
-                        extract_mipmaped(sampler.minFilter.value_or(gltf::Filter::LinearMipMapLinear)) //
-                            ? VK_LOD_CLAMP_NONE
-                            : 0;
+                    sampler_info.mipmapMode = extract_mipmap_mode(sampler.minFilter.value_or(gltf::Filter::Linear));
+                    sampler_info.minFilter = extract_filter(sampler.minFilter.value_or(gltf::Filter::Linear));
+                    sampler_info.magFilter = extract_filter(sampler.magFilter.value_or(gltf::Filter::Linear));
+                    sampler_info.maxLod = extract_mipmaped(sampler.minFilter.value_or(gltf::Filter::Linear)) //
+                                              ? VK_LOD_CLAMP_NONE
+                                              : 0;
                     samplers_[s] = device().createSampler(sampler_info);
                 }
 
@@ -687,7 +684,7 @@ void fi::ResDetails::lock_and_load()
                     size_t img_size = w * h * 4;
 
                     bool mip_mapping = extract_mipmaped(gltf->samplers[gltf->textures[t_g].samplerIndex.value_or(0)] //
-                                                            .minFilter.value_or(gltf::Filter::LinearMipMapLinear));
+                                                            .minFilter.value_or(gltf::Filter::Linear));
                     uint32_t levels = mip_mapping ? std::floor(std::log2(std::max(w, h))) + 1 : 1;
 
                     TSTexIdx tex(first_tex + t_g);
@@ -1056,4 +1053,5 @@ void fi::ResDetails::allocate_descriptor(vk::DescriptorPool des_pool)
 
     draw_call_count_ = draw_calls_.size();
     free_stl_container(draw_calls_);
+    free_stl_container(gltf_);
 }

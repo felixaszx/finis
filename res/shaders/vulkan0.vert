@@ -1,6 +1,6 @@
 #version 460 core
-#extension GL_ARB_shader_draw_parameters : enable
-#extension GL_EXT_nonuniform_qualifier : enable
+#extension GL_ARB_shader_draw_parameters : require
+#extension GL_EXT_nonuniform_qualifier : require
 
 struct PrimInfo
 {
@@ -39,71 +39,58 @@ struct MeshInfo
 
 layout(std430, set = 0, binding = 0) readonly buffer _POSITION
 {
-    float vtx_[];
-}
-POSITION;
+    float POSITION[];
+};
 layout(std430, set = 0, binding = 1) readonly buffer _NORMAL
 {
-    float vtx_[];
-}
-NORMAL;
+    float NORMAL[];
+};
 layout(std430, set = 0, binding = 2) readonly buffer _TANGENT
 {
-    float vtx_[];
-}
-TANGENT;
+    float TANGENT[];
+};
 layout(std430, set = 0, binding = 3) readonly buffer _TEXCOORD
 {
-    float vtx_[];
-}
-TEXCOORD;
+    float TEXCOORD[];
+};
 layout(std430, set = 0, binding = 4) readonly buffer _COLOR
 {
-    float vtx_[];
-}
-COLOR;
+    float COLOR[];
+};
 layout(std430, set = 0, binding = 4) readonly buffer _JOINT
 {
-    float vtx_[];
-}
-JOINT;
+    float JOINT[];
+};
 layout(std430, set = 0, binding = 5) readonly buffer _WEIGHT
 {
-    float vtx_[];
-}
-WEIGHT;
+    float WEIGHT[];
+};
 layout(std430, set = 0, binding = 6) readonly buffer _TARGET_POSITION
 {
-    float vtx_[];
-}
-TARGET_POSITION;
+    float TARGET_POSITION[];
+};
 layout(std430, set = 0, binding = 7) readonly buffer _TARGET_NORMAL
 {
-    float vtx_[];
-}
-TARGET_NORMAL;
+    float TARGET_NORMAL[];
+};
 layout(std430, set = 0, binding = 8) readonly buffer _TARGET_TANGENT
 {
-    float vtx_[];
-}
-TARGET_TANGENT;
+    float TARGET_TANGENT[];
+};
 layout(std430, set = 0, binding = 11) readonly buffer _MESHES
 {
-    MeshInfo data_[];
-}
-MESHES;
+    MeshInfo MESHES[];
+};
 layout(std430, set = 0, binding = 12) readonly buffer _MORPH_TARGETS
 {
-    MorphTargetInfo data_[];
-}
-MORPH_TARGETS;
+    MorphTargetInfo MORPH_TARGETS[];
+};
 layout(std430, set = 0, binding = 13) readonly buffer _PRIMITIVES
 {
-    PrimInfo data_[];
-}
-PRIMITIVES;
+    PrimInfo PRIMITIVES[];
+};
 
-layout(location = 0) out struct
+layout(location = 0) out struct1
 {
     vec4 position_;
     vec3 normal_;
@@ -126,41 +113,41 @@ PUSHES;
 void main()
 {
     PRIM_IDX = gl_DrawIDARB;
-    PrimInfo prim_info = PRIMITIVES.data_[PRIM_IDX];
-    MeshInfo mesh_info = MESHES.data_[prim_info.mesh_idx_];
-    MorphTargetInfo morph_info = MORPH_TARGETS.data_[prim_info.morph_target_];
+    PrimInfo prim_info = PRIMITIVES[PRIM_IDX];
+    MeshInfo mesh_info = MESHES[prim_info.mesh_idx_];
+    MorphTargetInfo morph_info = MORPH_TARGETS[prim_info.morph_target_];
 
-    vec3 position = {POSITION.vtx_[prim_info.first_position_ + gl_VertexIndex * 3 + 0], //
-                     POSITION.vtx_[prim_info.first_position_ + gl_VertexIndex * 3 + 1], //
-                     POSITION.vtx_[prim_info.first_position_ + gl_VertexIndex * 3 + 2]};
+    vec3 position = {POSITION[prim_info.first_position_ + gl_VertexIndex * 3 + 0], //
+                     POSITION[prim_info.first_position_ + gl_VertexIndex * 3 + 1], //
+                     POSITION[prim_info.first_position_ + gl_VertexIndex * 3 + 2]};
     vec3 normal = {0, 0, 0};
     if (prim_info.first_normal_ != EMPTY)
     {
-        normal = vec3(NORMAL.vtx_[prim_info.first_normal_ + gl_VertexIndex * 3 + 0],
-                      NORMAL.vtx_[prim_info.first_normal_ + gl_VertexIndex * 3 + 1],
-                      NORMAL.vtx_[prim_info.first_normal_ + gl_VertexIndex * 3 + 2]);
+        normal = vec3(NORMAL[prim_info.first_normal_ + gl_VertexIndex * 3 + 0],
+                      NORMAL[prim_info.first_normal_ + gl_VertexIndex * 3 + 1],
+                      NORMAL[prim_info.first_normal_ + gl_VertexIndex * 3 + 2]);
     }
     vec4 tangent = {0, 0, 0, 1};
     if (prim_info.first_tangent_ != EMPTY)
     {
-        tangent = vec4(TANGENT.vtx_[prim_info.first_tangent_ + gl_VertexIndex * 4 + 0],
-                       TANGENT.vtx_[prim_info.first_tangent_ + gl_VertexIndex * 4 + 1],
-                       TANGENT.vtx_[prim_info.first_tangent_ + gl_VertexIndex * 4 + 2],
-                       TANGENT.vtx_[prim_info.first_tangent_ + gl_VertexIndex * 4 + 3]);
+        tangent = vec4(TANGENT[prim_info.first_tangent_ + gl_VertexIndex * 4 + 0],
+                       TANGENT[prim_info.first_tangent_ + gl_VertexIndex * 4 + 1],
+                       TANGENT[prim_info.first_tangent_ + gl_VertexIndex * 4 + 2],
+                       TANGENT[prim_info.first_tangent_ + gl_VertexIndex * 4 + 3]);
     }
     vec2 texcoord = {0, 0};
     if (prim_info.first_texcoord_ != EMPTY)
     {
-        texcoord = vec2(TEXCOORD.vtx_[prim_info.first_texcoord_ + gl_VertexIndex * 2 + 0],
-                        TEXCOORD.vtx_[prim_info.first_texcoord_ + gl_VertexIndex * 2 + 1]);
+        texcoord = vec2(TEXCOORD[prim_info.first_texcoord_ + gl_VertexIndex * 2 + 0],
+                        TEXCOORD[prim_info.first_texcoord_ + gl_VertexIndex * 2 + 1]);
     }
     vec4 color = {1, 1, 1, 1};
     if (prim_info.first_color_ != EMPTY)
     {
-        color = vec4(COLOR.vtx_[prim_info.first_color_ + gl_VertexIndex * 4 + 0],
-                     COLOR.vtx_[prim_info.first_color_ + gl_VertexIndex * 4 + 1],
-                     COLOR.vtx_[prim_info.first_color_ + gl_VertexIndex * 4 + 2],
-                     COLOR.vtx_[prim_info.first_color_ + gl_VertexIndex * 4 + 3]);
+        color = vec4(COLOR[prim_info.first_color_ + gl_VertexIndex * 4 + 0],
+                     COLOR[prim_info.first_color_ + gl_VertexIndex * 4 + 1],
+                     COLOR[prim_info.first_color_ + gl_VertexIndex * 4 + 2],
+                     COLOR[prim_info.first_color_ + gl_VertexIndex * 4 + 3]);
     }
 
     mat4 model = PUSHES.model_;

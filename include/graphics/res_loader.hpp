@@ -48,7 +48,6 @@ namespace fi
 
         // helper infos
         std::vector<PrimIdx> first_prim_{};
-        std::vector<gltf::Expected<gltf::GltfDataBuffer>> gltf_file_{};
         std::vector<gltf::Expected<gltf::Asset>> gltf_{};
         std::vector<TSTexIdx> first_tex_{};
         std::vector<TSSamplerIdx> first_sampler_{};

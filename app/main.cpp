@@ -86,7 +86,7 @@ int main(int argc, char** argv)
         auto r = g.device().waitForFences(frame_fence, true, std::numeric_limits<uint64_t>::max());
         uint32_t img_idx = sc.aquire_next_image(next_img);
         g.device().resetFences(frame_fence);
-        color_infos[1].imageView = sc.views_[img_idx];
+        color_infos[2].imageView = sc.views_[img_idx];
 
         CpuClock::Second curr_time = clock.get_elapsed();
         float delta_time = curr_time - prev_time;
