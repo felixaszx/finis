@@ -197,6 +197,17 @@ void main()
                           * GET_VEC3(TARGET_NORMAL, first_morph_idx + 3 * t);
             }
         }
+
+        if (morph_info.first_tangent_ != EMPTY)
+        {
+            uint first_morph_idx = morph_info.first_tangent_ //
+                                   + GET_VTX(4) * morph_info.tangent_morph_count_;
+            for (int t = 0; t < morph_info.position_morph_count_; t++)
+            {
+                tangent += MORPH_WEIGHT[mesh_info.morph_weight_ + t] //
+                           * GET_VEC4(TARGET_TANGENT, first_morph_idx + 4 * t);
+            }
+        }
     }
 
     mat4 model = NODE_TRANSFORMS[mesh_info.node_];
@@ -207,15 +218,16 @@ void main()
         uvec4 joint_ids = GET_UVEC4(JOINT, prim_info.first_joint_ + GET_VTX(4));
         for (int i = 0; i < 4; i++)
         {
-            model += GET_VEC4(WEIGHT, prim_info.first_weight_ + GET_VTX(4))[i]           //
+            model += GET_VEC4(WEIGHT, prim_info.first_weight_ + GET_VTX(4))[i]            //
                      * NODE_TRANSFORMS[SKIN_JOINTS[mesh_info.first_joint + joint_ids[i]]] //
                      * INV_BINDINGS[mesh_info.first_joint + joint_ids[i]];
         }
     }
 
+    mat3 normal_correction = mat3(transpose(inverse(model)));
     FRAG_DATA.position_ = model * vec4(position, 1.0);
-    FRAG_DATA.normal_ = normalize(mat3(transpose(inverse(model))) * normal);
-    FRAG_DATA.tangent_ = normalize(mat3(transpose(inverse(model))) * tangent.xyz);
+    FRAG_DATA.normal_ = normalize(normal_correction * normal);
+    FRAG_DATA.tangent_ = normalize(normal_correction * tangent.xyz);
     FRAG_DATA.bitangent_ = tangent.w * normalize(cross(FRAG_DATA.normal_, FRAG_DATA.tangent_));
     FRAG_DATA.tex_coord_ = texcoord;
     FRAG_DATA.color_ = color;
