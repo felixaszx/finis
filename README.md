@@ -24,7 +24,18 @@ The `finis_graphic` sublibrary is a vulkan wrapper completely independent from `
 - Multi-threaded resources loading
 - more...
 
-## TBD
+## Build instructions
+1. Install [`MSYS2`](https://www.msys2.org/) on Windows and follow the instructions on MSYS2 website to install basic toolchains
+2. Install the following Packages for your MSYS2 enviroment:
+    - [mingw-w64-vulkan-devel](https://packages.msys2.org/basegroups/mingw-w64-vulkan-devel)
+    - [mingw-w64-stb](https://packages.msys2.org/base/mingw-w64-stb)
+    - [mingw-w64-simdjson](https://packages.msys2.org/base/mingw-w64-simdjson)
+    - [mingw-w64-glfw](https://packages.msys2.org/base/mingw-w64-glfw)
+    - [mingw-w64-shaderc](https://packages.msys2.org/base/mingw-w64-shaderc)
+    - [mingw-w64-fltk](https://packages.msys2.org/base/mingw-w64-fltk)
+3. `fastgltf` and `BS::thread_pool` are included already
+4. Install CMake and Ninja in your MSYS2 enviroment
+5. Good to go (should be)
 
 ## Third party libraries:
 - `stb_image` Public Domain
