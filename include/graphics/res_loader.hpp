@@ -113,7 +113,7 @@ namespace fi
         void allocate_descriptor(vk::DescriptorPool des_pool);
         void bind_res(vk::CommandBuffer cmd, vk::PipelineLayout pipeline_layout, uint32_t des_set);
         void draw(vk::CommandBuffer cmd);
-        bool locked() const;
+        [[nodiscard]] bool locked() const;
     };
 }; // namespace fi
 

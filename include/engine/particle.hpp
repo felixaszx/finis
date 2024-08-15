@@ -1,9 +1,9 @@
 #ifndef ENGINE_PARTICLE_HPP
 #define ENGINE_PARTICLE_HPP
 
-#include "graphics2/graphics.hpp"
-#include "graphics2/res_uploader.hpp"
-#include "graphics2/buffer.hpp"
+#include "graphics/graphics.hpp"
+#include "graphics/res_loader.hpp"
+#include "graphics/buffer.hpp"
 
 namespace fi
 {
@@ -14,6 +14,7 @@ namespace fi
     class ParticleSystem
     {
       private:
+        PrimIdx prim_idx_;
         std::unique_ptr<Buffer<BufferBase::EmptyExtraInfo, vertex, storage>> buffer_{};
 
       public:

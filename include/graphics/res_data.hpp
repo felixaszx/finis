@@ -1,12 +1,12 @@
 /**
  * @file res_data.hpp
  * @author Felix Xing (felixaszx@outlook.com)
- * @brief 
+ * @brief
  * @version 0.1
  * @date 2024-08-15
- * 
+ *
  * @copyright MIT License Copyright (c) 2024 Felixaszx (Felix Xing)
- * 
+ *
  */
 #ifndef GRAPHICS_RES_DATA_HPP
 #define GRAPHICS_RES_DATA_HPP
@@ -116,7 +116,7 @@ namespace fi
         MorphWeightIdx morph_weight_ = EMPTY;
 
         NodeIdx first_joint = EMPTY;
-        InstanceIdx instances_ = EMPTY; // tbd
+        uint32_t first_instance_mat_ = EMPTY; // modify by app in compute shader
     };
 
     struct alignas(16) MaterialInfo
@@ -148,11 +148,6 @@ namespace fi
     };
 
     using NodeTransform = glm::mat4;
-
-    struct InstancesInfo
-    {
-        // tbd
-    };
 }; // namespace fi
 
 #endif // GRAPHICS_RES_DATA_HPP
