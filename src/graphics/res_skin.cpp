@@ -1,12 +1,12 @@
 /**
  * @file res_skin.cpp
  * @author Felix Xing (felixaszx@outlook.com)
- * @brief 
+ * @brief
  * @version 0.1
  * @date 2024-08-15
- * 
+ *
  * @copyright MIT License Copyright (c) 2024 Felixaszx (Felix Xing)
- * 
+ *
  */
 #include "graphics/res_skin.hpp"
 
@@ -54,6 +54,12 @@ fi::ResSkinDetails::ResSkinDetails(ResDetails& res_details, ResStructure& res_st
                 res_details.meshes_[m].first_joint = skins_[first_skin_[g] + node.skinIndex.value()].first_joint_;
             }
         }
+    }
+
+    if (skins_.empty())
+    {
+        joints_.resize(4, EMPTY);
+        inv_binds_.push_back(glm::zero<glm::mat4>());
     }
 
     while (sizeof_arr(joints_) % 16)

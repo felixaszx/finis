@@ -140,7 +140,6 @@ inline void test_pipeline(fi::Graphics& g, fi::Swapchain& sc)
     view_port.viewportCount = 1;
     view_port.scissorCount = 1;
     rasterizer.lineWidth = 1;
-    rasterizer.cullMode = vk::CullModeFlagBits::eBack;
     multi_sample.rasterizationSamples = vk::SampleCountFlagBits::e1;
     pso_ds_info.depthTestEnable = true;
     pso_ds_info.depthCompareOp = vk::CompareOp::eLess;
