@@ -100,7 +100,8 @@ int main(int argc, char** argv)
         color_infos[2].imageView = sc.views_[img_idx];
 
         CpuClock::Second curr_time = clock.get_elapsed();
-        test_anim[0].set_keyframe(curr_time);
+        CpuClock::MilliSecond curr_time2 = clock.get_elapsed();
+        test_anim[1].set_keyframe(curr_time2);
         test_structure.update_structure();
 
         float delta_time = curr_time - prev_time;
