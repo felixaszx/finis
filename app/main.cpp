@@ -31,12 +31,9 @@ int main(int argc, char** argv)
 
     ResDetails test_res;
     test_res.add_gltf_file("res/models/sparta.glb");
-    test_res.add_gltf_file("res/models/MorphStressTest.glb");
-    test_res.add_gltf_file("res/models/sponza.glb");
     ResStructure test_structure(test_res);
     ResSkinDetails test_skins(test_res, test_structure);
     std::vector<ResAnimation> test_anim = get_res_animations(test_res, test_structure, 0);
-    std::vector<ResAnimation> test_anim2 = get_res_animations(test_res, test_structure, 1);
 
     test_res.lock_and_load();
     std::vector<vk::DescriptorPoolSize> combined_pool_sizes;
@@ -106,9 +103,9 @@ int main(int argc, char** argv)
         auto r = g.device().waitForFences(frame_fence, true, std::numeric_limits<uint64_t>::max());
         uint32_t img_idx = sc.aquire_next_image(next_img);
         g.device().resetFences(frame_fence);
+
         CpuClock::TimePoint curr_time = clock.get_elapsed();
         test_anim[0].set_keyframe(curr_time);
-        test_anim2[0].set_keyframe(curr_time);
         test_structure.update_structure();
 
         float delta_time = (CpuClock::Second)curr_time - prev_time;
