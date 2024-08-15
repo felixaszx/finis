@@ -1,3 +1,13 @@
+/**
+ * @file glms.hpp
+ * @author Felix Xing (felixaszx@outlook.com)
+ * @brief 
+ * @version 0.1
+ * @date 2024-08-15
+ * 
+ * @copyright MIT License Copyright (c) 2024 Felixaszx (Felix Xing)
+ * 
+ */
 #ifndef INCLUDE_GLMS_HPP
 #define INCLUDE_GLMS_HPP
 

@@ -1,3 +1,13 @@
+/**
+ * @file res_loader.cpp
+ * @author Felix Xing (felixaszx@outlook.com)
+ * @brief 
+ * @version 0.1
+ * @date 2024-08-15
+ * 
+ * @copyright MIT License Copyright (c) 2024 Felixaszx (Felix Xing)
+ * 
+ */
 #define STB_IMAGE_IMPLEMENTATION
 #include "graphics/res_loader.hpp"
 

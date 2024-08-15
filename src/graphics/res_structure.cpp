@@ -1,3 +1,13 @@
+/**
+ * @file res_structure.cpp
+ * @author Felix Xing (felixaszx@outlook.com)
+ * @brief 
+ * @version 0.1
+ * @date 2024-08-15
+ * 
+ * @copyright MIT License Copyright (c) 2024 Felixaszx (Felix Xing)
+ * 
+ */
 #include "graphics/res_structure.hpp"
 
 void build_layer(fi::TSNodeIdx node_idx,                                //

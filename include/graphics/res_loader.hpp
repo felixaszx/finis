@@ -1,3 +1,13 @@
+/**
+ * @file res_loader.hpp
+ * @author Felix Xing (felixaszx@outlook.com)
+ * @brief 
+ * @version 0.1
+ * @date 2024-08-15
+ * 
+ * @copyright MIT License Copyright (c) 2024 Felixaszx (Felix Xing)
+ * 
+ */
 #ifndef GRAPHICS_RES_LOADER_HPP
 #define GRAPHICS_RES_LOADER_HPP
 
