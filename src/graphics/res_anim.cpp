@@ -193,7 +193,7 @@ void fi::CombinedAnimChannel::sample_animation(float time_point)
         }
         else
         {
-            float weight_time_point = std::fmod(time_point, weight_timeline_.back());
+            float weight_time_point = fmod(time_point, weight_timeline_.back());
             auto upper_time = std::upper_bound(weight_timeline_.begin(), //
                                                weight_timeline_.end(),   //
                                                weight_time_point);
