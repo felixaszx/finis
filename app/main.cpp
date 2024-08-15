@@ -99,12 +99,11 @@ int main(int argc, char** argv)
         g.device().resetFences(frame_fence);
         color_infos[2].imageView = sc.views_[img_idx];
 
-        CpuClock::Second curr_time = clock.get_elapsed();
-        CpuClock::MilliSecond curr_time2 = clock.get_elapsed();
-        test_anim[1].set_keyframe(curr_time2);
+        CpuClock::TimePoint curr_time = clock.get_elapsed();
+        test_anim[1].set_keyframe(curr_time);
         test_structure.update_structure();
 
-        float delta_time = curr_time - prev_time;
+        float delta_time = (CpuClock::Second)curr_time - prev_time;
         prev_time = curr_time;
         glm::vec3 camera_front = glm::normalize(glm::vec3{std::cos(yaw) * std::cos(pitch), //
                                                           std::sin(pitch),                 //

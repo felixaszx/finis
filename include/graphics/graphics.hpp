@@ -108,7 +108,6 @@ namespace fi
         using DoubleSecond = double;
         using MilliSecond = size_t;
 
-      private:
         struct TimePoint
         {
             std::chrono::duration<size_t, std::chrono::milliseconds::period> duration_{};
@@ -120,6 +119,7 @@ namespace fi
             inline operator MilliSecond() { return duration_.count(); };
         };
 
+      private:
         std::chrono::system_clock::time_point init_;
         std::chrono::system_clock::time_point begin_;
         std::chrono::system_clock::time_point end_;
