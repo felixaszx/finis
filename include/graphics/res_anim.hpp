@@ -1,12 +1,12 @@
 /**
  * @file res_anim.hpp
  * @author Felix Xing (felixaszx@outlook.com)
- * @brief 
+ * @brief
  * @version 0.1
  * @date 2024-08-15
- * 
+ *
  * @copyright MIT License Copyright (c) 2024 Felixaszx (Felix Xing)
- * 
+ *
  */
 #ifndef GRAPHICS_RES_ANIM_HPP
 #define GRAPHICS_RES_ANIM_HPP
@@ -42,7 +42,7 @@ namespace fi
         // storages
         std::vector<CombinedAnimChannel> channels_{};
 
-        void set_keyframe(CpuClock::MilliSecond time_point = 0,bool stepping = false);
+        void set_keyframe(CpuClock::MilliSecond time_point = 0, bool stepping = false);
     };
 
     std::vector<ResAnimation> get_res_animations(ResDetails& res_details,     //
