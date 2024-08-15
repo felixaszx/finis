@@ -29,8 +29,9 @@ int main(int argc, char** argv)
     Swapchain sc;
     sc.create();
 
-    ResDetails test_res;
+    ResDetails test_res; 
     test_res.add_gltf_file("res/models/sparta.glb");
+    test_res.add_gltf_file("res/models/sponza.glb");
     ResStructure test_structure(test_res);
     ResSkinDetails test_skins(test_res, test_structure);
     std::vector<ResAnimation> test_anim = get_res_animations(test_res, test_structure, 0);

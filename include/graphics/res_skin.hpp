@@ -21,6 +21,7 @@ namespace fi
       public:
         struct SkinInfo
         {
+            std::string name_ = {};
             TSNodeIdx first_joint_{};
             uint32_t joint_count_ = EMPTY;
         };

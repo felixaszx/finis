@@ -96,6 +96,7 @@ namespace fi
         std::vector<TSMaterialIdx> first_material_{};
         std::vector<TSMeshIdx> first_mesh_{};
         std::vector<TSMorphTargetIdx> first_morph_target_{};
+        std::vector<std::string> gltf_names_{};
 
         // descriptors
         std::array<vk::DescriptorPoolSize, 2> des_sizes_{};
@@ -108,6 +109,11 @@ namespace fi
         std::vector<PrimInfo> primitives_{};           // indexed by PrimIdx
         std::vector<MaterialInfo> materials_{};        // indexed by TSMaterialIdx
         std::unique_ptr<Buffer<BufferOffsets, storage, indirect, index>> buffer_;
+
+        // names
+        std::vector<std::string> prim_names_{};
+        std::vector<std::string> mesh_names_{};
+        std::vector<std::string> material_names_{};
 
         ~ResDetails();
 

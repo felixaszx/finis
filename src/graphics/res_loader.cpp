@@ -73,6 +73,7 @@ void fi::ResDetails::add_gltf_file(const std::filesystem::path& path)
     first_mesh_.emplace_back(meshes_.size());
     first_prim_.emplace_back(primitives_.size());
     first_morph_target_.emplace_back(morph_targets_.size());
+    gltf_names_.emplace_back(path.generic_string());
 
     tex_imgs_.resize(tex_imgs_.size() + gltf.textures.size());
     tex_views_.resize(tex_imgs_.size());
@@ -81,6 +82,7 @@ void fi::ResDetails::add_gltf_file(const std::filesystem::path& path)
     samplers_.resize(samplers_.size() + gltf.samplers.size());
     meshes_.resize(meshes_.size() + gltf.meshes.size());
     materials_.resize(materials_.size() + gltf.materials.size());
+    material_names_.resize(materials_.size());
 
     // load geometric data
     for (TSMeshIdx m_in(0); m_in < gltf.meshes.size(); m_in++)
@@ -89,6 +91,8 @@ void fi::ResDetails::add_gltf_file(const std::filesystem::path& path)
         TSMeshIdx m(m_in + first_mesh_.back());
         draw_calls_.reserve(draw_calls_.size() + gltf.meshes[m_in].primitives.size());
         primitives_.reserve(primitives_.size() + gltf.meshes[m_in].primitives.size());
+        mesh_names_.emplace_back(gltf.meshes[m_in].name);
+
         for (const fgltf::Primitive& prim : gltf.meshes[m_in].primitives)
         {
             const fgltf::Accessor& pos_acc = gltf.accessors[prim.findAttribute("POSITION")->accessorIndex];
@@ -105,6 +109,7 @@ void fi::ResDetails::add_gltf_file(const std::filesystem::path& path)
             const fgltf::Attribute* colors_attrib = prim.findAttribute("COLOR_0");
             const fgltf::Attribute* joints_attrib = prim.findAttribute("JOINTS_0");
             const fgltf::Attribute* weights_attrib = prim.findAttribute("WEIGHTS_0");
+            prim_names_.push_back(std::format("{}[{}]", gltf.meshes[m_in].name.c_str(), primitives_.size()));
             PrimInfo& prim_info = primitives_.emplace_back();
             prim_info.mesh_idx_ = m;
             prim_info.material_ = first_material_.back() + (uint32_t)prim.materialIndex.value_or(0);
@@ -203,6 +208,16 @@ void fi::ResDetails::add_gltf_file(const std::filesystem::path& path)
     target_positions_.resize(old_target_positions_count);
     target_normals_.resize(old_target_normals_count_);
     target_tangents_.resize(old_target_tangents_count_);
+}
+
+void fi::ResDetails::lock_and_load()
+{
+    if (locked_)
+    {
+        return;
+    }
+    locked_ = true;
+
     draw_call_count_ = draw_calls_.size();
 
     if (draw_calls_.size() % SUB_GROUP_SIZE_)
@@ -218,15 +233,7 @@ void fi::ResDetails::add_gltf_file(const std::filesystem::path& path)
     {
         work_group_.x = draw_calls_.size() / SUB_GROUP_SIZE_;
     }
-}
 
-void fi::ResDetails::lock_and_load()
-{
-    if (locked_)
-    {
-        return;
-    }
-    locked_ = true;
     // threading helpers
     bs::thread_pool th_pool;
 
@@ -418,6 +425,7 @@ void fi::ResDetails::lock_and_load()
                     const fgltf::Material& mat_in = gltf->materials[m];
                     const fgltf::PBRData& pbr = mat_in.pbrData;
 
+                    material_names_[first_material + m] = mat_in.name;
                     glms::assign_value(material.color_factor_, pbr.baseColorFactor);
                     material.metalic_factor_ = pbr.metallicFactor;
                     material.roughtness_factor_ = pbr.roughnessFactor;

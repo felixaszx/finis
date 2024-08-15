@@ -23,7 +23,7 @@ fi::ResSkinDetails::ResSkinDetails(ResDetails& res_details, ResStructure& res_st
         skins_.reserve(skins_.size() + res_details.gltf_[g]->skins.size());
         for (const auto& skin : res_details.gltf_[g]->skins)
         {
-            SkinInfo& skin_info = skins_.emplace_back(TSNodeIdx(joints_.size()), skin.joints.size());
+            SkinInfo& skin_info = skins_.emplace_back(skin.name.c_str(), TSNodeIdx(joints_.size()), skin.joints.size());
             joints_.reserve(joints_.size() + skin_info.joint_count_);
             inv_binds_.reserve(inv_binds_.size() + skin_info.joint_count_);
             for (auto joint : skin.joints)
