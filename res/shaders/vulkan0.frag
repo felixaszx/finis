@@ -90,10 +90,6 @@ void main()
     if (mat.color_ != EMPTY)
     {
         COLOR *= texture(textures_arr[mat.color_], FRAG_DATA.tex_coord_);
-        if (COLOR.a < mat.alpha_cutoff_)
-        {
-            discard;
-        }
     }
 
     if (mat.normal_ != EMPTY)
@@ -102,4 +98,6 @@ void main()
         mapped_normal = normalize(mapped_normal * 2.0 - 1.0);
         NORMAL.rgb = normalize(mat3(FRAG_DATA.tangent_, FRAG_DATA.bitangent_, FRAG_DATA.normal_) * mapped_normal);
     }
+
+    // blending
 }
