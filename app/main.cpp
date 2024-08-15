@@ -18,7 +18,7 @@ int main(int argc, char** argv)
     using namespace program;
     using namespace glms::literal;
 
-    fle::DoubleWindow fltk(800, 600, "");
+    fle::DoubleWindow fltk(800, 600, "finis");
     fltk.end();
     fle::Flow flow(0, 0, 800, 600);
     fltk.add(flow);
