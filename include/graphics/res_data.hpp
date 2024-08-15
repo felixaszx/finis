@@ -116,7 +116,7 @@ namespace fi
         MorphWeightIdx morph_weight_ = EMPTY;
 
         NodeIdx first_joint = EMPTY;
-        uint32_t first_instance_mat_ = EMPTY; // modify by app in compute shader
+        uint32_t instan_detail_ = EMPTY;
     };
 
     struct alignas(16) MaterialInfo

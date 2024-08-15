@@ -1,12 +1,12 @@
 /**
  * @file res_loader.cpp
  * @author Felix Xing (felixaszx@outlook.com)
- * @brief 
+ * @brief
  * @version 0.1
  * @date 2024-08-15
- * 
+ *
  * @copyright MIT License Copyright (c) 2024 Felixaszx (Felix Xing)
- * 
+ *
  */
 #define STB_IMAGE_IMPLEMENTATION
 #include "graphics/res_loader.hpp"
@@ -203,6 +203,16 @@ void fi::ResDetails::add_gltf_file(const std::filesystem::path& path)
     target_positions_.resize(old_target_positions_count);
     target_normals_.resize(old_target_normals_count_);
     target_tangents_.resize(old_target_tangents_count_);
+    draw_call_count_ = draw_calls_.size();
+
+    if (draw_calls_.size() % SUB_GROUP_SIZE_)
+    {
+        draw_calls_.resize(draw_calls_.size()                                            //
+                               + SUB_GROUP_SIZE_ - draw_calls_.size() % SUB_GROUP_SIZE_, //
+                           vk::DrawIndexedIndirectCommand(-1, -1, -1, -1, -1));
+        primitives_.resize(primitives_.size() //
+                           + SUB_GROUP_SIZE_ - primitives_.size() % SUB_GROUP_SIZE_);
+    }
 }
 
 void fi::ResDetails::lock_and_load()
@@ -1073,7 +1083,6 @@ void fi::ResDetails::allocate_descriptor(vk::DescriptorPool des_pool)
     free_stl_container(materials_);
     free_stl_container(tex_infos_);
 
-    draw_call_count_ = draw_calls_.size();
     free_stl_container(draw_calls_);
     free_stl_container(gltf_);
 }

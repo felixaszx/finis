@@ -85,6 +85,8 @@ namespace fi
         };
 
       public:
+        inline static const uint32_t SUB_GROUP_SIZE_ = 64;
+
         // helper infos
         std::vector<PrimIdx> first_prim_{};
         std::vector<fgltf::Expected<fgltf::Asset>> gltf_{};
