@@ -106,7 +106,7 @@ namespace fi
         MorphWeightIdx morph_weight_ = EMPTY;
 
         NodeIdx first_joint = EMPTY;
-        InstanceIdx instances_ = EMPTY;
+        InstanceIdx instances_ = EMPTY; // tbd
     };
 
     struct alignas(16) MaterialInfo

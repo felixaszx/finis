@@ -62,7 +62,7 @@ layout(std430, set = 0, binding = 4) readonly buffer _COLOR
 };
 layout(std430, set = 0, binding = 5) readonly buffer _JOINT
 {
-    float JOINT[];
+    uint JOINT[];
 };
 layout(std430, set = 0, binding = 6) readonly buffer _WEIGHT
 {
@@ -104,6 +104,16 @@ layout(std430, set = 1, binding = 1) readonly buffer _MORPH_WEIGHT
     float MORPH_WEIGHT[];
 };
 
+// set 2
+layout(std430, set = 2, binding = 0) readonly buffer _SKIN_JOINTS
+{
+    uint SKIN_JOINTS[];
+};
+layout(std430, set = 2, binding = 1) readonly buffer _INV_BINDINGS
+{
+    mat4 INV_BINDINGS[];
+};
+
 // out put
 layout(location = 0) out struct
 {
@@ -124,9 +134,13 @@ layout(push_constant) uniform PUSHES_
 }
 PUSHES;
 
-#define GET_VEC2(arr, offset) vec2(arr[offset + 0], arr[offset + 1])
-#define GET_VEC3(arr, offset) vec3(arr[offset + 0], arr[offset + 1], arr[offset + 2])
-#define GET_VEC4(arr, offset) vec4(arr[offset + 0], arr[offset + 1], arr[offset + 2], arr[offset + 3])
+#define GET_VTX(s)             (s * gl_VertexIndex)
+#define GET_VEC2(arr, offset)  vec2(arr[offset + 0], arr[offset + 1])
+#define GET_VEC3(arr, offset)  vec3(arr[offset + 0], arr[offset + 1], arr[offset + 2])
+#define GET_VEC4(arr, offset)  vec4(arr[offset + 0], arr[offset + 1], arr[offset + 2], arr[offset + 3])
+#define GET_UVEC2(arr, offset) uvec2(arr[offset + 0], arr[offset + 1])
+#define GET_UVEC3(arr, offset) uvec3(arr[offset + 0], arr[offset + 1], arr[offset + 2])
+#define GET_UVEC4(arr, offset) uvec4(arr[offset + 0], arr[offset + 1], arr[offset + 2], arr[offset + 3])
 
 void main()
 {
@@ -136,7 +150,7 @@ void main()
     MorphTargetInfo morph_info = MORPH_TARGETS[prim_info.morph_target_];
 
     // pull vtx datas
-    vec3 position = GET_VEC3(POSITION, prim_info.first_position_ + gl_VertexIndex * 3);
+    vec3 position = GET_VEC3(POSITION, prim_info.first_position_ + GET_VTX(3));
     vec3 normal = {0, 0, 0};
     vec4 tangent = {0, 0, 0, 1};
     vec2 texcoord = {0, 0};
@@ -144,19 +158,19 @@ void main()
     {
         if (prim_info.first_normal_ != EMPTY)
         {
-            normal = GET_VEC3(NORMAL, prim_info.first_normal_ + gl_VertexIndex * 3);
+            normal = GET_VEC3(NORMAL, prim_info.first_normal_ + GET_VTX(3));
         }
         if (prim_info.first_tangent_ != EMPTY)
         {
-            tangent = GET_VEC4(TANGENT, prim_info.first_tangent_ + gl_VertexIndex * 4);
+            tangent = GET_VEC4(TANGENT, prim_info.first_tangent_ + GET_VTX(4));
         }
         if (prim_info.first_texcoord_ != EMPTY)
         {
-            texcoord = GET_VEC2(TEXCOORD, prim_info.first_texcoord_ + gl_VertexIndex * 2);
+            texcoord = GET_VEC2(TEXCOORD, prim_info.first_texcoord_ + GET_VTX(2));
         }
         if (prim_info.first_color_ != EMPTY)
         {
-            color = GET_VEC4(COLOR, prim_info.first_color_ + gl_VertexIndex * 4);
+            color = GET_VEC4(COLOR, prim_info.first_color_ + GET_VTX(4));
         }
     }
 
@@ -165,16 +179,40 @@ void main()
         if (morph_info.first_position_ != EMPTY)
         {
             uint first_morph_idx = morph_info.first_position_ //
-                                   + gl_VertexIndex * 3 * morph_info.position_morph_count_;
+                                   + GET_VTX(3) * morph_info.position_morph_count_;
             for (int t = 0; t < morph_info.position_morph_count_; t++)
             {
                 position += MORPH_WEIGHT[mesh_info.morph_weight_ + t] //
                             * GET_VEC3(TARGET_POSITION, first_morph_idx + 3 * t);
             }
         }
+
+        if (morph_info.first_normal_ != EMPTY)
+        {
+            uint first_morph_idx = morph_info.first_normal_ //
+                                   + GET_VTX(3) * morph_info.normal_morph_count_;
+            for (int t = 0; t < morph_info.position_morph_count_; t++)
+            {
+                normal += MORPH_WEIGHT[mesh_info.morph_weight_ + t] //
+                          * GET_VEC3(TARGET_NORMAL, first_morph_idx + 3 * t);
+            }
+        }
     }
 
     mat4 model = NODE_TRANSFORMS[mesh_info.node_];
+    // calculate skeleton animation
+    if (mesh_info.first_joint != EMPTY)
+    {
+        model = mat4(0);
+        uvec4 joint_ids = GET_UVEC4(JOINT, prim_info.first_joint_ + GET_VTX(4));
+        for (int i = 0; i < 4; i++)
+        {
+            model += GET_VEC4(WEIGHT, prim_info.first_weight_ + GET_VTX(4))[i]           //
+                     * NODE_TRANSFORMS[SKIN_JOINTS[mesh_info.first_joint + joint_ids[i]]] //
+                     * INV_BINDINGS[mesh_info.first_joint + joint_ids[i]];
+        }
+    }
+
     FRAG_DATA.position_ = model * vec4(position, 1.0);
     FRAG_DATA.normal_ = normalize(mat3(transpose(inverse(model))) * normal);
     FRAG_DATA.tangent_ = normalize(mat3(transpose(inverse(model))) * tangent.xyz);
