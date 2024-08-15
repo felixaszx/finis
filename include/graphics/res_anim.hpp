@@ -23,7 +23,7 @@ namespace fi
         std::vector<glm::vec3> scale_samples_{};
         std::vector<float> weight_samples_{};
 
-        void sample_animation(CpuClock::MilliSecond time_point = 0);
+        void sample_animation(CpuClock::MilliSecond time_point = 0, bool stepping = false);
     };
 
     struct ResAnimation
@@ -32,7 +32,7 @@ namespace fi
         // storages
         std::vector<CombinedAnimChannel> channels_{};
 
-        void set_keyframe(CpuClock::MilliSecond time_point = 0);
+        void set_keyframe(CpuClock::MilliSecond time_point = 0,bool stepping = false);
     };
 
     std::vector<ResAnimation> get_res_animations(ResDetails& res_details,     //

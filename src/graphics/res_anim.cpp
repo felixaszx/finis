@@ -126,7 +126,7 @@ std::vector<fi::ResAnimation> fi::get_res_animations(ResDetails& res_details, Re
     return animations;
 }
 
-void fi::CombinedAnimChannel::sample_animation(CpuClock::MilliSecond time_point)
+void fi::CombinedAnimChannel::sample_animation(CpuClock::MilliSecond time_point, bool stepping)
 {
     if (!translation_timeline_.empty())
     {
@@ -139,7 +139,7 @@ void fi::CombinedAnimChannel::sample_animation(CpuClock::MilliSecond time_point)
         size_t upper_idx = upper_time - translation_timeline_.begin();
         CpuClock::MilliSecond dt = translation_time_point - *(upper_time - 1);
         CpuClock::MilliSecond t = *upper_time - *(upper_time - 1);
-        float l = (float)dt / t;
+        float l = stepping ? 0 : (float)dt / t;
         node_ref_->translation_ = glm::lerp(translation_samples_[upper_idx - 1], //
                                             translation_samples_[upper_idx],     //
                                             l);
@@ -156,7 +156,7 @@ void fi::CombinedAnimChannel::sample_animation(CpuClock::MilliSecond time_point)
         size_t upper_idx = upper_time - rotation_timeline_.begin();
         CpuClock::MilliSecond dt = rotation_time_point - *(upper_time - 1);
         CpuClock::MilliSecond t = *upper_time - *(upper_time - 1);
-        float l = dt / t;
+        float l = stepping ? 0 : (float)dt / t;
         node_ref_->rotation_ = glm::slerp(rotation_samples_[upper_idx - 1], //
                                           rotation_samples_[upper_idx],     //
                                           l);
@@ -173,7 +173,7 @@ void fi::CombinedAnimChannel::sample_animation(CpuClock::MilliSecond time_point)
         size_t upper_idx = upper_time - scale_timeline_.begin();
         CpuClock::MilliSecond dt = scale_time_point - *(upper_time - 1);
         CpuClock::MilliSecond t = *upper_time - *(upper_time - 1);
-        float l = (float)dt / t;
+        float l = stepping ? 0 : (float)dt / t;
         node_ref_->scale_ = glm::lerp(scale_samples_[upper_idx - 1], //
                                       scale_samples_[upper_idx],     //
                                       l);
@@ -190,7 +190,7 @@ void fi::CombinedAnimChannel::sample_animation(CpuClock::MilliSecond time_point)
         size_t upper_idx = upper_time - weight_timeline_.begin();
         CpuClock::MilliSecond dt = weight_time_point - *(upper_time - 1);
         CpuClock::MilliSecond t = *upper_time - *(upper_time - 1);
-        float l = (float)dt / t;
+        float l = stepping ? 0 : (float)dt / t;
 
         size_t prev_idx = (upper_idx - 1) * weights_count_;
         size_t next_idx = upper_idx * weights_count_;
@@ -201,10 +201,11 @@ void fi::CombinedAnimChannel::sample_animation(CpuClock::MilliSecond time_point)
         }
     }
 }
-void fi::ResAnimation::set_keyframe(CpuClock::MilliSecond time_point)
+
+void fi::ResAnimation::set_keyframe(CpuClock::MilliSecond time_point, bool stepping)
 {
     for (fi::CombinedAnimChannel& channel : channels_)
     {
-        channel.sample_animation(time_point);
+        channel.sample_animation(time_point, stepping);
     }
 }
