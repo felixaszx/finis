@@ -1,12 +1,12 @@
 /**
  * @file buffer.cpp
  * @author Felix Xing (felixaszx@outlook.com)
- * @brief 
+ * @brief
  * @version 0.1
  * @date 2024-08-15
- * 
+ *
  * @copyright MIT License Copyright (c) 2024 Felixaszx (Felix Xing)
- * 
+ *
  */
 #include "graphics/buffer.hpp"
 
@@ -111,4 +111,10 @@ void fi::host_coherent(vk::BufferCreateInfo& buffer_info, vma::AllocationCreateI
 void fi::host_cached(vk::BufferCreateInfo& buffer_info, vma::AllocationCreateInfo& alloc_info)
 {
     alloc_info.preferredFlags |= vk::MemoryPropertyFlagBits::eHostCached;
+}
+
+void fi::device_adress(vk::BufferCreateInfo& buffer_info, vma::AllocationCreateInfo& alloc_info)
+{
+    buffer_info.usage |= vk::BufferUsageFlagBits::eShaderDeviceAddress;
+    vk::DescriptorAddressInfoEXT a;
 }

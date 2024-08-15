@@ -1,12 +1,12 @@
 /**
  * @file graphics.cpp
  * @author Felix Xing (felixaszx@outlook.com)
- * @brief 
+ * @brief
  * @version 0.1
  * @date 2024-08-15
- * 
+ *
  * @copyright MIT License Copyright (c) 2024 Felixaszx (Felix Xing)
- * 
+ *
  */
 #define VMA_IMPLEMENTATION
 #define TINYGLTF_IMPLEMENTATION
@@ -119,6 +119,7 @@ fi::Graphics::Graphics(int width, int height, const std::string& title)
     feature11.shaderDrawParameters = true;
     vk::PhysicalDeviceVulkan12Features feature12{};
     feature12.runtimeDescriptorArray = true;
+    feature12.bufferDeviceAddress = true;
     vk::PhysicalDeviceVulkan13Features feature13{};
     feature13.dynamicRendering = true;
     feature13.synchronization2 = true;
@@ -151,6 +152,7 @@ fi::Graphics::Graphics(int width, int height, const std::string& title)
     vma_function.vkGetDeviceImageMemoryRequirements = &vkGetDeviceImageMemoryRequirements;
 
     vma::AllocatorCreateInfo vma_create_info{};
+    vma_create_info.flags = vma::AllocatorCreateFlagBits::eBufferDeviceAddress;
     vma_create_info.vulkanApiVersion = app_info.apiVersion;
     vma_create_info.pVulkanFunctions = &vma_function;
     vma_create_info.instance = instance_;

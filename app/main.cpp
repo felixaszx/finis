@@ -30,7 +30,7 @@ int main(int argc, char** argv)
     sc.create();
 
     ResDetails test_res;
-    test_res.add_gltf_file("res/models/san_miguel.glb");
+    test_res.add_gltf_file("res/models/sparta.glb");
     ResStructure test_structure(test_res);
     ResSkinDetails test_skins(test_res, test_structure);
     std::vector<ResAnimation> test_anim = get_res_animations(test_res, test_structure, 0);
@@ -103,7 +103,6 @@ int main(int argc, char** argv)
         auto r = g.device().waitForFences(frame_fence, true, std::numeric_limits<uint64_t>::max());
         uint32_t img_idx = sc.aquire_next_image(next_img);
         g.device().resetFences(frame_fence);
-        color_infos[2].imageView = sc.views_[img_idx];
 
         CpuClock::TimePoint curr_time = clock.get_elapsed();
         test_structure.update_structure();
