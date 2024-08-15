@@ -1,12 +1,12 @@
 /**
  * @file tools.hpp
  * @author Felix Xing (felixaszx@outlook.com)
- * @brief 
+ * @brief
  * @version 0.1
  * @date 2024-08-15
- * 
+ *
  * @copyright MIT License Copyright (c) 2024 Felixaszx (Felix Xing)
- * 
+ *
  */
 #ifndef INCLUDE_TOOLS_HPP
 #define INCLUDE_TOOLS_HPP
@@ -17,6 +17,7 @@
 #include <chrono>
 
 #include <vulkan/vulkan.hpp>
+#include <glms.hpp>
 
 #define bit_shift_left(bits) (1 << bits)
 #define TRY_FUNC \
@@ -45,12 +46,17 @@ namespace fi
 {
     inline void begin_cmd(const vk::CommandBuffer& cmd,           //
                           vk::CommandBufferUsageFlags flags = {}, //
-                          vk::CommandBufferInheritanceInfo* inheritance = nullptr)
+                          const vk::CommandBufferInheritanceInfo* inheritance = nullptr)
     {
         vk::CommandBufferBeginInfo begin_info{};
         begin_info.pInheritanceInfo = inheritance;
         begin_info.flags = flags;
         cmd.begin(begin_info);
+    }
+
+    inline void dispatch_cmd(const vk::CommandBuffer& cmd, const glm::uvec3& work_group)
+    {
+        cmd.dispatch(work_group.x, work_group.y, work_group.z);
     }
 
 };

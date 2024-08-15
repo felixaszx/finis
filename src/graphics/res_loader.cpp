@@ -213,6 +213,11 @@ void fi::ResDetails::add_gltf_file(const std::filesystem::path& path)
         primitives_.resize(primitives_.size() //
                            + SUB_GROUP_SIZE_ - primitives_.size() % SUB_GROUP_SIZE_);
     }
+
+    if (draw_calls_.size() > SUB_GROUP_SIZE_)
+    {
+        work_group_.x = draw_calls_.size() / SUB_GROUP_SIZE_;
+    }
 }
 
 void fi::ResDetails::lock_and_load()
