@@ -77,7 +77,7 @@ namespace fi
       public:
         // helper infos
         std::vector<PrimIdx> first_prim_{};
-        std::vector<gltf::Expected<gltf::Asset>> gltf_{};
+        std::vector<fgltf::Expected<fgltf::Asset>> gltf_{};
         std::vector<TSTexIdx> first_tex_{};
         std::vector<TSSamplerIdx> first_sampler_{};
         std::vector<TSMaterialIdx> first_material_{};

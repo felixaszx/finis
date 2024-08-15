@@ -25,38 +25,38 @@ void fi::ResDetails::add_gltf_file(const std::filesystem::path& path)
     }
 
     // load gltf
-    auto gltf_file = fastgltf::GltfDataBuffer::FromPath(path);
+    auto gltf_file = fgltf::GltfDataBuffer::FromPath(path);
     if (!gltf_file)
     {
         throw std::runtime_error(std::format("Fail to load {}, Error code {}\n", //
                                              path.generic_string(),              //
-                                             gltf::getErrorMessage(gltf_file.error())));
+                                             fgltf::getErrorMessage(gltf_file.error())));
         return;
     }
 
-    gltf::Parser parser(gltf::Extensions::EXT_mesh_gpu_instancing |         //
-                        gltf::Extensions::KHR_materials_anisotropy |        //
-                        gltf::Extensions::KHR_materials_emissive_strength | //
-                        gltf::Extensions::KHR_materials_ior |               //
-                        gltf::Extensions::KHR_materials_sheen |             //
-                        gltf::Extensions::KHR_materials_specular);
-    gltf_.emplace_back(parser.loadGltf(gltf_file.get(),                           //
-                                       path.parent_path(),                        //
-                                       gltf::Options::LoadExternalBuffers |       //
-                                           gltf::Options::LoadExternalImages |    //
-                                           gltf::Options::DecomposeNodeMatrices | //
-                                           gltf::Options::GenerateMeshIndices));
+    fgltf::Parser parser(fgltf::Extensions::EXT_mesh_gpu_instancing |         //
+                         fgltf::Extensions::KHR_materials_anisotropy |        //
+                         fgltf::Extensions::KHR_materials_emissive_strength | //
+                         fgltf::Extensions::KHR_materials_ior |               //
+                         fgltf::Extensions::KHR_materials_sheen |             //
+                         fgltf::Extensions::KHR_materials_specular);
+    gltf_.emplace_back(parser.loadGltf(gltf_file.get(),                            //
+                                       path.parent_path(),                         //
+                                       fgltf::Options::LoadExternalBuffers |       //
+                                           fgltf::Options::LoadExternalImages |    //
+                                           fgltf::Options::DecomposeNodeMatrices | //
+                                           fgltf::Options::GenerateMeshIndices));
     if (!gltf_.back())
     {
         throw std::runtime_error(std::format("Fail to parse {}, Error code {}\n", //
                                              path.generic_string(),               //
-                                             gltf::getErrorMessage(gltf_.back().error())));
+                                             fgltf::getErrorMessage(gltf_.back().error())));
         gltf_.pop_back();
         return;
     }
 
     // load updated data
-    gltf::Asset& gltf = gltf_.back().get();
+    fgltf::Asset& gltf = gltf_.back().get();
     first_tex_.emplace_back(tex_imgs_.size());
     first_sampler_.emplace_back(samplers_.size());
     first_material_.emplace_back(materials_.size());
@@ -79,22 +79,22 @@ void fi::ResDetails::add_gltf_file(const std::filesystem::path& path)
         TSMeshIdx m(m_in + first_mesh_.back());
         draw_calls_.reserve(draw_calls_.size() + gltf.meshes[m_in].primitives.size());
         primitives_.reserve(primitives_.size() + gltf.meshes[m_in].primitives.size());
-        for (const gltf::Primitive& prim : gltf.meshes[m_in].primitives)
+        for (const fgltf::Primitive& prim : gltf.meshes[m_in].primitives)
         {
-            const gltf::Accessor& pos_acc = gltf.accessors[prim.findAttribute("POSITION")->accessorIndex];
-            const gltf::Accessor& idx_acc = gltf.accessors[prim.indicesAccessor.value()];
+            const fgltf::Accessor& pos_acc = gltf.accessors[prim.findAttribute("POSITION")->accessorIndex];
+            const fgltf::Accessor& idx_acc = gltf.accessors[prim.indicesAccessor.value()];
             vk::DrawIndexedIndirectCommand& draw_call = draw_calls_.emplace_back();
             draw_call.firstIndex = old_idx_count_;
             draw_call.indexCount = idx_acc.count;
             draw_call.firstInstance = 0;
             draw_call.instanceCount = 1;
 
-            const fastgltf::Attribute* normals_attrib = prim.findAttribute("NORMAL");
-            const fastgltf::Attribute* tangents_attrib = prim.findAttribute("TANGENT");
-            const fastgltf::Attribute* texcoord_attrib = prim.findAttribute("TEXCOORD_0");
-            const fastgltf::Attribute* colors_attrib = prim.findAttribute("COLOR_0");
-            const fastgltf::Attribute* joints_attrib = prim.findAttribute("JOINTS_0");
-            const fastgltf::Attribute* weights_attrib = prim.findAttribute("WEIGHTS_0");
+            const fgltf::Attribute* normals_attrib = prim.findAttribute("NORMAL");
+            const fgltf::Attribute* tangents_attrib = prim.findAttribute("TANGENT");
+            const fgltf::Attribute* texcoord_attrib = prim.findAttribute("TEXCOORD_0");
+            const fgltf::Attribute* colors_attrib = prim.findAttribute("COLOR_0");
+            const fgltf::Attribute* joints_attrib = prim.findAttribute("JOINTS_0");
+            const fgltf::Attribute* weights_attrib = prim.findAttribute("WEIGHTS_0");
             PrimInfo& prim_info = primitives_.emplace_back();
             prim_info.mesh_idx_ = m;
             prim_info.material_ = first_material_.back() + (uint32_t)prim.materialIndex.value_or(0);
@@ -209,7 +209,7 @@ void fi::ResDetails::lock_and_load()
     std::vector<std::future<void>> futs;
     for (size_t g = 0; g < gltf_.size(); g++)
     {
-        gltf::Asset* gltf = &gltf_[g].get();
+        fgltf::Asset* gltf = &gltf_[g].get();
         TSTexIdx first_tex = first_tex_[g];
         TSMaterialIdx first_material = first_material_[g];
         TSMeshIdx first_mesh = first_mesh_[g];
@@ -221,12 +221,12 @@ void fi::ResDetails::lock_and_load()
                 auto draw_call_iter = draw_calls_.begin() + first_prim;
                 for (TSMeshIdx m_g(0); m_g < gltf->meshes.size(); m_g++)
                 {
-                    for (const gltf::Primitive& prim : gltf->meshes[m_g].primitives)
+                    for (const fgltf::Primitive& prim : gltf->meshes[m_g].primitives)
                     {
                         const auto& accessor = gltf->accessors[prim.indicesAccessor.value()];
-                        fastgltf::iterateAccessorWithIndex<uint32_t>(
-                            *gltf, accessor, //
-                            [&](uint32_t idx, size_t iter) { idxs_[draw_call_iter->firstIndex + iter] = idx; });
+                        fgltf::iterateAccessorWithIndex<uint32_t>(*gltf, accessor, //
+                                                                  [&](uint32_t idx, size_t iter)
+                                                                  { idxs_[draw_call_iter->firstIndex + iter] = idx; });
                         draw_call_iter++;
                     }
                 }
@@ -238,12 +238,12 @@ void fi::ResDetails::lock_and_load()
                 auto prim_info = primitives_.begin() + first_prim;
                 for (TSMeshIdx m_g(0); m_g < gltf->meshes.size(); m_g++)
                 {
-                    for (const gltf::Primitive& prim : gltf->meshes[m_g].primitives)
+                    for (const fgltf::Primitive& prim : gltf->meshes[m_g].primitives)
                     {
-                        const gltf::Accessor& pos_acc = gltf->accessors[prim.findAttribute("POSITION")->accessorIndex];
-                        fastgltf::iterateAccessorWithIndex<gltf::math::fvec3>(
+                        const fgltf::Accessor& pos_acc = gltf->accessors[prim.findAttribute("POSITION")->accessorIndex];
+                        fgltf::iterateAccessorWithIndex<fgltf::math::fvec3>(
                             *gltf, pos_acc, //
-                            [&](const gltf::math::fvec3& position, size_t iter)
+                            [&](const fgltf::math::fvec3& position, size_t iter)
                             { glms::assign_value(vtx_positions_[prim_info->first_position_ / 3 + iter], position); });
                         prim_info++;
                     }
@@ -256,15 +256,15 @@ void fi::ResDetails::lock_and_load()
                 auto prim_info = primitives_.begin() + first_prim;
                 for (TSMeshIdx m_g(0); m_g < gltf->meshes.size(); m_g++)
                 {
-                    for (const gltf::Primitive& prim : gltf->meshes[m_g].primitives)
+                    for (const fgltf::Primitive& prim : gltf->meshes[m_g].primitives)
                     {
-                        const fastgltf::Attribute* normals_attrib = prim.findAttribute("NORMAL");
+                        const fgltf::Attribute* normals_attrib = prim.findAttribute("NORMAL");
                         if (normals_attrib != prim.attributes.end())
                         {
-                            const gltf::Accessor& acc = gltf->accessors[normals_attrib->accessorIndex];
-                            fastgltf::iterateAccessorWithIndex<gltf::math::fvec3>(
+                            const fgltf::Accessor& acc = gltf->accessors[normals_attrib->accessorIndex];
+                            fgltf::iterateAccessorWithIndex<fgltf::math::fvec3>(
                                 *gltf, acc, //
-                                [&](const gltf::math::fvec3& normal, size_t iter)
+                                [&](const fgltf::math::fvec3& normal, size_t iter)
                                 { glms::assign_value(vtx_normals_[prim_info->first_normal_ / 3 + iter], normal); });
                         }
                         prim_info++;
@@ -278,15 +278,15 @@ void fi::ResDetails::lock_and_load()
                 auto prim_info = primitives_.begin() + first_prim;
                 for (TSMeshIdx m_g(0); m_g < gltf->meshes.size(); m_g++)
                 {
-                    for (const gltf::Primitive& prim : gltf->meshes[m_g].primitives)
+                    for (const fgltf::Primitive& prim : gltf->meshes[m_g].primitives)
                     {
-                        const fastgltf::Attribute* tangents_attrib = prim.findAttribute("TANGENT");
+                        const fgltf::Attribute* tangents_attrib = prim.findAttribute("TANGENT");
                         if (tangents_attrib != prim.attributes.end())
                         {
-                            const gltf::Accessor& acc = gltf->accessors[tangents_attrib->accessorIndex];
-                            fastgltf::iterateAccessorWithIndex<gltf::math::fvec4>(
+                            const fgltf::Accessor& acc = gltf->accessors[tangents_attrib->accessorIndex];
+                            fgltf::iterateAccessorWithIndex<fgltf::math::fvec4>(
                                 *gltf, acc, //
-                                [&](const gltf::math::fvec4& tangent, size_t iter)
+                                [&](const fgltf::math::fvec4& tangent, size_t iter)
                                 { glms::assign_value(vtx_tangents_[prim_info->first_tangent_ / 4 + iter], tangent); });
                         }
                         prim_info++;
@@ -300,15 +300,15 @@ void fi::ResDetails::lock_and_load()
                 auto prim_info = primitives_.begin() + first_prim;
                 for (TSMeshIdx m_g(0); m_g < gltf->meshes.size(); m_g++)
                 {
-                    for (const gltf::Primitive& prim : gltf->meshes[m_g].primitives)
+                    for (const fgltf::Primitive& prim : gltf->meshes[m_g].primitives)
                     {
-                        const fastgltf::Attribute* texcoord_attrib = prim.findAttribute("TEXCOORD_0");
+                        const fgltf::Attribute* texcoord_attrib = prim.findAttribute("TEXCOORD_0");
                         if (texcoord_attrib != prim.attributes.end())
                         {
-                            const gltf::Accessor& acc = gltf->accessors[texcoord_attrib->accessorIndex];
-                            fastgltf::iterateAccessorWithIndex<gltf::math::fvec2>(
+                            const fgltf::Accessor& acc = gltf->accessors[texcoord_attrib->accessorIndex];
+                            fgltf::iterateAccessorWithIndex<fgltf::math::fvec2>(
                                 *gltf, acc, //
-                                [&](const gltf::math::fvec2& tex_coord, size_t iter) {
+                                [&](const fgltf::math::fvec2& tex_coord, size_t iter) {
                                     glms::assign_value(vtx_texcoords_[prim_info->first_texcoord_ / 2 + iter],
                                                        tex_coord);
                                 });
@@ -324,15 +324,15 @@ void fi::ResDetails::lock_and_load()
                 auto prim_info = primitives_.begin() + first_prim;
                 for (TSMeshIdx m_g(0); m_g < gltf->meshes.size(); m_g++)
                 {
-                    for (const gltf::Primitive& prim : gltf->meshes[m_g].primitives)
+                    for (const fgltf::Primitive& prim : gltf->meshes[m_g].primitives)
                     {
-                        const fastgltf::Attribute* colors_attrib = prim.findAttribute("COLOR_0");
+                        const fgltf::Attribute* colors_attrib = prim.findAttribute("COLOR_0");
                         if (colors_attrib != prim.attributes.end())
                         {
-                            const gltf::Accessor& acc = gltf->accessors[colors_attrib->accessorIndex];
-                            fastgltf::iterateAccessorWithIndex<gltf::math::fvec4>(
+                            const fgltf::Accessor& acc = gltf->accessors[colors_attrib->accessorIndex];
+                            fgltf::iterateAccessorWithIndex<fgltf::math::fvec4>(
                                 *gltf, acc, //
-                                [&](const gltf::math::fvec4& color, size_t iter)
+                                [&](const fgltf::math::fvec4& color, size_t iter)
                                 { glms::assign_value(vtx_colors_[prim_info->first_color_ / 4 + iter], color); });
                         }
                         prim_info++;
@@ -346,15 +346,15 @@ void fi::ResDetails::lock_and_load()
                 auto prim_info = primitives_.begin() + first_prim;
                 for (TSMeshIdx m_g(0); m_g < gltf->meshes.size(); m_g++)
                 {
-                    for (const gltf::Primitive& prim : gltf->meshes[m_g].primitives)
+                    for (const fgltf::Primitive& prim : gltf->meshes[m_g].primitives)
                     {
-                        const fastgltf::Attribute* joints_attrib = prim.findAttribute("JOINTS_0");
+                        const fgltf::Attribute* joints_attrib = prim.findAttribute("JOINTS_0");
                         if (joints_attrib != prim.attributes.end())
                         {
-                            const gltf::Accessor& acc = gltf->accessors[joints_attrib->accessorIndex];
-                            fastgltf::iterateAccessorWithIndex<gltf::math::uvec4>(
+                            const fgltf::Accessor& acc = gltf->accessors[joints_attrib->accessorIndex];
+                            fgltf::iterateAccessorWithIndex<fgltf::math::uvec4>(
                                 *gltf, acc, //
-                                [&](const gltf::math::uvec4& joints, size_t iter)
+                                [&](const fgltf::math::uvec4& joints, size_t iter)
                                 { glms::assign_value(vtx_joints_[prim_info->first_joint_ / 4 + iter], joints); });
                         }
                         prim_info++;
@@ -368,15 +368,15 @@ void fi::ResDetails::lock_and_load()
                 auto prim_info = primitives_.begin() + first_prim;
                 for (TSMeshIdx m_g(0); m_g < gltf->meshes.size(); m_g++)
                 {
-                    for (const gltf::Primitive& prim : gltf->meshes[m_g].primitives)
+                    for (const fgltf::Primitive& prim : gltf->meshes[m_g].primitives)
                     {
-                        const fastgltf::Attribute* weights_attrib = prim.findAttribute("WEIGHTS_0");
+                        const fgltf::Attribute* weights_attrib = prim.findAttribute("WEIGHTS_0");
                         if (weights_attrib != prim.attributes.end())
                         {
-                            const gltf::Accessor& acc = gltf->accessors[weights_attrib->accessorIndex];
-                            fastgltf::iterateAccessorWithIndex<gltf::math::fvec4>(
+                            const fgltf::Accessor& acc = gltf->accessors[weights_attrib->accessorIndex];
+                            fgltf::iterateAccessorWithIndex<fgltf::math::fvec4>(
                                 *gltf, acc, //
-                                [&](const gltf::math::fvec4& weights, size_t iter)
+                                [&](const fgltf::math::fvec4& weights, size_t iter)
                                 { glms::assign_value(vtx_weights_[prim_info->first_weight_ / 4 + iter], weights); });
                         }
                         prim_info++;
@@ -390,8 +390,8 @@ void fi::ResDetails::lock_and_load()
                 for (MaterialIdx m(0); m < gltf->materials.size(); m++)
                 {
                     MaterialInfo& material = materials_[first_material + m];
-                    const gltf::Material& mat_in = gltf->materials[m];
-                    const gltf::PBRData& pbr = mat_in.pbrData;
+                    const fgltf::Material& mat_in = gltf->materials[m];
+                    const fgltf::PBRData& pbr = mat_in.pbrData;
 
                     glms::assign_value(material.color_factor_, pbr.baseColorFactor);
                     material.metalic_factor_ = pbr.metallicFactor;
@@ -414,17 +414,17 @@ void fi::ResDetails::lock_and_load()
 
                     switch (mat_in.alphaMode)
                     {
-                        case gltf::AlphaMode::Opaque:
+                        case fgltf::AlphaMode::Opaque:
                         {
                             material.alpha_cutoff_ = 0;
                             break;
                         }
-                        case gltf::AlphaMode::Blend:
+                        case fgltf::AlphaMode::Blend:
                         {
                             material.alpha_cutoff_ = -1;
                             break;
                         }
-                        case gltf::AlphaMode::Mask:
+                        case fgltf::AlphaMode::Mask:
                         {
                             material.alpha_cutoff_ = mat_in.alphaCutoff;
                             break;
@@ -475,7 +475,7 @@ void fi::ResDetails::lock_and_load()
                 auto prim_info = primitives_.begin() + first_prim;
                 for (TSMeshIdx m_g(0); m_g < gltf->meshes.size(); m_g++)
                 {
-                    for (const gltf::Primitive& prim : gltf->meshes[m_g].primitives)
+                    for (const fgltf::Primitive& prim : gltf->meshes[m_g].primitives)
                     {
                         size_t target_idx = 0;
                         for (const auto& target : prim.targets)
@@ -485,20 +485,20 @@ void fi::ResDetails::lock_and_load()
                                 if (attrib.name == "POSITION")
                                 {
                                     MorphTargetInfo& morph_info = morph_targets_[prim_info->morph_target_];
-                                    const gltf::Accessor& acc = gltf->accessors[attrib.accessorIndex];
-                                    fastgltf::iterateAccessorWithIndex<gltf::math::fvec3>(
+                                    const fgltf::Accessor& acc = gltf->accessors[attrib.accessorIndex];
+                                    fgltf::iterateAccessorWithIndex<fgltf::math::fvec3>(
                                         *gltf, acc, //
-                                        [&](const gltf::math::fvec3& position, size_t iter)
+                                        [&](const fgltf::math::fvec3& position, size_t iter)
                                         {
                                             size_t pos_idx = morph_info.first_position_ / 3            //
                                                              + morph_info.position_morph_count_ * iter //
                                                              + target_idx;
                                             glms::assign_value(target_positions_[pos_idx], position);
                                         });
-                                    target_idx++;
                                     break;
                                 }
                             }
+                            target_idx++;
                         }
                         prim_info++;
                     }
@@ -511,7 +511,7 @@ void fi::ResDetails::lock_and_load()
                 auto prim_info = primitives_.begin() + first_prim;
                 for (TSMeshIdx m_g(0); m_g < gltf->meshes.size(); m_g++)
                 {
-                    for (const gltf::Primitive& prim : gltf->meshes[m_g].primitives)
+                    for (const fgltf::Primitive& prim : gltf->meshes[m_g].primitives)
                     {
                         size_t target_idx = 0;
                         for (const auto& target : prim.targets)
@@ -521,20 +521,20 @@ void fi::ResDetails::lock_and_load()
                                 if (attrib.name == "NORMAL")
                                 {
                                     MorphTargetInfo& morph_info = morph_targets_[prim_info->morph_target_];
-                                    const gltf::Accessor& acc = gltf->accessors[attrib.accessorIndex];
-                                    fastgltf::iterateAccessorWithIndex<gltf::math::fvec3>(
+                                    const fgltf::Accessor& acc = gltf->accessors[attrib.accessorIndex];
+                                    fgltf::iterateAccessorWithIndex<fgltf::math::fvec3>(
                                         *gltf, acc, //
-                                        [&](const gltf::math::fvec3& normal, size_t iter)
+                                        [&](const fgltf::math::fvec3& normal, size_t iter)
                                         {
                                             size_t normal_idx = morph_info.first_normal_ / 3            //
                                                                 + morph_info.normal_morph_count_ * iter //
                                                                 + target_idx;
                                             glms::assign_value(target_normals_[normal_idx], normal);
                                         });
-                                    target_idx++;
                                     break;
                                 }
                             }
+                            target_idx++;
                         }
                         prim_info++;
                     }
@@ -547,7 +547,7 @@ void fi::ResDetails::lock_and_load()
                 auto prim_info = primitives_.begin() + first_prim;
                 for (TSMeshIdx m_g(0); m_g < gltf->meshes.size(); m_g++)
                 {
-                    for (const gltf::Primitive& prim : gltf->meshes[m_g].primitives)
+                    for (const fgltf::Primitive& prim : gltf->meshes[m_g].primitives)
                     {
                         size_t target_idx = 0;
                         for (const auto& target : prim.targets)
@@ -557,20 +557,20 @@ void fi::ResDetails::lock_and_load()
                                 if (attrib.name == "TANGENT")
                                 {
                                     MorphTargetInfo& morph_info = morph_targets_[prim_info->morph_target_];
-                                    const gltf::Accessor& acc = gltf->accessors[attrib.accessorIndex];
-                                    fastgltf::iterateAccessorWithIndex<gltf::math::fvec4>(
+                                    const fgltf::Accessor& acc = gltf->accessors[attrib.accessorIndex];
+                                    fgltf::iterateAccessorWithIndex<fgltf::math::fvec4>(
                                         *gltf, acc, //
-                                        [&](const gltf::math::fvec4& tangent, size_t iter)
+                                        [&](const fgltf::math::fvec4& tangent, size_t iter)
                                         {
                                             size_t tangent_idx = morph_info.first_tangent_ / 4            //
                                                                  + morph_info.tangent_morph_count_ * iter //
                                                                  + target_idx;
                                             glms::assign_value(target_tangents_[tangent_idx], tangent);
                                         });
-                                    target_idx++;
                                     break;
                                 }
                             }
+                            target_idx++;
                         }
                         prim_info++;
                     }
@@ -582,7 +582,7 @@ void fi::ResDetails::lock_and_load()
     std::mutex queue_lock;
     for (size_t g = 0; g < gltf_.size(); g++)
     {
-        gltf::Asset* gltf = &gltf_[g].get();
+        fgltf::Asset* gltf = &gltf_[g].get();
         TSTexIdx first_tex = first_tex_[g];
         TSSamplerIdx first_sampler = first_sampler_[g];
 
@@ -596,14 +596,14 @@ void fi::ResDetails::lock_and_load()
                 Fence upload_completed;
                 device().resetFences(upload_completed);
 
-                auto extract_mipmaped = [](gltf::Filter filter)
+                auto extract_mipmaped = [](fgltf::Filter filter)
                 {
                     switch (filter)
                     {
-                        case gltf::Filter::NearestMipMapNearest:
-                        case gltf::Filter::LinearMipMapNearest:
-                        case gltf::Filter::NearestMipMapLinear:
-                        case gltf::Filter::LinearMipMapLinear:
+                        case fgltf::Filter::NearestMipMapNearest:
+                        case fgltf::Filter::LinearMipMapNearest:
+                        case fgltf::Filter::NearestMipMapLinear:
+                        case fgltf::Filter::LinearMipMapLinear:
                             return true;
                         default:
                             return false;
@@ -612,53 +612,53 @@ void fi::ResDetails::lock_and_load()
 
                 for (TSSamplerIdx s_g(0); s_g < gltf->samplers.size(); s_g++)
                 {
-                    auto extract_filter = [](gltf::Filter filter)
+                    auto extract_filter = [](fgltf::Filter filter)
                     {
                         switch (filter)
                         {
-                            case gltf::Filter::Nearest:
-                            case gltf::Filter::NearestMipMapNearest:
-                            case gltf::Filter::NearestMipMapLinear:
+                            case fgltf::Filter::Nearest:
+                            case fgltf::Filter::NearestMipMapNearest:
+                            case fgltf::Filter::NearestMipMapLinear:
                                 return vk::Filter::eNearest;
 
-                            case gltf::Filter::Linear:
-                            case gltf::Filter::LinearMipMapNearest:
-                            case gltf::Filter::LinearMipMapLinear:
+                            case fgltf::Filter::Linear:
+                            case fgltf::Filter::LinearMipMapNearest:
+                            case fgltf::Filter::LinearMipMapLinear:
                             default:
                                 return vk::Filter::eLinear;
                         }
                     };
 
-                    auto extract_mipmap_mode = [](gltf::Filter filter)
+                    auto extract_mipmap_mode = [](fgltf::Filter filter)
                     {
                         switch (filter)
                         {
-                            case gltf::Filter::NearestMipMapNearest:
-                            case gltf::Filter::LinearMipMapNearest:
+                            case fgltf::Filter::NearestMipMapNearest:
+                            case fgltf::Filter::LinearMipMapNearest:
                                 return vk::SamplerMipmapMode::eNearest;
 
-                            case gltf::Filter::NearestMipMapLinear:
-                            case gltf::Filter::LinearMipMapLinear:
+                            case fgltf::Filter::NearestMipMapLinear:
+                            case fgltf::Filter::LinearMipMapLinear:
                             default:
                                 return vk::SamplerMipmapMode::eLinear;
                         }
                     };
 
-                    auto extract_wrapping = [](gltf::Wrap wrap)
+                    auto extract_wrapping = [](fgltf::Wrap wrap)
                     {
                         switch (wrap)
                         {
-                            case gltf::Wrap::ClampToEdge:
+                            case fgltf::Wrap::ClampToEdge:
                                 return vk::SamplerAddressMode::eClampToEdge;
-                            case gltf::Wrap::MirroredRepeat:
+                            case fgltf::Wrap::MirroredRepeat:
                                 return vk::SamplerAddressMode::eMirroredRepeat;
                             default:
-                            case gltf::Wrap::Repeat:
+                            case fgltf::Wrap::Repeat:
                                 return vk::SamplerAddressMode::eRepeat;
                         }
                     };
 
-                    const gltf::Sampler& sampler = gltf->samplers[s_g];
+                    const fgltf::Sampler& sampler = gltf->samplers[s_g];
                     TSSamplerIdx s(first_sampler + s_g);
                     vk::SamplerCreateInfo sampler_info{};
                     sampler_info.anisotropyEnable = true;
@@ -666,10 +666,10 @@ void fi::ResDetails::lock_and_load()
                     sampler_info.addressModeU = extract_wrapping(sampler.wrapS);
                     sampler_info.addressModeV = extract_wrapping(sampler.wrapT);
                     sampler_info.addressModeW = vk::SamplerAddressMode::eRepeat;
-                    sampler_info.mipmapMode = extract_mipmap_mode(sampler.minFilter.value_or(gltf::Filter::Linear));
-                    sampler_info.minFilter = extract_filter(sampler.minFilter.value_or(gltf::Filter::Linear));
-                    sampler_info.magFilter = extract_filter(sampler.magFilter.value_or(gltf::Filter::Linear));
-                    sampler_info.maxLod = extract_mipmaped(sampler.minFilter.value_or(gltf::Filter::Linear)) //
+                    sampler_info.mipmapMode = extract_mipmap_mode(sampler.minFilter.value_or(fgltf::Filter::Linear));
+                    sampler_info.minFilter = extract_filter(sampler.minFilter.value_or(fgltf::Filter::Linear));
+                    sampler_info.magFilter = extract_filter(sampler.magFilter.value_or(fgltf::Filter::Linear));
+                    sampler_info.maxLod = extract_mipmaped(sampler.minFilter.value_or(fgltf::Filter::Linear)) //
                                               ? VK_LOD_CLAMP_NONE
                                               : 0;
                     samplers_[s] = device().createSampler(sampler_info);
@@ -677,9 +677,10 @@ void fi::ResDetails::lock_and_load()
 
                 for (TSTexIdx t_g(0); t_g < gltf->textures.size(); t_g++)
                 {
-                    const gltf::Image& img_g = gltf->images[gltf->textures[t_g].imageIndex.value()];
-                    const gltf::BufferView& img_bufer_view = gltf->bufferViews[std::get<1>(img_g.data).bufferViewIndex];
-                    const gltf::Buffer& img_bufer = gltf->buffers[img_bufer_view.bufferIndex];
+                    const fgltf::Image& img_g = gltf->images[gltf->textures[t_g].imageIndex.value()];
+                    const fgltf::BufferView& img_bufer_view =
+                        gltf->bufferViews[std::get<1>(img_g.data).bufferViewIndex];
+                    const fgltf::Buffer& img_bufer = gltf->buffers[img_bufer_view.bufferIndex];
 
                     int w = 0, h = 0, c = 0;
                     stbi_uc* pixels = stbi_load_from_memory(
@@ -690,7 +691,7 @@ void fi::ResDetails::lock_and_load()
                     size_t img_size = w * h * 4;
 
                     bool mip_mapping = extract_mipmaped(gltf->samplers[gltf->textures[t_g].samplerIndex.value_or(0)] //
-                                                            .minFilter.value_or(gltf::Filter::Linear));
+                                                            .minFilter.value_or(fgltf::Filter::Linear));
                     uint32_t levels = mip_mapping ? std::floor(std::log2(std::max(w, h))) + 1 : 1;
 
                     TSTexIdx tex(first_tex + t_g);

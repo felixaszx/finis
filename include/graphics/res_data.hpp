@@ -35,6 +35,12 @@ namespace fi
         inline void operator-=(const uint32_t& offset) { idx_ -= offset; }
         inline uint32_t operator+(const uint32_t& offset) const { return idx_ + offset; }
         inline uint32_t operator-(const uint32_t& offset) const { return idx_ - offset; }
+        inline void operator+=(const size_t& offset) { idx_ += offset; }
+        inline void operator-=(const size_t& offset) { idx_ -= offset; }
+        inline uint32_t operator+(const size_t& offset) const { return idx_ + offset; }
+        inline uint32_t operator-(const size_t& offset) const { return idx_ - offset; }
+        inline bool operator==(const size_t& cmp) const { return idx_ == cmp; }
+        inline bool operator==(const uint32_t& cmp) const { return idx_ == cmp; }
     };
 
     class TSIdxIdx : public TSIdx

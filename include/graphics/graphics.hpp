@@ -33,7 +33,7 @@
 
 namespace fi
 {
-    namespace gltf = fastgltf;
+    namespace fgltf = fastgltf;
 
     struct Graphics;
     class GraphicsObject

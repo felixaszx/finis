@@ -21,6 +21,7 @@ namespace fi
         };
 
       private:
+
         // helpers
         size_t old_node_count_ = 0;
         std::vector<TSNodeIdx> first_node_{};
@@ -28,8 +29,6 @@ namespace fi
         // storages
         std::vector<TSNodeIdx> node_mappings_{};
         std::vector<NodeInfo> nodes_{};
-        std::vector<NodeTransform> transforms_{}; // binding 0
-        std::vector<float> target_weights_{};     // binding 1
 
         struct BufferOffsets
         {
@@ -42,6 +41,9 @@ namespace fi
         vk::DescriptorSetLayout set_layout_{};
         vk::DescriptorSet des_set_{};
         std::unique_ptr<Buffer<BufferOffsets, storage, seq_write, host_coherent>> buffer_;
+
+        std::vector<NodeTransform> transforms_{}; // binding 0
+        std::vector<float> morph_weight_{};       // binding 1
 
         ResStructure(ResDetails& res_details);
         ~ResStructure();

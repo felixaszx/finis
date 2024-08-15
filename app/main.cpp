@@ -6,6 +6,7 @@
 #include "graphics/swapchain.hpp"
 #include "graphics/res_loader.hpp"
 #include "graphics/res_structure.hpp"
+#include "graphics/res_anim.hpp"
 #include "fltk/fl_ext.hpp"
 
 #include "test_pipeline.cpp"
@@ -28,10 +29,11 @@ int main(int argc, char** argv)
     sc.create();
 
     ResDetails test_res;
-    test_res.add_gltf_file("res/models/sparta.glb");
+    test_res.add_gltf_file("res/models/MorphStressTest.glb");
     ResStructure test_structure(test_res);
-    test_res.lock_and_load();
+    std::vector<ResAnimation> test_anim = get_res_animations(test_res, test_structure, 0);
 
+    test_res.lock_and_load();
     std::vector<vk::DescriptorPoolSize> combined_pool_sizes;
     combined_pool_sizes.insert(combined_pool_sizes.end(), //
                                test_res.des_sizes_.begin(), test_res.des_sizes_.end());
@@ -98,6 +100,9 @@ int main(int argc, char** argv)
         color_infos[2].imageView = sc.views_[img_idx];
 
         CpuClock::Second curr_time = clock.get_elapsed();
+        test_anim[0].set_keyframe(curr_time);
+        test_structure.update_structure();
+
         float delta_time = curr_time - prev_time;
         prev_time = curr_time;
         glm::vec3 camera_front = glm::normalize(glm::vec3{std::cos(yaw) * std::cos(pitch), //

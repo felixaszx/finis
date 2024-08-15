@@ -80,6 +80,7 @@ layout(std430, set = 0, binding = 9) readonly buffer _TARGET_TANGENT
 {
     float TARGET_TANGENT[];
 };
+// binding 10 is draw call
 layout(std430, set = 0, binding = 11) readonly buffer _MESHES
 {
     MeshInfo MESHES[];
@@ -98,13 +99,13 @@ layout(std430, set = 1, binding = 0) readonly buffer _NODE_TRANSFORMS
 {
     mat4 NODE_TRANSFORMS[];
 };
-layout(std430, set = 1, binding = 1) readonly buffer _TARGET_WEIGHTS
+layout(std430, set = 1, binding = 1) readonly buffer _MORPH_WEIGHT
 {
-    float TARGET_WEIGHTS[];
+    float MORPH_WEIGHT[];
 };
 
 // out put
-layout(location = 0) out struct1
+layout(location = 0) out struct
 {
     vec4 position_;
     vec3 normal_;
@@ -112,8 +113,7 @@ layout(location = 0) out struct1
     vec3 bitangent_;
     vec2 tex_coord_;
     vec4 color_;
-}
-FRAG_DATA;
+} FRAG_DATA;
 layout(location = 6) out flat int PRIM_IDX;
 
 layout(push_constant) uniform PUSHES_
@@ -124,6 +124,10 @@ layout(push_constant) uniform PUSHES_
 }
 PUSHES;
 
+#define GET_VEC2(arr, offset) vec2(arr[offset + 0], arr[offset + 1])
+#define GET_VEC3(arr, offset) vec3(arr[offset + 0], arr[offset + 1], arr[offset + 2])
+#define GET_VEC4(arr, offset) vec4(arr[offset + 0], arr[offset + 1], arr[offset + 2], arr[offset + 3])
+
 void main()
 {
     PRIM_IDX = gl_DrawIDARB;
@@ -132,9 +136,7 @@ void main()
     MorphTargetInfo morph_info = MORPH_TARGETS[prim_info.morph_target_];
 
     // pull vtx datas
-    vec3 position = {POSITION[prim_info.first_position_ + gl_VertexIndex * 3 + 0], //
-                     POSITION[prim_info.first_position_ + gl_VertexIndex * 3 + 1], //
-                     POSITION[prim_info.first_position_ + gl_VertexIndex * 3 + 2]};
+    vec3 position = GET_VEC3(POSITION, prim_info.first_position_ + gl_VertexIndex * 3);
     vec3 normal = {0, 0, 0};
     vec4 tangent = {0, 0, 0, 1};
     vec2 texcoord = {0, 0};
@@ -142,28 +144,19 @@ void main()
     {
         if (prim_info.first_normal_ != EMPTY)
         {
-            normal = vec3(NORMAL[prim_info.first_normal_ + gl_VertexIndex * 3 + 0],
-                          NORMAL[prim_info.first_normal_ + gl_VertexIndex * 3 + 1],
-                          NORMAL[prim_info.first_normal_ + gl_VertexIndex * 3 + 2]);
+            normal = GET_VEC3(NORMAL, prim_info.first_normal_ + gl_VertexIndex * 3);
         }
         if (prim_info.first_tangent_ != EMPTY)
         {
-            tangent = vec4(TANGENT[prim_info.first_tangent_ + gl_VertexIndex * 4 + 0],
-                           TANGENT[prim_info.first_tangent_ + gl_VertexIndex * 4 + 1],
-                           TANGENT[prim_info.first_tangent_ + gl_VertexIndex * 4 + 2],
-                           TANGENT[prim_info.first_tangent_ + gl_VertexIndex * 4 + 3]);
+            tangent = GET_VEC4(TANGENT, prim_info.first_tangent_ + gl_VertexIndex * 4);
         }
         if (prim_info.first_texcoord_ != EMPTY)
         {
-            texcoord = vec2(TEXCOORD[prim_info.first_texcoord_ + gl_VertexIndex * 2 + 0],
-                            TEXCOORD[prim_info.first_texcoord_ + gl_VertexIndex * 2 + 1]);
+            texcoord = GET_VEC2(TEXCOORD, prim_info.first_texcoord_ + gl_VertexIndex * 2);
         }
         if (prim_info.first_color_ != EMPTY)
         {
-            color = vec4(COLOR[prim_info.first_color_ + gl_VertexIndex * 4 + 0],
-                         COLOR[prim_info.first_color_ + gl_VertexIndex * 4 + 1],
-                         COLOR[prim_info.first_color_ + gl_VertexIndex * 4 + 2],
-                         COLOR[prim_info.first_color_ + gl_VertexIndex * 4 + 3]);
+            color = GET_VEC4(COLOR, prim_info.first_color_ + gl_VertexIndex * 4);
         }
     }
 
@@ -171,34 +164,12 @@ void main()
     {
         if (morph_info.first_position_ != EMPTY)
         {
+            uint first_morph_idx = morph_info.first_position_ //
+                                   + gl_VertexIndex * 3 * morph_info.position_morph_count_;
             for (int t = 0; t < morph_info.position_morph_count_; t++)
             {
-                position += TARGET_WEIGHTS[mesh_info.morph_weight_ + t]                                       //
-                            * vec3(TARGET_POSITION[prim_info.first_position_ + (gl_VertexIndex + t) * 3 + 0], //
-                                   TARGET_POSITION[prim_info.first_position_ + (gl_VertexIndex + t) * 3 + 1], //
-                                   TARGET_POSITION[prim_info.first_position_ + (gl_VertexIndex + t) * 3 + 2]);
-            }
-        }
-
-        if (morph_info.first_normal_ != EMPTY)
-        {
-            for (int t = 0; t < morph_info.normal_morph_count_; t++)
-            {
-                normal += TARGET_WEIGHTS[mesh_info.morph_weight_ + t]                                   //
-                          * vec3(TARGET_NORMAL[prim_info.first_normal_ + (gl_VertexIndex + t) * 3 + 0], //
-                                 TARGET_NORMAL[prim_info.first_normal_ + (gl_VertexIndex + t) * 3 + 1], //
-                                 TARGET_NORMAL[prim_info.first_normal_ + (gl_VertexIndex + t) * 3 + 2]);
-            }
-        }
-
-        if (morph_info.first_tangent_ != EMPTY)
-        {
-            for (int t = 0; t < morph_info.tangent_morph_count_; t++)
-            {
-                normal += TARGET_WEIGHTS[mesh_info.morph_weight_ + t]                                     //
-                          * vec3(TARGET_TANGENT[prim_info.first_tangent_ + (gl_VertexIndex + t) * 3 + 0], //
-                                 TARGET_TANGENT[prim_info.first_tangent_ + (gl_VertexIndex + t) * 3 + 1], //
-                                 TARGET_TANGENT[prim_info.first_tangent_ + (gl_VertexIndex + t) * 3 + 2]);
+                position += MORPH_WEIGHT[mesh_info.morph_weight_ + t] //
+                            * GET_VEC3(TARGET_POSITION, first_morph_idx + 3 * t);
             }
         }
     }

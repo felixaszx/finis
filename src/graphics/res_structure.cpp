@@ -59,7 +59,7 @@ fi::ResStructure::ResStructure(ResDetails& res_details)
             {
                 for (const auto& node_in : gltf->nodes)
                 {
-                    const gltf::TRS& trs = std::get<0>(node_in.transform);
+                    const fgltf::TRS& trs = std::get<0>(node_in.transform);
                     NodeInfo& node = tmp_nodes.emplace_back();
                     node.self_idx_ = tmp_nodes.size() - 1;
                     node.name_ = node_in.name;
@@ -72,14 +72,14 @@ fi::ResStructure::ResStructure(ResDetails& res_details)
                         MeshInfo& mesh_info = res_details.meshes_[node_in.meshIndex.value() + *first_mesh_iter];
                         mesh_info.node_ = node.self_idx_;
 
-                        const auto& target_weight = gltf->meshes[node_in.meshIndex.value() + *first_mesh_iter].weights;
+                        const auto& target_weight = gltf->meshes[node_in.meshIndex.value()].weights;
                         if (!target_weight.empty())
                         {
-                            mesh_info.morph_weight_ = target_weights_.size();
-                            target_weights_.reserve(target_weights_.size() + target_weight.size());
+                            mesh_info.morph_weight_ = morph_weight_.size();
+                            morph_weight_.reserve(morph_weight_.size() + target_weight.size());
                             for (auto weight : target_weight)
                             {
-                                target_weights_.push_back(weight);
+                                morph_weight_.push_back(weight);
                             }
                         }
                     }
@@ -147,17 +147,17 @@ fi::ResStructure::ResStructure(ResDetails& res_details)
     des_sizes_[0].type = vk::DescriptorType::eStorageBuffer;
     des_sizes_[0].descriptorCount = bindings.size();
 
-    if (target_weights_.empty())
+    if (morph_weight_.empty())
     {
-        target_weights_.resize(4, std::numeric_limits<float>::min());
+        morph_weight_.resize(4, std::numeric_limits<float>::min());
     }
 
-    while (sizeof_arr(target_weights_) % 16)
+    while (sizeof_arr(morph_weight_) % 16)
     {
-        target_weights_.push_back(std::numeric_limits<float>::min());
+        morph_weight_.push_back(std::numeric_limits<float>::min());
     }
 
-    make_unique2(buffer_, sizeof_arr(transforms_) + sizeof_arr(target_weights_));
+    make_unique2(buffer_, sizeof_arr(transforms_) + sizeof_arr(morph_weight_));
     buffer_->target_weights_ = sizeof_arr(transforms_);
     buffer_->map_memory();
     update_structure();
@@ -185,7 +185,7 @@ void fi::ResStructure::update_data(size_t gltf_idx)
                     : range - offset;
     }
     memcpy(buffer_->mapping() + offset, transforms_.data() + offset, range);
-    memcpy(buffer_->mapping() + buffer_->target_weights_, target_weights_.data(), sizeof_arr(target_weights_));
+    memcpy(buffer_->mapping() + buffer_->target_weights_, morph_weight_.data(), sizeof_arr(morph_weight_));
 }
 
 void fi::ResStructure::update_structure(const glm::mat4& transform, size_t gltf_idx)
@@ -224,7 +224,7 @@ void fi::ResStructure::allocate_descriptor(vk::DescriptorPool des_pool)
     buffer_infos[0].range = sizeof_arr(transforms_);
     buffer_infos[1].buffer = *buffer_;
     buffer_infos[1].offset = buffer_->target_weights_;
-    buffer_infos[1].range = sizeof_arr(target_weights_);
+    buffer_infos[1].range = sizeof_arr(morph_weight_);
 
     vk::WriteDescriptorSet write{};
     write.descriptorType = vk::DescriptorType::eStorageBuffer;
