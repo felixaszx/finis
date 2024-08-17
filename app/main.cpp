@@ -29,7 +29,7 @@ int main(int argc, char** argv)
     Swapchain sc;
     sc.create();
 
-    ResDetails test_res; 
+    ResDetails test_res;
     test_res.add_gltf_file("res/models/sparta.glb");
     test_res.add_gltf_file("res/models/sponza.glb");
     ResStructure test_structure(test_res);
@@ -104,18 +104,39 @@ int main(int argc, char** argv)
         auto r = g.device().waitForFences(frame_fence, true, std::numeric_limits<uint64_t>::max());
         uint32_t img_idx = sc.aquire_next_image(next_img);
         g.device().resetFences(frame_fence);
-        color_infos[2].imageView = sc.views_[img_idx];
 
         CpuClock::TimePoint curr_time = clock.get_elapsed();
         test_anim[0].set_keyframe(curr_time);
         test_structure.update_structure();
 
+        float camera_speed = 2;
         float delta_time = (CpuClock::Second)curr_time - prev_time;
         prev_time = curr_time;
         glm::vec3 camera_front = glm::normalize(glm::vec3{std::cos(yaw) * std::cos(pitch), //
                                                           std::sin(pitch),                 //
                                                           std::sin(yaw) * std::cos(pitch)});
         {
+            if (glfwGetKey(g.window(), GLFW_KEY_Q))
+            {
+                delta_time *= 2;
+            }
+            if (glfwGetKey(g.window(), GLFW_KEY_UP) && pitch < 85_dg)
+            {
+                pitch += delta_time * camera_speed * 30.0_dg;
+            }
+            if (glfwGetKey(g.window(), GLFW_KEY_DOWN) && pitch > -85_dg)
+            {
+                pitch -= delta_time * camera_speed * 30.0_dg;
+            }
+            if (glfwGetKey(g.window(), GLFW_KEY_LEFT))
+            {
+                yaw -= delta_time * camera_speed * 30.0_dg;
+            }
+            if (glfwGetKey(g.window(), GLFW_KEY_RIGHT))
+            {
+                yaw += delta_time * camera_speed * 30.0_dg;
+            }
+
             if (glfwGetKey(g.window(), GLFW_KEY_W))
             {
                 camera_pos += camera_front * delta_time;
@@ -139,24 +160,6 @@ int main(int argc, char** argv)
             if (glfwGetKey(g.window(), GLFW_KEY_LEFT_SHIFT))
             {
                 camera_pos.y -= delta_time;
-            }
-
-            float camera_speed = 2;
-            if (glfwGetKey(g.window(), GLFW_KEY_UP))
-            {
-                pitch += delta_time * camera_speed * 30.0_dg;
-            }
-            if (glfwGetKey(g.window(), GLFW_KEY_DOWN))
-            {
-                pitch -= delta_time * camera_speed * 30.0_dg;
-            }
-            if (glfwGetKey(g.window(), GLFW_KEY_LEFT))
-            {
-                yaw -= delta_time * camera_speed * 30.0_dg;
-            }
-            if (glfwGetKey(g.window(), GLFW_KEY_RIGHT))
-            {
-                yaw += delta_time * camera_speed * 30.0_dg;
             }
         }
         push.view = glm::lookAt(camera_pos, camera_pos + camera_front, glm::vec3(0, 1, 0));
