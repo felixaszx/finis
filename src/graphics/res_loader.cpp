@@ -220,20 +220,6 @@ void fi::ResDetails::lock_and_load()
 
     draw_call_count_ = draw_calls_.size();
 
-    if (draw_calls_.size() % SUB_GROUP_SIZE_)
-    {
-        draw_calls_.resize(draw_calls_.size()                                            //
-                               + SUB_GROUP_SIZE_ - draw_calls_.size() % SUB_GROUP_SIZE_, //
-                           vk::DrawIndexedIndirectCommand(-1, -1, -1, -1, -1));
-        primitives_.resize(primitives_.size() //
-                           + SUB_GROUP_SIZE_ - primitives_.size() % SUB_GROUP_SIZE_);
-    }
-
-    if (draw_calls_.size() > SUB_GROUP_SIZE_)
-    {
-        work_group_.x = draw_calls_.size() / SUB_GROUP_SIZE_;
-    }
-
     // threading helpers
     bs::thread_pool th_pool;
 
