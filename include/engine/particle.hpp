@@ -7,17 +7,17 @@
 
 namespace fi
 {
-    struct alignas(16) ParticleInfo
-    {
-    };
-
     class ParticleSystem
     {
       private:
-        PrimIdx prim_idx_;
+        std::vector<glm::vec3> positios_{};
+        std::vector<glm::vec3> velocities_{};
+        std::vector<float> alpha_cut_offs_{};
         std::unique_ptr<Buffer<BufferBase::EmptyExtraInfo, vertex, storage>> buffer_{};
 
       public:
+        ParticleSystem(uint32_t max_particles);
+        ~ParticleSystem();
     };
 }; // namespace fi
 

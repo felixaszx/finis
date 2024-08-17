@@ -60,6 +60,7 @@ fi::ResSkinDetails::ResSkinDetails(ResDetails& res_details, ResStructure& res_st
     {
         joints_.resize(4, EMPTY);
         inv_binds_.push_back(glm::zero<glm::mat4>());
+        int* a = new int;
     }
 
     while (sizeof_arr(joints_) % 16)

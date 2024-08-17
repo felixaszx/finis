@@ -124,9 +124,9 @@ fi::Graphics::Graphics(int width, int height, const std::string& title)
     feature13.dynamicRendering = true;
     feature13.synchronization2 = true;
 
-    vk::PhysicalDeviceFeatures2 feature2{};
-    feature2.setFeatures(feature);
-    feature2.pNext = &feature11;
+    vk::PhysicalDeviceFeatures2 feature_alter{};
+    feature_alter.setFeatures(feature);
+    feature_alter.pNext = &feature11;
     feature11.pNext = &feature12;
     feature12.pNext = &feature13;
 
@@ -134,7 +134,7 @@ fi::Graphics::Graphics(int width, int height, const std::string& title)
     std::vector<const char*> device_layer_names;
 
     vk::DeviceCreateInfo device_create_info{};
-    device_create_info.pNext = &feature2;
+    device_create_info.pNext = &feature_alter;
     device_create_info.setQueueCreateInfos(queue_create_infos);
     device_create_info.setPEnabledExtensionNames(device_ext_names);
     device_create_info.setPEnabledLayerNames(device_layer_names);
