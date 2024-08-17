@@ -9,7 +9,7 @@ The `finis_graphic` sublibrary is a vulkan wrapper completely independent from `
 ### Overview of `finis_graphic`
 - Programmable vertex pulling
     - All vertex attributes supported by `glTF`
-    - Flexibale vertex format (forget about it)
+    - Flexibale vertex format (In 21st centry, we finally get rid of vertex buffer)
 - GPU Driven
     - Using `vk::CommandBuffer::DrawIndexedIndirect`
     - Compute shader ready
