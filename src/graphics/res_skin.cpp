@@ -71,7 +71,7 @@ fi::ResSkinDetails::ResSkinDetails(ResDetails& res_details, ResStructure& res_st
     make_unique2(buffer_, sizeof_arr(joints_) + sizeof_arr(inv_binds_), DST);
     buffer_->inv_binds_ = sizeof_arr(joints_);
 
-    Buffer<BufferBase::EmptyExtraInfo, vertex, seq_write, host_cached> staging(buffer_->size(), SRC);
+    Buffer<BufferBase::EmptyExtraInfo, vertex, seq_write, host_cached, hosted> staging(buffer_->size(), SRC);
     memcpy(staging.map_memory(), joints_.data(), sizeof_arr(joints_));
     memcpy(staging.mapping() + buffer_->inv_binds_, inv_binds_.data(), sizeof_arr(inv_binds_));
     staging.flush_cache();

@@ -935,7 +935,7 @@ void fi::ResDetails::lock_and_load()
     buffer_->primitives_ = buffer_->morph_targets_ + sizeof_arr(morph_targets_) + morph_targets_padding;
     buffer_->materials_ = buffer_->primitives_ + sizeof_arr(primitives_) + primitives_padding;
 
-    Buffer<BufferBase::EmptyExtraInfo, vertex, seq_write, host_cached> staging(buffer_->size(), SRC);
+    Buffer<BufferBase::EmptyExtraInfo, vertex, seq_write, host_cached, hosted> staging(buffer_->size(), SRC);
     staging.map_memory();
     memcpy(staging.mapping() + buffer_->idx_, idxs_.data(), sizeof_arr(idxs_));
     memcpy(staging.mapping() + buffer_->vtx_positions_, vtx_positions_.data(), sizeof_arr(vtx_positions_));
