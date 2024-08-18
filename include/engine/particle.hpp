@@ -25,7 +25,7 @@ namespace fi
         {
             enum Mode : uint32_t
             {
-                TOWORD, // Moving toword the adjustment
+                TOWARD, // Moving toward the adjustment
                 FOLLOW, // Moving follow the adjustment as direction
                 AWAY    // Moving away from the adjustment
             };
@@ -41,26 +41,27 @@ namespace fi
         std::vector<Target> targets_{};     // binding 1
 
       public:
-        // buffer
-        struct BufferOffsetP
+        struct BufferOffsets
         {
-            vk::DeviceSize particles_{};
-            vk::DeviceSize targets_{};
+            vk::DeviceSize targets_ = 0;
+            vk::DeviceSize uniforms_ = 0;
         };
 
-        std::unique_ptr<Buffer<BufferBase::EmptyExtraInfo, vertex, storage>> buffer_{};
+        // buffers
+        std::unique_ptr<Buffer<BufferBase::EmptyExtraInfo, storage>> device_buffer_{};
+        std::unique_ptr<Buffer<BufferOffsets, storage, uniform, host_coherent, seq_write>> host_buffer_{};
 
         // descriptors
         std::array<vk::DescriptorPoolSize, 2> des_sizes_{};
         vk::DescriptorSetLayout set_layout_{};
         vk::DescriptorSet des_set_{};
 
-        ParticleGroup(uint32_t max_particles);
+        ParticleGroup(uint32_t max_particles, uint32_t max_targets = 1);
         ParticleGroup(vk::Buffer positions, vk::DeviceSize offset, vk::DeviceSize range); // in vec3 only
         ~ParticleGroup();
 
         void bind_res(vk::CommandBuffer cmd, vk::PipelineLayout pipeline_layout, uint32_t des_set);
-        void draw(vk::CommandBuffer cmd);
+        void compute(vk::CommandBuffer cmd);
     };
 }; // namespace fi
 

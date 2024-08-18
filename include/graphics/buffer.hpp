@@ -51,7 +51,7 @@ namespace fi
     void hosted(vk::BufferCreateInfo& buffer_info, vma::AllocationCreateInfo& alloc_info);
     void host_coherent(vk::BufferCreateInfo& buffer_info, vma::AllocationCreateInfo& alloc_info);
     void host_cached(vk::BufferCreateInfo& buffer_info, vma::AllocationCreateInfo& alloc_info);
-    void device_adress(vk::BufferCreateInfo& buffer_info, vma::AllocationCreateInfo& alloc_info);
+    void device_address(vk::BufferCreateInfo& buffer_info, vma::AllocationCreateInfo& alloc_info);
 
     enum Transfer : uint32_t
     {

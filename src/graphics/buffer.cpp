@@ -113,7 +113,7 @@ void fi::host_cached(vk::BufferCreateInfo& buffer_info, vma::AllocationCreateInf
     alloc_info.preferredFlags |= vk::MemoryPropertyFlagBits::eHostCached;
 }
 
-void fi::device_adress(vk::BufferCreateInfo& buffer_info, vma::AllocationCreateInfo& alloc_info)
+void fi::device_address(vk::BufferCreateInfo& buffer_info, vma::AllocationCreateInfo& alloc_info)
 {
     buffer_info.usage |= vk::BufferUsageFlagBits::eShaderDeviceAddress;
     vk::DescriptorAddressInfoEXT a;
