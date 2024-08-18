@@ -1,12 +1,12 @@
 /**
  * @file res_structure.hpp
  * @author Felix Xing (felixaszx@outlook.com)
- * @brief 
+ * @brief
  * @version 0.1
  * @date 2024-08-15
- * 
+ *
  * @copyright MIT License Copyright (c) 2024 Felixaszx (Felix Xing)
- * 
+ *
  */
 #ifndef GRAPHICS_RES_STRUCTURE_HPP
 #define GRAPHICS_RES_STRUCTURE_HPP
@@ -31,7 +31,6 @@ namespace fi
         };
 
       private:
-
         // helpers
         size_t old_node_count_ = 0;
         std::vector<TSNodeIdx> first_node_{};
@@ -40,13 +39,13 @@ namespace fi
         std::vector<TSNodeIdx> node_mappings_{};
         std::vector<NodeInfo> nodes_{};
 
+      public:
         struct BufferOffsets
         {
             vk::DeviceSize transforms_ = 0;
             vk::DeviceSize target_weights_ = 0;
         };
 
-      public:
         std::array<vk::DescriptorPoolSize, 1> des_sizes_{};
         vk::DescriptorSetLayout set_layout_{};
         vk::DescriptorSet des_set_{};

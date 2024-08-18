@@ -117,6 +117,7 @@ namespace fi
         using Second = float;
         using DoubleSecond = double;
         using MilliSecond = size_t;
+        using SmallMilliSecond = uint32_t;
 
         struct TimePoint
         {
@@ -127,6 +128,7 @@ namespace fi
             inline operator Second() { return duration_.count() / (Second)1000; };
             inline operator DoubleSecond() { return duration_.count() / (DoubleSecond)1000; };
             inline operator MilliSecond() { return duration_.count(); };
+            inline operator SmallMilliSecond() { return duration_.count(); };
         };
 
       private:
