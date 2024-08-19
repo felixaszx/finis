@@ -76,7 +76,8 @@ namespace fi
         [[nodiscard]] Target& index_target(uint32_t idx) { return targets_[idx]; }
         void bind_res(vk::CommandBuffer cmd, vk::PipelineBindPoint bind_point, //
                       vk::PipelineLayout pipeline_layout, uint32_t des_set);
-        void compute(vk::CommandBuffer cmd, const glm::vec3& work_group);
+        void compute(vk::CommandBuffer cmd);
+        void compute(vk::CommandBuffer cmd, const glm::uvec3& work_group);
     };
 }; // namespace fi
 

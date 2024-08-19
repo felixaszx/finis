@@ -1,12 +1,12 @@
 /**
  * @file graphics.hpp
  * @author Felix Xing (felixaszx@outlook.com)
- * @brief 
+ * @brief
  * @version 0.1
  * @date 2024-08-15
- * 
+ *
  * @copyright MIT License Copyright (c) 2024 Felixaszx (Felix Xing)
- * 
+ *
  */
 #ifndef GRAPHICS_GRAPHICS_HPP
 #define GRAPHICS_GRAPHICS_HPP
@@ -57,6 +57,8 @@ namespace fi
             COMPUTE = 1,
             TRANSFER = 2
         };
+
+        inline static const uint32_t SUB_GROUP_SIZE_ = 64;
 
       private:
         inline static vk::Instance instance_{};

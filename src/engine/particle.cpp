@@ -64,7 +64,14 @@ void fi::ParticleGroup::bind_res(vk::CommandBuffer cmd, vk::PipelineBindPoint bi
     cmd.bindDescriptorSets(bind_point, pipeline_layout, des_set, des_set_, {});
 }
 
-void fi::ParticleGroup::compute(vk::CommandBuffer cmd, const glm::vec3& work_group)
+void fi::ParticleGroup::compute(vk::CommandBuffer cmd)
+{
+    uint32_t size = particles_.size() / SUB_GROUP_SIZE_;
+    size += particles_.size() % SUB_GROUP_SIZE_ ? 0 : 1;
+    dispatch_cmd(cmd, {size, 0, 0});
+}
+
+void fi::ParticleGroup::compute(vk::CommandBuffer cmd, const glm::uvec3& work_group)
 {
     dispatch_cmd(cmd, work_group);
 }

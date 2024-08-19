@@ -85,7 +85,6 @@ namespace fi
             vk::DeviceSize materials_ = 0;     // binding 14
         };
 
-        inline static const uint32_t SUB_GROUP_SIZE_ = 64;
         glm::uvec3 work_group_ = {1, 1, 1};
 
         // helper infos
