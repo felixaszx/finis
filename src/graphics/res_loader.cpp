@@ -983,9 +983,10 @@ void fi::ResDetails::lock_and_load()
     des_sizes_[1].descriptorCount = 15;
 }
 
-void fi::ResDetails::bind_res(vk::CommandBuffer cmd, vk::PipelineLayout pipeline_layout, uint32_t des_set)
+void fi::ResDetails::bind_res(vk::CommandBuffer cmd, vk::PipelineBindPoint bind_point, //
+                      vk::PipelineLayout pipeline_layout, uint32_t des_set)
 {
-    cmd.bindDescriptorSets(vk::PipelineBindPoint::eGraphics, pipeline_layout, des_set, des_set_, {});
+    cmd.bindDescriptorSets(bind_point, pipeline_layout, des_set, des_set_, {});
     cmd.bindIndexBuffer(*buffer_, buffer_->idx_, vk::IndexType::eUint32);
 }
 

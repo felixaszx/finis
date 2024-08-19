@@ -60,7 +60,8 @@ namespace fi
         ParticleGroup(vk::Buffer positions, vk::DeviceSize offset, vk::DeviceSize range); // in vec3 only
         ~ParticleGroup();
 
-        void bind_res(vk::CommandBuffer cmd, vk::PipelineLayout pipeline_layout, uint32_t des_set);
+        void bind_res(vk::CommandBuffer cmd, vk::PipelineBindPoint bind_point, //
+                      vk::PipelineLayout pipeline_layout, uint32_t des_set);
         void compute(vk::CommandBuffer cmd);
     };
 }; // namespace fi

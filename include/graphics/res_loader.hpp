@@ -120,7 +120,8 @@ namespace fi
         void add_gltf_file(const std::filesystem::path& path);
         void lock_and_load();
         void allocate_descriptor(vk::DescriptorPool des_pool);
-        void bind_res(vk::CommandBuffer cmd, vk::PipelineLayout pipeline_layout, uint32_t des_set);
+        void bind_res(vk::CommandBuffer cmd, vk::PipelineBindPoint bind_point, //
+                      vk::PipelineLayout pipeline_layout, uint32_t des_set);
         void draw(vk::CommandBuffer cmd);
         [[nodiscard]] bool locked() const;
     };

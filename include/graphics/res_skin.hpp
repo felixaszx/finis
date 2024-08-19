@@ -51,7 +51,8 @@ namespace fi
         ~ResSkinDetails();
 
         void allocate_descriptor(vk::DescriptorPool des_pool);
-        void bind_res(vk::CommandBuffer cmd, vk::PipelineLayout pipeline_layout, uint32_t set);
+        void bind_res(vk::CommandBuffer cmd, vk::PipelineBindPoint bind_point, //
+                      vk::PipelineLayout pipeline_layout, uint32_t des_set);
     };
 }; // namespace fi
 

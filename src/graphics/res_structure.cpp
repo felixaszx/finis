@@ -1,12 +1,12 @@
 /**
  * @file res_structure.cpp
  * @author Felix Xing (felixaszx@outlook.com)
- * @brief 
+ * @brief
  * @version 0.1
  * @date 2024-08-15
- * 
+ *
  * @copyright MIT License Copyright (c) 2024 Felixaszx (Felix Xing)
- * 
+ *
  */
 #include "graphics/res_structure.hpp"
 
@@ -244,7 +244,8 @@ void fi::ResStructure::allocate_descriptor(vk::DescriptorPool des_pool)
     device().updateDescriptorSets(write, {});
 }
 
-void fi::ResStructure::bind_res(vk::CommandBuffer cmd, vk::PipelineLayout pipeline_layout, uint32_t set)
+void fi::ResStructure::bind_res(vk::CommandBuffer cmd, vk::PipelineBindPoint bind_point, //
+                                vk::PipelineLayout pipeline_layout, uint32_t des_set)
 {
-    cmd.bindDescriptorSets(vk::PipelineBindPoint::eGraphics, pipeline_layout, set, des_set_, {});
+    cmd.bindDescriptorSets(bind_point, pipeline_layout, des_set, des_set_, {});
 }

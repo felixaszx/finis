@@ -184,9 +184,9 @@ int main(int argc, char** argv)
         begin_cmd(cmds[0]);
         cmds[0].beginRendering(rendering);
         cmds[0].bindPipeline(vk::PipelineBindPoint::eGraphics, pso);
-        test_res.bind_res(cmds[0], pso_layout, 0);
-        test_structure.bind_res(cmds[0], pso_layout, 1);
-        test_skins.bind_res(cmds[0], pso_layout, 2);
+        test_res.bind_res(cmds[0], vk::PipelineBindPoint::eGraphics, pso_layout, 0);
+        test_structure.bind_res(cmds[0], vk::PipelineBindPoint::eGraphics, pso_layout, 1);
+        test_skins.bind_res(cmds[0], vk::PipelineBindPoint::eGraphics, pso_layout, 2);
         cmds[0].pushConstants(pso_layout, vk::ShaderStageFlagBits::eVertex, 0, sizeof(push), &push);
         cmds[0].setViewport(0, vk::Viewport(0, 0, 1920, 1080, 0, 1));
         cmds[0].setScissor(0, vk::Rect2D({}, {1920, 1080}));
