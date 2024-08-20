@@ -6,16 +6,28 @@
 #include "tools.hpp"
 #include "graphics/graphics.hpp"
 
+#define ALL_IMAGE_SUBRESOURCES(aspect)                                   \
+    vk::ImageSubresourceRange                                            \
+    {                                                                    \
+        aspect, 0, VK_REMAINING_MIP_LEVELS, 0, VK_REMAINING_ARRAY_LAYERS \
+    }
+
 namespace fi
 {
     // this reander graph only support dynamic rendering
     class RenderGraph : private GraphicsObject
     {
       public:
+        RenderGraph(const RenderGraph&) = delete;
+        RenderGraph(RenderGraph&&) = delete;
+        RenderGraph& operator=(const RenderGraph&) = delete;
+        RenderGraph& operator=(RenderGraph&&) = delete;
+
         using ResIdx = uint32_t;
         using PassIdx = uint32_t;
 
-        struct SyncedRes
+        struct SyncedRes : public vma::Allocation, //
+                           public vk::DeviceMemory
         {
             friend RenderGraph;
 
@@ -24,29 +36,46 @@ namespace fi
             {
                 READ,
                 WRITE,
-                PASS
+                PASS,
+                INITIAL
+            };
+
+            enum Type
+            {
+                BUFFER,
+                IMAGE
             };
 
           protected:
             ResIdx idx_ = -1;
 
           public:
+            vk::DeviceSize allocated_offset_ = 0;
+            vk::DeviceSize allocated_size_ = 0;
             std::vector<PassIdx> history_{};
-            std::vector<Access> access{};
+            std::vector<Access> access_{};
+
+            inline operator bool() noexcept { return casts(vma::Allocation, *this); }
+            Access find_prev_access(PassIdx this_pass);
+            Access find_next_access(PassIdx this_pass);
         };
 
         struct Buffer : public SyncedRes, //
-                        public vk::Buffer,
-                        public vma::Allocation
+                        public vk::Buffer
         {
-            vk::DeviceSize offset_;
-            vk::DeviceSize range_;
+            vk::DeviceSize offset_ = 0;
+            vk::DeviceSize range_ = 0;
+            vk::BufferUsageFlags usage_{};
+
+            bool presistant_mapping_ = false;
         };
 
         struct Image : public SyncedRes, //
-                       public vk::Image,
-                       public vma::Allocation
+                       public vk::Image
         {
+            vk::Extent3D extent_{};
+            vk::ImageType type_{};
+            vk::Format format_{};
             vk::ImageUsageFlags usages_{};
             vk::ImageSubresource sub_res_{};
             std::vector<vk::ImageView> views_{};
@@ -60,21 +89,31 @@ namespace fi
         {
             friend RenderGraph;
 
+            enum Type
+            {
+                GRAPHICS,
+                COMPUTE
+            };
+
           protected:
             PassIdx idx_ = -1;
             RenderGraph* rg_ = nullptr;
 
             Image& add_read_img(ResIdx img_idx, const vk::ImageSubresourceRange& sub_resources);
             Image& add_write_img(ResIdx img_idx, const vk::ImageSubresourceRange& sub_resources);
+            static void set_image_barrier(vk::ImageMemoryBarrier2& barrier,
+                                          vk::ImageLayout old_layout,
+                                          vk::ImageLayout new_layout);
 
           public:
+            vk::DependencyInfo dep_info_{};
+            std::vector<vk::ImageMemoryBarrier2> wait_imgs_{};
+
+            std::set<PassIdx> waiting_{};
             std::set<ResIdx> input_{};
             std::set<ResIdx> output_{};
             std::set<ResIdx> passing_{};
-            std::set<ResIdx> clearing_{};
 
-            void read_buffer(ResIdx buf_idx);
-            void write_buffer(ResIdx buf_idx);
             void read_img(ResIdx img_idx, const vk::ImageSubresourceRange& sub_resources);
             void sample_img(ResIdx img_idx, const vk::ImageSubresourceRange& sub_resources);
             void pass_img(ResIdx img_idx, vk::ImageLayout taget_layout, const vk::ImageSubresourceRange& sub_resources);
@@ -83,7 +122,6 @@ namespace fi
         struct ComputePass : public Pass
         {
             using Setup = std::function<void(ComputePass& pass)>;
-            std::vector<vk::DescriptorImageInfo> des_img_infos_{};
 
             void write_img(ResIdx img_idx, const vk::ImageSubresourceRange& sub_resources);
         };
@@ -100,15 +138,6 @@ namespace fi
                 STENCIL_READ = bit_shift_left(3)
             };
 
-            std::vector<vk::DescriptorImageInfo> des_img_infos_{};
-            std::vector<vk::Format> color_formats_{};
-            vk::Format depth_format_{};
-            vk::Format stencil_format_{};
-
-            std::vector<vk::RenderingAttachmentInfo> color_atchm_infos_{};
-            vk::RenderingAttachmentInfo depth_atchm_info_{};
-            vk::RenderingAttachmentInfo stencil_atchm_info_{};
-
             void clear_img(ResIdx res_idx);
             void write_color_atchm(ResIdx img_idx, const vk::ImageSubresourceRange& sub_resources);
             void set_ds_atchm(ResIdx img_idx, DepthStencilOp operation, const vk::ImageSubresourceRange& sub_resources);
@@ -116,18 +145,35 @@ namespace fi
 
       private:
         std::vector<PassIdx> pass_mapping_{};
+        std::vector<vk::Event> events_{};
+        std::vector<Pass::Type> pass_types_{};
         std::vector<ComputePass> computes_{};
         std::vector<GraphicsPass> graphics_{};
 
         std::vector<ResIdx> res_mapping_{};
+        std::vector<SyncedRes::Type> res_types_{};
         std::vector<Buffer> bufs_{};
         std::vector<Image> imgs_{};
 
+        std::vector<vk::ImageMemoryBarrier2> final_transitions_{};
+        std::vector<vk::ImageMemoryBarrier2> initial_transitions_{};
+        std::vector<std::set<PassIdx>> exc_groups_{};
+
       public:
-        ResIdx register_atchm(vk::ImageSubresource sub_res, vk::ImageUsageFlagBits initial_usage = {});
+        RenderGraph() = default;
+        ~RenderGraph();
+
+        ResIdx register_atchm(vk::ImageSubresource sub_res,
+                              vk::Extent3D extent,
+                              vk::Format format,
+                              vk::ImageType type = vk::ImageType::e2D,
+                              vk::ImageUsageFlagBits initial_usage = {});
         ResIdx register_atchm(vk::Image image, const std::vector<vk::ImageView>& views);
-        ResIdx register_buffer(vk::DeviceSize size);
-        ResIdx register_buffer(vk::Buffer buffer, vk::DeviceSize offset = 0, vk::DeviceSize range = VK_WHOLE_SIZE);
+        ResIdx register_buffer(vk::DeviceSize size, bool presistant_mapping = false);
+        ResIdx register_buffer(vk::Buffer buffer,
+                               vk::DeviceSize offset = 0,
+                               vk::DeviceSize range = VK_WHOLE_SIZE,
+                               bool presistant_mapping = false);
         Buffer& get_buffer_res(ResIdx buf_idx);
         Image& get_image_res(ResIdx img_idx);
 
@@ -135,9 +181,11 @@ namespace fi
         PassIdx register_graphics_pass(const GraphicsPass::Setup& setup_func = {});
         void set_compute_pass(PassIdx compute_pass_idx, const ComputePass::Setup& setup_func);
         void set_graphics_pass(PassIdx graphics_pass_idx, const GraphicsPass::Setup& setup_func);
-        
-        void compile(const vk::Extent2D& render_area_);
-        void excute(const std::vector<std::function<void()>>& funcs); // funcs.size() == passes_.size()
+
+        void allocate_res();
+        void reset();
+        void compile();
+        void excute(vk::CommandBuffer cmd, const std::vector<std::function<void(vk::CommandBuffer cmd)>>& funcs);
     };
 }; // namespace fi
 

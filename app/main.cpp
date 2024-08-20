@@ -29,23 +29,38 @@ int main(int argc, char** argv)
     sc.create();
 
     RenderGraph graph;
-    RenderGraph::ResIdx ds = graph.register_atchm({});
-    RenderGraph::ResIdx a0 = graph.register_atchm({});
-    RenderGraph::ResIdx a1 = graph.register_atchm({});
-    RenderGraph::PassIdx p0 = graph.register_compute_pass();
+    RenderGraph::ResIdx ds = graph.register_atchm({vk::ImageAspectFlagBits::eDepth, 1, 1}, //
+                                                  vk::Extent3D{WIN_HEIGHT, WIN_HEIGHT, 1}, //
+                                                  vk::Format::eD16Unorm);
+    RenderGraph::ResIdx ds1 = graph.register_atchm({vk::ImageAspectFlagBits::eDepth, 1, 1}, //
+                                                   vk::Extent3D{WIN_HEIGHT, WIN_HEIGHT, 1}, //
+                                                   vk::Format::eD16Unorm);
+    RenderGraph::ResIdx a1 = graph.register_atchm({vk::ImageAspectFlagBits::eColor, 1, 1}, //
+                                                  vk::Extent3D{WIN_HEIGHT, WIN_HEIGHT, 1}, //
+                                                  vk::Format::eR32G32B32A32Sfloat);
     RenderGraph::PassIdx p1 = graph.register_graphics_pass(
         [&](RenderGraph::GraphicsPass& pass)
         {
-            pass.set_ds_atchm(ds, RenderGraph::GraphicsPass::DEPTH_WRITE, {});
-            pass.write_color_atchm(a0, {});
+            pass.set_ds_atchm(ds, RenderGraph::GraphicsPass::DEPTH_WRITE,
+                              ALL_IMAGE_SUBRESOURCES(vk::ImageAspectFlagBits::eDepth));
+            pass.write_color_atchm(a1, //
+                                   ALL_IMAGE_SUBRESOURCES(vk::ImageAspectFlagBits::eColor));
         });
     RenderGraph::PassIdx p2 = graph.register_graphics_pass(
         [&](RenderGraph::GraphicsPass& pass)
         {
-            pass.set_ds_atchm(ds, RenderGraph::GraphicsPass::DEPTH_READ, {});
-            pass.sample_img(a0, {});
-            pass.write_color_atchm(a1, {});
+            pass.set_ds_atchm(ds, RenderGraph::GraphicsPass::DEPTH_READ,
+                              ALL_IMAGE_SUBRESOURCES(vk::ImageAspectFlagBits::eDepth));
+            pass.write_color_atchm(a1, ALL_IMAGE_SUBRESOURCES(vk::ImageAspectFlagBits::eColor));
         });
+    RenderGraph::PassIdx p3 = graph.register_graphics_pass(
+        [&](RenderGraph::GraphicsPass& pass)
+        {
+            pass.set_ds_atchm(ds1, RenderGraph::GraphicsPass::DEPTH_WRITE,
+                              ALL_IMAGE_SUBRESOURCES(vk::ImageAspectFlagBits::eDepth));
+        });
+    graph.allocate_res();
+    graph.compile();
 
     Semaphore next_img;
     Semaphore submit;
@@ -65,6 +80,30 @@ int main(int argc, char** argv)
     CpuClock clock;
     while (true)
     {
+        graph.reset();
+        graph.set_graphics_pass(p1,
+            [&](RenderGraph::GraphicsPass& pass)
+            {
+                pass.set_ds_atchm(ds, RenderGraph::GraphicsPass::DEPTH_WRITE,
+                                  ALL_IMAGE_SUBRESOURCES(vk::ImageAspectFlagBits::eDepth));
+                pass.write_color_atchm(a1, //
+                                       ALL_IMAGE_SUBRESOURCES(vk::ImageAspectFlagBits::eColor));
+            });
+        graph.set_graphics_pass(p2,
+            [&](RenderGraph::GraphicsPass& pass)
+            {
+                pass.set_ds_atchm(ds, RenderGraph::GraphicsPass::DEPTH_READ,
+                                  ALL_IMAGE_SUBRESOURCES(vk::ImageAspectFlagBits::eDepth));
+                pass.write_color_atchm(a1, ALL_IMAGE_SUBRESOURCES(vk::ImageAspectFlagBits::eColor));
+            });
+        graph.set_graphics_pass(p3,
+            [&](RenderGraph::GraphicsPass& pass)
+            {
+                pass.set_ds_atchm(ds1, RenderGraph::GraphicsPass::DEPTH_WRITE,
+                                  ALL_IMAGE_SUBRESOURCES(vk::ImageAspectFlagBits::eDepth));
+            });
+        graph.compile();
+
         auto r = g.device().waitForFences(frame_fence, true, std::numeric_limits<uint64_t>::max());
         uint32_t img_idx = sc.aquire_next_image(next_img);
         g.device().resetFences(frame_fence);

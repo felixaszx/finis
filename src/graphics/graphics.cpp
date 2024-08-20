@@ -271,6 +271,16 @@ vk::Semaphore fi::create_vk_semaphore(vk::Device device)
     return device.createSemaphore(create_info);
 }
 
+vk::Event fi::create_vk_event(vk::Device device, bool host_event)
+{
+    vk::EventCreateInfo create_info{vk::EventCreateFlagBits::eDeviceOnly};
+    if (host_event)
+    {
+        create_info.flags = {};
+    }
+    return device.createEvent(create_info);
+}
+
 fi::Fence::Fence(bool signal)
     : vk::Fence(create_vk_fence(device(), signal))
 {
@@ -289,6 +299,18 @@ fi::Semaphore::Semaphore()
 fi::Semaphore::~Semaphore()
 {
     device().destroySemaphore(*this);
+}
+
+fi::Event::Event(bool host_event)
+    : vk::Event(create_vk_event(device(), host_event))
+{
+    std::cout << 1;
+}
+
+fi::Event::~Event()
+{
+    std::cout << 2;
+    device().destroyEvent(*this);
 }
 
 fi::CpuClock::CpuClock()

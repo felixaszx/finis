@@ -98,6 +98,7 @@ namespace fi
 
     vk::Fence create_vk_fence(vk::Device device, bool signal);
     vk::Semaphore create_vk_semaphore(vk::Device device);
+    vk::Event create_vk_event(vk::Device device, bool host_event = false);
 
     struct Fence : public vk::Fence, //
                    private GraphicsObject
@@ -111,6 +112,13 @@ namespace fi
     {
         Semaphore();
         ~Semaphore();
+    };
+
+    struct Event : public vk::Event, //
+                   private GraphicsObject
+    {
+        Event(bool host_event = false);
+        ~Event();
     };
 
     class CpuClock
