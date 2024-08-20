@@ -125,16 +125,17 @@ namespace fi
 
       public:
         ResIdx register_atchm(vk::ImageSubresource sub_res, vk::ImageUsageFlagBits initial_usage = {});
-
         ResIdx register_atchm(vk::Image image, const std::vector<vk::ImageView>& views);
         ResIdx register_buffer(vk::DeviceSize size);
         ResIdx register_buffer(vk::Buffer buffer, vk::DeviceSize offset = 0, vk::DeviceSize range = VK_WHOLE_SIZE);
+        Buffer& get_buffer_res(ResIdx buf_idx);
+        Image& get_image_res(ResIdx img_idx);
+
         PassIdx register_compute_pass(const ComputePass::Setup& setup_func = {});
         PassIdx register_graphics_pass(const GraphicsPass::Setup& setup_func = {});
         void set_compute_pass(PassIdx compute_pass_idx, const ComputePass::Setup& setup_func);
         void set_graphics_pass(PassIdx graphics_pass_idx, const GraphicsPass::Setup& setup_func);
-        Buffer& get_buffer_res(ResIdx buf_idx);
-        Image& get_image_res(ResIdx img_idx);
+        
         void compile(const vk::Extent2D& render_area_);
         void excute(const std::vector<std::function<void()>>& funcs); // funcs.size() == passes_.size()
     };

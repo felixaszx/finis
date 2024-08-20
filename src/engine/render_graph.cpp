@@ -42,6 +42,16 @@ fi::RenderGraph::ResIdx fi::RenderGraph::register_buffer(vk::Buffer buffer, vk::
     return buf.idx_;
 }
 
+fi::RenderGraph::Buffer& fi::RenderGraph::get_buffer_res(ResIdx buf_idx)
+{
+    return bufs_[res_mapping_[buf_idx]];
+};
+
+fi::RenderGraph::Image& fi::RenderGraph::get_image_res(ResIdx img_idx)
+{
+    return imgs_[res_mapping_[img_idx]];
+};
+
 fi::RenderGraph::PassIdx fi::RenderGraph::register_graphics_pass(const GraphicsPass::Setup& setup_func)
 {
     GraphicsPass& pass = graphics_.emplace_back();
@@ -83,16 +93,6 @@ void fi::RenderGraph::set_graphics_pass(PassIdx graphics_pass_idx, const Graphic
     pass.rg_ = this;
     setup_func(pass);
 }
-
-fi::RenderGraph::Buffer& fi::RenderGraph::get_buffer_res(ResIdx buf_idx)
-{
-    return bufs_[res_mapping_[buf_idx]];
-};
-
-fi::RenderGraph::Image& fi::RenderGraph::get_image_res(ResIdx img_idx)
-{
-    return imgs_[res_mapping_[img_idx]];
-};
 
 fi::RenderGraph::Image& fi::RenderGraph::Pass::add_read_img(ResIdx img_idx,
                                                             const vk::ImageSubresourceRange& sub_resources)
