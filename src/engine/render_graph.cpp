@@ -172,12 +172,6 @@ void fi::RenderGraph::ComputePass::write_img(ResIdx img_idx, const vk::ImageSubr
     img.usages_ |= vk::ImageUsageFlagBits::eStorage;
 }
 
-void fi::RenderGraph::GraphicsPass::clear_img(ResIdx res_idx)
-{
-    rg_->get_image_res(res_idx).cleared_pass_.push_back(idx_);
-    clearing_.insert(res_idx);
-}
-
 void fi::RenderGraph::GraphicsPass::write_color_atchm(ResIdx img_idx, const vk::ImageSubresourceRange& sub_resources)
 {
     Image& img = add_write_img(img_idx, sub_resources);
@@ -457,7 +451,6 @@ void fi::RenderGraph::reset()
         pass.input_.clear();
         pass.output_.clear();
         pass.passing_.clear();
-        pass.clearing_.clear();
         pass.waiting_.clear();
     }
     for (Pass& pass : computes_)
@@ -466,7 +459,6 @@ void fi::RenderGraph::reset()
         pass.input_.clear();
         pass.output_.clear();
         pass.passing_.clear();
-        pass.clearing_.clear();
         pass.waiting_.clear();
     }
     initial_transitions_.clear();

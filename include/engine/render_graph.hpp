@@ -138,7 +138,6 @@ namespace fi
                 STENCIL_READ = bit_shift_left(3)
             };
 
-            void clear_img(ResIdx res_idx);
             void write_color_atchm(ResIdx img_idx, const vk::ImageSubresourceRange& sub_resources);
             void set_ds_atchm(ResIdx img_idx, DepthStencilOp operation, const vk::ImageSubresourceRange& sub_resources);
         };
