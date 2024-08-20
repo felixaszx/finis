@@ -33,19 +33,25 @@ namespace fi
     struct FrameImageRef : public vk::ImageView
     {
         vk::Image image_ = nullptr;
+        vk::Format format_{};
         vk::ImageViewType type_{};
         vk::ImageSubresourceRange range_{};
-        std::map<ImgRefIdx, std::pair<vk::ImageLayout, vk::AccessFlags2>> history_;
 
-       static bool is_writing(vk::ImageLayout layout);
+        bool cleared_ = false;
+        std::map<ImgRefIdx, std::pair<vk::ImageLayout, vk::AccessFlagBits2>> history_;
+
+        operator bool() { return casts(vk::ImageView, *this); }
+
+        static bool is_reading(vk::ImageLayout layout);
+        static vk::PipelineStageFlagBits2 get_src_stage(vk::AccessFlagBits2 access);
+        static vk::PipelineStageFlagBits2 get_dst_stage(vk::AccessFlagBits2 access);
     };
 
     struct FramePass
     {
-        vk::Event event_{};
-        vk::DependencyInfo deps_{};
-        std::vector<vk::ImageMemoryBarrier2> img_barriers_{};
         PassFunc func_ = {};
+        vk::DependencyInfo deps_{};
+        std::map<PassIdx, std::pair<vk::Event, std::vector<vk::ImageMemoryBarrier2>>> img_barriers_;
     };
 
     // this frame graph only support dynamic rendering
@@ -68,14 +74,16 @@ namespace fi
         std::vector<FramePass> passes_{};
 
       public:
+        ~FrameGraph();
+
         FrameImage& register_image();
         ImgRefIdx register_image_ref(FrameImageRef& ref_detail);
         PassIdx register_pass();
+        void push_cluster_break();
 
         void set_pass_func(PassIdx pass_idx, const PassFunc& func);
         void read_image(PassIdx pass_idx, ImgRefIdx ref_idx);
         void write_image(PassIdx pass_idx, ImgRefIdx ref_idx);
-        void pass_image(PassIdx pass_idx, ImgRefIdx ref_idx, vk::ImageLayout layout);
         void sample_image(PassIdx pass_idx, ImgRefIdx ref_idx);
         void write_color_atchm(PassIdx pass_idx, ImgRefIdx ref_idx);
         void set_depth_stencil(PassIdx pass_idx, ImgRefIdx ref_idx, DepthStencilOpMask operations);
