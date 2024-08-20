@@ -8,6 +8,7 @@
 
 namespace fi
 {
+    // this reander graph only support dynamic rendering
     class RenderGraph : private GraphicsObject
     {
       public:
