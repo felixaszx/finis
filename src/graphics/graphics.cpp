@@ -110,7 +110,6 @@ fi::Graphics::Graphics(int width, int height, const std::string& title)
     feature.fillModeNonSolid = true;
     feature.geometryShader = true;
     feature.fillModeNonSolid = true;
-    feature.sampleRateShading = true;
     feature.imageCubeArray = true;
     feature.multiDrawIndirect = true;
     feature.shaderSampledImageArrayDynamicIndexing = true;
