@@ -82,6 +82,7 @@ namespace fi
 
         struct ComputePass : public Pass
         {
+            using Setup = std::function<void(ComputePass& pass)>;
             std::vector<vk::DescriptorImageInfo> des_img_infos_{};
 
             void write_img(ResIdx img_idx, const vk::ImageSubresourceRange& sub_resources);
@@ -89,6 +90,7 @@ namespace fi
 
         struct GraphicsPass : public Pass
         {
+            using Setup = std::function<void(GraphicsPass& pass)>;
             using DepthStencilOp = uint32_t;
             enum DepthStencilOpBits : uint32_t
             {
@@ -123,15 +125,14 @@ namespace fi
 
       public:
         ResIdx register_atchm(vk::ImageSubresource sub_res, vk::ImageUsageFlagBits initial_usage = {});
+
         ResIdx register_atchm(vk::Image image, const std::vector<vk::ImageView>& views);
         ResIdx register_buffer(vk::DeviceSize size);
         ResIdx register_buffer(vk::Buffer buffer, vk::DeviceSize offset = 0, vk::DeviceSize range = VK_WHOLE_SIZE);
-        PassIdx register_compute_pass(const std::function<void(ComputePass& pass)>& setup_func //
-                                      = [](ComputePass& pass) {});
-        PassIdx register_graphics_pass(const std::function<void(GraphicsPass& pass)>& setup_func //
-                                       = [](GraphicsPass& pass) {});
-        ComputePass& get_compute_pass(PassIdx compute_pass_idx);
-        GraphicsPass& get_graphics_pass(PassIdx graphics_pass_idx);
+        PassIdx register_compute_pass(const ComputePass::Setup& setup_func = {});
+        PassIdx register_graphics_pass(const GraphicsPass::Setup& setup_func = {});
+        void set_compute_pass(PassIdx compute_pass_idx, const ComputePass::Setup& setup_func);
+        void set_graphics_pass(PassIdx graphics_pass_idx, const GraphicsPass::Setup& setup_func);
         Buffer& get_buffer_res(ResIdx buf_idx);
         Image& get_image_res(ResIdx img_idx);
         void compile(const vk::Extent2D& render_area_);

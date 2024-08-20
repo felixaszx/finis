@@ -42,38 +42,46 @@ fi::RenderGraph::ResIdx fi::RenderGraph::register_buffer(vk::Buffer buffer, vk::
     return buf.idx_;
 }
 
-fi::RenderGraph::PassIdx fi::RenderGraph::register_graphics_pass(
-    const std::function<void(GraphicsPass& pass)>& setup_func)
+fi::RenderGraph::PassIdx fi::RenderGraph::register_graphics_pass(const GraphicsPass::Setup& setup_func)
 {
     GraphicsPass& pass = graphics_.emplace_back();
     pass.rg_ = this;
 
     pass.idx_ = pass_mapping_.size();
     pass_mapping_.push_back(graphics_.size() - 1);
-    setup_func(pass);
+    if (setup_func)
+    {
+        setup_func(pass);
+    }
     return pass.idx_;
 }
 
-fi::RenderGraph::PassIdx fi::RenderGraph::register_compute_pass(
-    const std::function<void(ComputePass& pass)>& setup_func)
+fi::RenderGraph::PassIdx fi::RenderGraph::register_compute_pass(const ComputePass::Setup& setup_func)
 {
     ComputePass& pass = computes_.emplace_back();
     pass.rg_ = this;
 
     pass.idx_ = pass_mapping_.size();
     pass_mapping_.push_back(computes_.size() - 1);
-    setup_func(pass);
+    if (setup_func)
+    {
+        setup_func(pass);
+    }
     return pass.idx_;
 }
 
-fi::RenderGraph::ComputePass& fi::RenderGraph::get_compute_pass(PassIdx compute_pass_idx)
+void fi::RenderGraph::set_compute_pass(PassIdx compute_pass_idx, const ComputePass::Setup& setup_func)
 {
-    return computes_[pass_mapping_[compute_pass_idx]];
+    ComputePass& pass = computes_[pass_mapping_[compute_pass_idx]];
+    pass.rg_ = this;
+    setup_func(pass);
 }
 
-fi::RenderGraph::GraphicsPass& fi::RenderGraph::get_graphics_pass(PassIdx graphics_pass_idx)
+void fi::RenderGraph::set_graphics_pass(PassIdx graphics_pass_idx, const GraphicsPass::Setup& setup_func)
 {
-    return graphics_[pass_mapping_[graphics_pass_idx]];
+    GraphicsPass& pass = graphics_[pass_mapping_[graphics_pass_idx]];
+    pass.rg_ = this;
+    setup_func(pass);
 }
 
 fi::RenderGraph::Buffer& fi::RenderGraph::get_buffer_res(ResIdx buf_idx)
@@ -124,7 +132,8 @@ void fi::RenderGraph::Pass::write_buffer(ResIdx buf_idx)
     buf.access.push_back(SyncedRes::WRITE);
 }
 
-void fi::RenderGraph::Pass::pass_img(ResIdx img_idx, vk::ImageLayout taget_layout,
+void fi::RenderGraph::Pass::pass_img(ResIdx img_idx,
+                                     vk::ImageLayout taget_layout,
                                      const vk::ImageSubresourceRange& sub_resources)
 {
     passing_.insert(img_idx);

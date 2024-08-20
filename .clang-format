@@ -1,17 +1,20 @@
 ---
 BasedOnStyle: Microsoft
 AlignAfterOpenBracket: Align
-AlignConsecutiveMacros: 'true'
+AlignConsecutiveMacros: true
 AlignEscapedNewlines: Left
 AllowShortFunctionsOnASingleLine: InlineOnly
 SortIncludes: false
 NamespaceIndentation: All
 PointerAlignment: Left
-ColumnLimit: '120'
-IndentCaseLabels: 'true'
-AlwaysBreakTemplateDeclarations: 'Yes'
+ColumnLimit: 120
+IndentCaseLabels: true
+AlwaysBreakTemplateDeclarations: Yes
 PackConstructorInitializers: Never
 BreakAfterAttributes: Never
+BinPackParameters: false
+AllowAllParametersOfDeclarationOnNextLine: false
+Cpp11BracedListStyle: true
 BraceWrapping: 
   AfterCaseLabel: true
   AfterClass: true
