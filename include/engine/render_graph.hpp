@@ -98,6 +98,10 @@ namespace fi
             };
 
             std::vector<vk::DescriptorImageInfo> des_img_infos_{};
+            std::vector<vk::Format> color_formats_{};
+            vk::Format depth_format_{};
+            vk::Format stencil_format_{};
+
             std::vector<vk::RenderingAttachmentInfo> color_atchm_infos_{};
             vk::RenderingAttachmentInfo depth_atchm_info_{};
             vk::RenderingAttachmentInfo stencil_atchm_info_{};
