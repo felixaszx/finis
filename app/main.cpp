@@ -4,10 +4,8 @@
 #include "extensions/loader.hpp"
 #include "graphics/graphics.hpp"
 #include "graphics/swapchain.hpp"
-#include "graphics/res_loader.hpp"
-#include "graphics/res_structure.hpp"
-#include "graphics/res_anim.hpp"
-#include "graphics/res_skin.hpp"
+#include "engine/scene.hpp"
+#include "engine/render_graph.hpp"
 #include "fltk/fl_ext.hpp"
 
 int main(int argc, char** argv)
@@ -16,6 +14,9 @@ int main(int argc, char** argv)
     using namespace glms::literal;
     using namespace std::chrono_literals;
 
+    const uint32_t WIN_WIDTH = 1920;
+    const uint32_t WIN_HEIGHT = 1080;
+
     fle::DoubleWindow fltk(800, 600, "finis pannel");
     fltk.end();
     fle::Flow flow(0, 0, 800, 600);
@@ -23,9 +24,28 @@ int main(int argc, char** argv)
     fltk.resizable(flow);
 
     fltk.show();
-    Graphics g(1920, 1080, "finis");
+    Graphics g(WIN_WIDTH, WIN_HEIGHT, "finis");
     Swapchain sc;
     sc.create();
+
+    RenderGraph graph;
+    RenderGraph::ResIdx ds = graph.register_atchm({});
+    RenderGraph::ResIdx a0 = graph.register_atchm({});
+    RenderGraph::ResIdx a1 = graph.register_atchm({});
+    RenderGraph::PassIdx p0 = graph.register_compute_pass();
+    RenderGraph::PassIdx p1 = graph.register_graphics_pass(
+        [&](RenderGraph::GraphicsPass& pass)
+        {
+            pass.set_ds_atchm(ds, RenderGraph::GraphicsPass::DEPTH_WRITE, {});
+            pass.write_color_atchm(a0, {});
+        });
+    RenderGraph::PassIdx p2 = graph.register_graphics_pass(
+        [&](RenderGraph::GraphicsPass& pass)
+        {
+            pass.set_ds_atchm(ds, RenderGraph::GraphicsPass::DEPTH_READ, {});
+            pass.sample_img(a0, {});
+            pass.write_color_atchm(a1, {});
+        });
 
     Semaphore next_img;
     Semaphore submit;

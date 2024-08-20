@@ -2,9 +2,9 @@
 #define ENGINE_SCENE_HPP
 
 #include "graphics/res_loader.hpp"
+#include "graphics/res_structure.hpp"
 #include "graphics/res_anim.hpp"
 #include "graphics/res_skin.hpp"
-#include "graphics/res_structure.hpp"
 
 namespace fi
 {

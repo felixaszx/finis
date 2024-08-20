@@ -24,11 +24,10 @@
     try          \
     {
 
-#define CATCH_BEGIN            \
-    }                          \
-    catch (std::exception & e) \
-    {                          \
-        std::cerr << e.what();
+#define CATCH_BEGIN(error)         \
+    }                              \
+    catch (std::exception & error) \
+    {
 #define CATCH_END }
 #define CATCH_FUNC             \
     }                          \
@@ -59,6 +58,11 @@ namespace fi
         cmd.dispatch(work_group.x, work_group.y, work_group.z);
     }
 
+    template <typename T>
+    inline std::string indx_error(const T& arr, size_t idx, const std::string& details = "")
+    {
+        return std::format("Index {}[{}] out of range{}", details, idx, arr.size());
+    }
 };
 
 template <typename T>
