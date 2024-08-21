@@ -123,4 +123,30 @@ inline constexpr void make_shared2(std::shared_ptr<Ptr>& shared_ptr, Param&&... 
     shared_ptr = std::make_shared<Ptr>(std::forward<Param>(param)...);
 }
 
+template <typename T>
+struct UniqueObj : public std::unique_ptr<T>
+{
+    inline constexpr UniqueObj(std::nullptr_t obj)
+        : std::unique_ptr<T>(obj)
+    {
+    }
+
+    template <typename... Param>
+    inline constexpr UniqueObj(Param&&... param)
+        : std::unique_ptr<T>(new T(std::forward<Param>(param)...))
+    {
+    }
+
+    template <typename... Param>
+    inline constexpr void create_wtih(Param&&... param)
+    {
+        this->reset(new T(std::forward<Param>(param)...));
+    }
+
+    ~UniqueObj() = default;
+
+    operator T&() { return *this->get(); }
+    operator T&() const { return *this->get(); }
+};
+
 #endif // INCLUDE_TOOLS_HPP

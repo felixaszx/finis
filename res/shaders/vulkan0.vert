@@ -34,9 +34,7 @@ struct MeshInfo
 {
     uint node_;
     uint morph_weight_;
-
     uint first_joint;
-    uint instances_;
 };
 
 // set 0

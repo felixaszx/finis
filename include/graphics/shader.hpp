@@ -30,6 +30,11 @@ namespace fi
         inline static shaderc::Compiler compiler_{};
 
       public:
+        ShaderModule(const ShaderModule&) = delete;
+        ShaderModule(ShaderModule&&) = delete;
+        ShaderModule& operator=(const ShaderModule&) = delete;
+        ShaderModule& operator=(ShaderModule&&) = delete;
+        
         ShaderModule() = default;
         ShaderModule(const std::string& file_name, //
                      vk::ShaderStageFlagBits stage);

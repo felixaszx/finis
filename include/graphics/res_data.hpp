@@ -99,7 +99,7 @@ namespace fi
         MorphTargetIdx morph_target_ = EMPTY;
     };
 
-    struct MorphTargetInfo // tbd
+    struct MorphTargetInfo
     {
         VtxIdx first_position_ = EMPTY;
         VtxIdx first_normal_ = EMPTY;
@@ -114,9 +114,7 @@ namespace fi
     {
         NodeIdx node_ = EMPTY;
         MorphWeightIdx morph_weight_ = EMPTY;
-
         NodeIdx first_joint = EMPTY;
-        uint32_t padding = EMPTY;
     };
 
     struct alignas(16) MaterialInfo

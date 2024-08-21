@@ -47,6 +47,11 @@ namespace fi
         std::vector<glm::mat4> inv_binds_{}; // binding 1
         std::unique_ptr<Buffer<BufferOffsets, storage>> buffer_;
 
+        ResSkinDetails(const ResSkinDetails&) = delete;
+        ResSkinDetails(ResSkinDetails&&) = delete;
+        ResSkinDetails& operator=(const ResSkinDetails&) = delete;
+        ResSkinDetails& operator=(ResSkinDetails&&) = delete;
+        
         ResSkinDetails(ResDetails& res_details, ResStructure& res_structure);
         ~ResSkinDetails();
 

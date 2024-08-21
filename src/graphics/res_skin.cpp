@@ -21,6 +21,11 @@ fi::ResSkinDetails::ResSkinDetails(ResDetails& res_details, ResStructure& res_st
     {
         first_skin_.push_back(skins_.size());
         skins_.reserve(skins_.size() + res_details.gltf_[g]->skins.size());
+        if (!res_details.gltf_[g]->skins.size())
+        {
+            first_skin_.back() = EMPTY;
+        }
+
         for (const auto& skin : res_details.gltf_[g]->skins)
         {
             SkinInfo& skin_info = skins_.emplace_back(skin.name.c_str(), TSNodeIdx(joints_.size()), skin.joints.size());
@@ -58,9 +63,7 @@ fi::ResSkinDetails::ResSkinDetails(ResDetails& res_details, ResStructure& res_st
 
     if (skins_.empty())
     {
-        joints_.resize(4, EMPTY);
-        inv_binds_.push_back(glm::zero<glm::mat4>());
-        int* a = new int;
+        return;
     }
 
     while (sizeof_arr(joints_) % 16)
@@ -127,8 +130,10 @@ void fi::ResSkinDetails::allocate_descriptor(vk::DescriptorPool des_pool)
     device().updateDescriptorSets(write, {});
 }
 
-void fi::ResSkinDetails::bind_res(vk::CommandBuffer cmd, vk::PipelineBindPoint bind_point, //
-                                  vk::PipelineLayout pipeline_layout, uint32_t des_set)
+void fi::ResSkinDetails::bind_res(vk::CommandBuffer cmd,
+                                  vk::PipelineBindPoint bind_point, //
+                                  vk::PipelineLayout pipeline_layout,
+                                  uint32_t des_set)
 {
     cmd.bindDescriptorSets(bind_point, pipeline_layout, des_set, des_set_, {});
 }

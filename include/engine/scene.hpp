@@ -10,10 +10,17 @@ namespace fi
 {
     struct SceneResources
     {
-        std::vector<ResDetails> res_details_;
-        std::vector<ResStructure> res_structures_;
-        std::vector<ResSkinDetails> res_skins_;
-        std::vector<std::vector<ResAnimation>> res_anims_;
+        struct InstancingInfo
+        {
+            uint32_t first_matrix_ = EMPTY;
+            uint32_t matrix_count_ = 0;
+        };
+
+        UniqueObj<ResDetails> res_detail_;
+        UniqueObj<ResStructure> res_structure_{nullptr};
+        UniqueObj<ResSkinDetails> res_skin_{nullptr};
+        std::vector<std::vector<ResAnimation>> res_anims_{};
+        std::vector<std::vector<InstancingInfo>> instance_info_{};
 
         std::filesystem::path res_path_ = "";
 

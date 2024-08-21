@@ -27,6 +27,8 @@ int main(int argc, char** argv)
     Swapchain sc;
     sc.create();
 
+    SceneResources scene_res("res/models");
+
     Semaphore next_img;
     Semaphore submit;
     Fence frame_fence;

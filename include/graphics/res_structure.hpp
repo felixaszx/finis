@@ -54,6 +54,11 @@ namespace fi
         std::vector<NodeTransform> transforms_{}; // binding 0
         std::vector<float> morph_weight_{};       // binding 1
 
+        ResStructure(const ResStructure&) = delete;
+        ResStructure(ResStructure&&) = delete;
+        ResStructure& operator=(const ResStructure&) = delete;
+        ResStructure& operator=(ResStructure&&) = delete;
+        
         ResStructure(ResDetails& res_details);
         ~ResStructure();
 
