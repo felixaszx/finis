@@ -19,12 +19,13 @@ namespace fi
         UniqueObj<ResDetails> res_detail_;
         UniqueObj<ResStructure> res_structure_{nullptr};
         UniqueObj<ResSkinDetails> res_skin_{nullptr};
+        std::vector<InstancingInfo> instancing_infos_{};
         std::vector<std::vector<ResAnimation>> res_anims_{};
-        std::vector<std::vector<InstancingInfo>> instance_info_{};
+        std::vector<glm::mat4> instancing_matrices_{};
 
         std::filesystem::path res_path_ = "";
 
-        SceneResources(const std::filesystem::path& res_path);
+        SceneResources(const std::filesystem::path& res_path, uint32_t max_instances = 0);
     };
 }; // namespace fi
 

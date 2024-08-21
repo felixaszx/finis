@@ -149,4 +149,30 @@ struct UniqueObj : public std::unique_ptr<T>
     operator T&() const { return *this->get(); }
 };
 
+template <typename T>
+struct SharedObj : public std::shared_ptr<T>
+{
+    inline constexpr SharedObj(std::nullptr_t obj)
+        : std::shared_ptr<T>(obj)
+    {
+    }
+
+    template <typename... Param>
+    inline constexpr SharedObj(Param&&... param)
+        : std::shared_ptr<T>(new T(std::forward<Param>(param)...))
+    {
+    }
+
+    template <typename... Param>
+    inline constexpr void create_wtih(Param&&... param)
+    {
+        this->reset(new T(std::forward<Param>(param)...));
+    }
+
+    ~SharedObj() = default;
+
+    operator T&() { return *this->get(); }
+    operator T&() const { return *this->get(); }
+};
+
 #endif // INCLUDE_TOOLS_HPP
