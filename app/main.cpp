@@ -5,7 +5,6 @@
 #include "graphics/graphics.hpp"
 #include "graphics/swapchain.hpp"
 #include "engine/scene.hpp"
-#include "engine/frame_graph.hpp"
 #include "fltk/fl_ext.hpp"
 
 int main(int argc, char** argv)
@@ -27,71 +26,6 @@ int main(int argc, char** argv)
     Graphics g(WIN_WIDTH, WIN_HEIGHT, "finis");
     Swapchain sc;
     sc.create();
-
-    FrameGraph graph;
-    ImgIdx atchm0 = graph.register_image(
-        [](FrameImage& image)
-        {
-            image.set_depth_atchm();
-            image.extent_ = vk::Extent3D{WIN_WIDTH, WIN_HEIGHT, 1};
-            image.type_ = vk::ImageType::e2D;
-            image.sub_resources_.arrayLayer = 1;
-            image.sub_resources_.mipLevel = 1;
-        });
-    ImgIdx atchm1 = graph.register_image(
-        [](FrameImage& image)
-        {
-            image.set_sampled();
-            image.set_color_atchm();
-            image.extent_ = vk::Extent3D{WIN_WIDTH, WIN_HEIGHT, 1};
-            image.type_ = vk::ImageType::e2D;
-            image.sub_resources_.arrayLayer = 1;
-            image.sub_resources_.mipLevel = 1;
-        });
-    ImgIdx atchm2 = graph.register_image(
-        [](FrameImage& image)
-        {
-            image.set_sampled();
-            image.set_color_atchm();
-            image.extent_ = vk::Extent3D{WIN_WIDTH, WIN_HEIGHT, 1};
-            image.type_ = vk::ImageType::e2D;
-            image.sub_resources_.arrayLayer = 1;
-            image.sub_resources_.mipLevel = 1;
-        });
-    ImgIdx atchm3 = graph.register_image(
-        [](FrameImage& image)
-        {
-            image.set_sampled();
-            image.set_color_atchm();
-            image.extent_ = vk::Extent3D{WIN_WIDTH, WIN_HEIGHT, 1};
-            image.type_ = vk::ImageType::e2D;
-            image.sub_resources_.arrayLayer = 1;
-            image.sub_resources_.mipLevel = 1;
-        });
-    graph.reset();
-    ImgRefIdx r0 = graph.register_image_ref(atchm0, vk::ImageViewType::e2D,
-                                            ALL_IMAGE_SUBRESOURCES(vk::ImageAspectFlagBits::eDepth));
-    ImgRefIdx r1 = graph.register_image_ref(atchm1, vk::ImageViewType::e2D,
-                                            ALL_IMAGE_SUBRESOURCES(vk::ImageAspectFlagBits::eColor));
-    ImgRefIdx r2 = graph.register_image_ref(atchm2, vk::ImageViewType::e2D,
-                                            ALL_IMAGE_SUBRESOURCES(vk::ImageAspectFlagBits::eColor));
-    ImgRefIdx r3 = graph.register_image_ref(atchm3, vk::ImageViewType::e2D,
-                                            ALL_IMAGE_SUBRESOURCES(vk::ImageAspectFlagBits::eColor));
-    graph.reset();
-
-    PassIdx p0 = graph.register_pass();
-    graph.set_depth_stencil(p0, r0, FrameGraph::DEPTH_WRITE);
-    graph.write_color_atchm(p0, r1);
-
-    PassIdx p1 = graph.register_pass();
-    graph.set_depth_stencil(p1, r0, FrameGraph::DEPTH_READ);
-    graph.write_color_atchm(p1, r1);
-    graph.write_color_atchm(p1, r2);
-
-    PassIdx p2 = graph.register_pass();
-    graph.read_image(p2, r1);
-    graph.read_image(p2, r2);
-    graph.write_image(p2, r3);
 
     Semaphore next_img;
     Semaphore submit;
