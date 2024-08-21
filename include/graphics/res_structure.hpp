@@ -53,8 +53,6 @@ namespace fi
 
         std::vector<NodeTransform> transforms_{}; // binding 0
         std::vector<float> morph_weight_{};       // binding 1
-        std::vector<TSNodeIdx> renderale_nodes_{};
-        std::vector<TSNodeIdx> root_nodes_{};
 
         ResStructure(ResDetails& res_details);
         ~ResStructure();
@@ -65,6 +63,7 @@ namespace fi
         void allocate_descriptor(vk::DescriptorPool des_pool);
         void bind_res(vk::CommandBuffer cmd, vk::PipelineBindPoint bind_point, //
                       vk::PipelineLayout pipeline_layout, uint32_t des_set);
+        [[nodiscard]] const std::vector<NodeInfo>& nodes() const { return nodes_; }
     };
 }; // namespace fi
 

@@ -92,7 +92,6 @@ fi::ResStructure::ResStructure(ResDetails& res_details)
                                 morph_weight_.push_back(weight);
                             }
                         }
-                        renderale_nodes_.push_back(TSNodeIdx(node.self_idx_));
                     }
                 }
                 first_mesh_iter++;
@@ -129,7 +128,6 @@ fi::ResStructure::ResStructure(ResDetails& res_details)
     {
         for (NodeIdx root : gltf->scenes[0].nodeIndices)
         {
-            root_nodes_.push_back(TSNodeIdx(root));
             build_layer(TSNodeIdx(root + *first_node_iter), tmp_nodes, tmp_children, layers);
         }
         first_node_iter++;
