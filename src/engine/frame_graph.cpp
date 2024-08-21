@@ -1,5 +1,65 @@
 #include "engine/frame_graph.hpp"
 
+void fi::FrameImage::set_color_atchm()
+{
+    format_ = vk::Format::eR32G32B32A32Sfloat;
+    usage_ |= vk::ImageUsageFlagBits::eColorAttachment;
+    init_layout_ = vk::ImageLayout::eColorAttachmentOptimal;
+    sub_resources_.aspectMask = vk::ImageAspectFlagBits::eColor;
+}
+
+void fi::FrameImage::set_depth_atchm()
+{
+    format_ = vk::Format::eD16Unorm;
+    usage_ |= vk::ImageUsageFlagBits::eDepthStencilAttachment;
+    init_layout_ = vk::ImageLayout::eDepthAttachmentOptimal;
+    sub_resources_.aspectMask = vk::ImageAspectFlagBits::eDepth;
+}
+
+void fi::FrameImage::set_stencil_atchm()
+{
+    format_ = vk::Format::eS8Uint;
+    usage_ |= vk::ImageUsageFlagBits::eDepthStencilAttachment;
+    init_layout_ = vk::ImageLayout::eStencilAttachmentOptimal;
+    sub_resources_.aspectMask = vk::ImageAspectFlagBits::eStencil;
+}
+
+void fi::FrameImage::set_ds_atchm()
+{
+    format_ = vk::Format::eD24UnormS8Uint;
+    usage_ |= vk::ImageUsageFlagBits::eDepthStencilAttachment;
+    init_layout_ = vk::ImageLayout::eDepthStencilAttachmentOptimal;
+    sub_resources_.aspectMask = vk::ImageAspectFlagBits::eDepth | vk::ImageAspectFlagBits::eStencil;
+}
+
+void fi::FrameImage::set_storage()
+{
+    usage_ |= vk::ImageUsageFlagBits::eStorage;
+    init_layout_ = vk::ImageLayout::eShaderReadOnlyOptimal;
+}
+
+void fi::FrameImage::set_write()
+{
+    usage_ |= vk::ImageUsageFlagBits::eStorage;
+    init_layout_ = vk::ImageLayout::eGeneral;
+}
+
+void fi::FrameImage::set_sampled()
+{
+    usage_ |= vk::ImageUsageFlagBits::eSampled;
+    init_layout_ = vk::ImageLayout::eShaderReadOnlyOptimal;
+}
+
+void fi::FrameImageRef::reference_image(const FrameImage& image,
+                                        vk::ImageViewType type,
+                                        const vk::ImageSubresourceRange& range)
+{
+    image_ = image;
+    format_ = image.format_;
+    type_ = type;
+    range_ = range;
+}
+
 bool fi::FrameImageRef::is_reading(vk::ImageLayout layout)
 {
     switch (layout)
@@ -93,14 +153,26 @@ fi::FrameGraph::~FrameGraph()
     }
 }
 
-fi::FrameImage& fi::FrameGraph::register_image()
+fi::ImgIdx fi::FrameGraph::register_image(const std::function<void(FrameImage&)>& func)
 {
-    return imgs_.emplace_back();
+    if (func)
+    {
+        func(imgs_.emplace_back());
+    }
+    return imgs_.size() - 1;
 }
 
 fi::ImgRefIdx fi::FrameGraph::register_image_ref(FrameImageRef& ref_detail)
 {
     ref_detail = img_refs_.emplace_back();
+    return img_refs_.size() - 1;
+}
+
+fi::ImgRefIdx fi::FrameGraph::register_image_ref(ImgIdx idx,
+                                                 vk::ImageViewType type,
+                                                 const vk::ImageSubresourceRange& range)
+{
+    img_refs_.emplace_back().reference_image(imgs_[idx], type, range);
     return img_refs_.size() - 1;
 }
 
@@ -110,9 +182,10 @@ fi::PassIdx fi::FrameGraph::register_pass()
     return passes_.size() - 1;
 }
 
-void fi::FrameGraph::push_cluster_break()
+void fi::FrameGraph::register_cluster()
 {
     FramePass& pass = passes_.emplace_back();
+    pass.place_holder_ = true;
 }
 
 void fi::FrameGraph::set_pass_func(PassIdx pass_idx, const PassFunc& func)
