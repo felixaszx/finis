@@ -53,6 +53,8 @@ namespace fi
 
         std::vector<NodeTransform> transforms_{}; // binding 0
         std::vector<float> morph_weight_{};       // binding 1
+        std::vector<TSNodeIdx> renderale_nodes_{};
+        std::vector<TSNodeIdx> root_nodes_{};
 
         ResStructure(ResDetails& res_details);
         ~ResStructure();

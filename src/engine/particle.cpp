@@ -60,7 +60,6 @@ void fi::ParticleGroup::update_buffer()
 void fi::ParticleGroup::bind_res(vk::CommandBuffer cmd, vk::PipelineBindPoint bind_point, //
                                  vk::PipelineLayout pipeline_layout, uint32_t des_set)
 {
-
     cmd.bindDescriptorSets(bind_point, pipeline_layout, des_set, des_set_, {});
 }
 

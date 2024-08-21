@@ -92,6 +92,7 @@ fi::ResStructure::ResStructure(ResDetails& res_details)
                                 morph_weight_.push_back(weight);
                             }
                         }
+                        renderale_nodes_.push_back(TSNodeIdx(node.self_idx_));
                     }
                 }
                 first_mesh_iter++;
@@ -128,6 +129,7 @@ fi::ResStructure::ResStructure(ResDetails& res_details)
     {
         for (NodeIdx root : gltf->scenes[0].nodeIndices)
         {
+            root_nodes_.push_back(TSNodeIdx(root));
             build_layer(TSNodeIdx(root + *first_node_iter), tmp_nodes, tmp_children, layers);
         }
         first_node_iter++;
@@ -244,8 +246,10 @@ void fi::ResStructure::allocate_descriptor(vk::DescriptorPool des_pool)
     device().updateDescriptorSets(write, {});
 }
 
-void fi::ResStructure::bind_res(vk::CommandBuffer cmd, vk::PipelineBindPoint bind_point, //
-                                vk::PipelineLayout pipeline_layout, uint32_t des_set)
+void fi::ResStructure::bind_res(vk::CommandBuffer cmd,
+                                vk::PipelineBindPoint bind_point, //
+                                vk::PipelineLayout pipeline_layout,
+                                uint32_t des_set)
 {
     cmd.bindDescriptorSets(bind_point, pipeline_layout, des_set, des_set_, {});
 }
