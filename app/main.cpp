@@ -4,7 +4,7 @@
 #include "extensions/loader.hpp"
 #include "graphics/graphics.hpp"
 #include "graphics/swapchain.hpp"
-#include "engine/scene.hpp"
+#include "engine/resource.hpp"
 #include "fltk/fl_ext.hpp"
 
 int main(int argc, char** argv)

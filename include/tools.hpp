@@ -138,20 +138,53 @@ struct UniqueObj : public std::unique_ptr<T>
     }
 
     template <typename... Param>
-    inline constexpr void create_wtih(Param&&... param)
+    inline constexpr void construct_with(Param&&... param)
     {
         this->reset(new T(std::forward<Param>(param)...));
     }
 
-    ~UniqueObj() = default;
-
     operator T&() { return *this->get(); }
-    operator T&() const { return *this->get(); }
+    operator const T&() const { return *this->get(); }
 };
 
 template <typename T>
 struct SharedObj : public std::shared_ptr<T>
 {
+    struct Ref : public std::weak_ptr<T>
+    {
+        inline constexpr Ref(const SharedObj<T>& obj)
+            : std::weak_ptr<T>(obj)
+        {
+        }
+
+        T* test()
+        {
+            if (this->expired())
+            {
+                throw std::runtime_error("Reference to SharedObj expired\n");
+            }
+            else
+            {
+                *this->lock().get();
+            }
+        }
+
+        const T* test() const
+        {
+            if (this->expired())
+            {
+                throw std::runtime_error("Reference to SharedObj expired\n");
+            }
+            else
+            {
+                *this->lock().get();
+            }
+        }
+
+        operator T&() { return *test(); }
+        operator const T&() const { return *test(); }
+    };
+
     inline constexpr SharedObj(std::nullptr_t obj)
         : std::shared_ptr<T>(obj)
     {
@@ -164,15 +197,15 @@ struct SharedObj : public std::shared_ptr<T>
     }
 
     template <typename... Param>
-    inline constexpr void create_wtih(Param&&... param)
+    inline constexpr void construct_with(Param&&... param)
     {
         this->reset(new T(std::forward<Param>(param)...));
     }
 
-    ~SharedObj() = default;
-
     operator T&() { return *this->get(); }
-    operator T&() const { return *this->get(); }
+    operator const T&() const { return *this->get(); }
+
+    SharedObj<T>::Ref reference() { return {*this}; }
 };
 
 #endif // INCLUDE_TOOLS_HPP
