@@ -14,9 +14,12 @@ void fi::BufferBase::create_buffer(const vk::BufferCreateInfo& buffer_info, cons
 {
     size_ = buffer_info.size;
 
-    auto result = allocator().createBuffer(buffer_info, alloc_info);
+    vma::AllocationInfo alloc_result{};
+    auto result = allocator().createBuffer(buffer_info, alloc_info, alloc_result);
     sset(*this, result.first);
     sset(*this, result.second);
+    mapping_ = (std::byte*)alloc_result.pMappedData;
+    presistant_ = mapping_;
 }
 
 fi::BufferBase::~BufferBase()
@@ -27,7 +30,7 @@ fi::BufferBase::~BufferBase()
 
 std::byte* fi::BufferBase::map_memory()
 {
-    if (!mapping_)
+    if (!mapping_ && !presistant_)
     {
         mapping_ = (std::byte*)allocator().mapMemory(*this);
     }
@@ -36,7 +39,7 @@ std::byte* fi::BufferBase::map_memory()
 
 void fi::BufferBase::unmap_memory()
 {
-    if (mapping_)
+    if (mapping_ && !presistant_)
     {
         allocator().unmapMemory(*this);
         mapping_ = nullptr;
@@ -96,6 +99,11 @@ void fi::indirect(vk::BufferCreateInfo& buffer_info, vma::AllocationCreateInfo& 
 void fi::seq_write(vk::BufferCreateInfo& buffer_info, vma::AllocationCreateInfo& alloc_info)
 {
     alloc_info.flags |= vma::AllocationCreateFlagBits::eHostAccessSequentialWrite;
+}
+
+void fi::presistant(vk::BufferCreateInfo& buffer_info, vma::AllocationCreateInfo& alloc_info)
+{
+    alloc_info.flags |= vma::AllocationCreateFlagBits::eMapped;
 }
 
 void fi::hosted(vk::BufferCreateInfo& buffer_info, vma::AllocationCreateInfo& alloc_info)

@@ -148,6 +148,20 @@ struct UniqueObj : public std::unique_ptr<T>
 };
 
 template <typename T>
+struct RefObj
+{
+    T* ptr_ = nullptr;
+
+    RefObj() = default;
+    RefObj(T& target) { reference(target); }
+
+    operator T&() { return *ptr_; }
+    operator const T&() const { return *ptr_; }
+
+    void reference(T& target) { ptr_ = &target; }
+};
+
+template <typename T>
 struct SharedObj : public std::shared_ptr<T>
 {
     struct Ref : public std::weak_ptr<T>

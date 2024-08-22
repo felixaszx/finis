@@ -49,7 +49,7 @@ namespace fi
         std::array<vk::DescriptorPoolSize, 1> des_sizes_{};
         vk::DescriptorSetLayout set_layout_{};
         vk::DescriptorSet des_set_{};
-        std::unique_ptr<Buffer<BufferOffsets, storage, seq_write, host_coherent>> buffer_;
+        std::unique_ptr<Buffer<BufferOffsets, storage, seq_write, host_coherent, presistant>> buffer_;
 
         std::vector<NodeTransform> transforms_{}; // binding 0
         std::vector<float> morph_weight_{};       // binding 1
@@ -58,7 +58,7 @@ namespace fi
         ResStructure(ResStructure&&) = delete;
         ResStructure& operator=(const ResStructure&) = delete;
         ResStructure& operator=(ResStructure&&) = delete;
-        
+
         ResStructure(ResDetails& res_details);
         ~ResStructure();
 
@@ -66,8 +66,10 @@ namespace fi
         void update_data(size_t gltf_idx = EMPTY);
         void update_structure(const glm::mat4& transform = glm::identity<glm::mat4>(), size_t gltf_idx = EMPTY);
         void allocate_descriptor(vk::DescriptorPool des_pool);
-        void bind_res(vk::CommandBuffer cmd, vk::PipelineBindPoint bind_point, //
-                      vk::PipelineLayout pipeline_layout, uint32_t des_set);
+        void bind_res(vk::CommandBuffer cmd,
+                      vk::PipelineBindPoint bind_point, //
+                      vk::PipelineLayout pipeline_layout,
+                      uint32_t des_set);
         [[nodiscard]] const std::vector<NodeInfo>& nodes() const { return nodes_; }
     };
 }; // namespace fi

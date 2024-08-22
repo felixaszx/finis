@@ -1,12 +1,12 @@
 /**
  * @file buffer.hpp
  * @author Felix Xing (felixaszx@outlook.com)
- * @brief 
+ * @brief
  * @version 0.1
  * @date 2024-08-15
- * 
+ *
  * @copyright MIT License Copyright (c) 2024 Felixaszx (Felix Xing)
- * 
+ *
  */
 #ifndef GRAPHICS_BUFFER_HPP
 #define GRAPHICS_BUFFER_HPP
@@ -21,10 +21,12 @@ namespace fi
                         protected GraphicsObject
     {
       protected:
+        bool presistant_ = false;
         vk::DeviceSize size_ = 0;
         std::byte* mapping_ = nullptr;
 
-        void create_buffer(const vk::BufferCreateInfo& buffer_info, const vma::AllocationCreateInfo& alloc_info);
+        void create_buffer(const vk::BufferCreateInfo& buffer_info,
+                           const vma::AllocationCreateInfo& alloc_info);
 
       public:
         struct EmptyExtraInfo
@@ -48,6 +50,7 @@ namespace fi
     void vertex(vk::BufferCreateInfo& buffer_info, vma::AllocationCreateInfo& alloc_info);
     void indirect(vk::BufferCreateInfo& buffer_info, vma::AllocationCreateInfo& alloc_info);
     void seq_write(vk::BufferCreateInfo& buffer_info, vma::AllocationCreateInfo& alloc_info);
+    void presistant(vk::BufferCreateInfo& buffer_info, vma::AllocationCreateInfo& alloc_info);
     void hosted(vk::BufferCreateInfo& buffer_info, vma::AllocationCreateInfo& alloc_info);
     void host_coherent(vk::BufferCreateInfo& buffer_info, vma::AllocationCreateInfo& alloc_info);
     void host_cached(vk::BufferCreateInfo& buffer_info, vma::AllocationCreateInfo& alloc_info);
@@ -86,6 +89,7 @@ namespace fi
         buffer_info.size = size;
         alloc_info.usage = vma::MemoryUsage::eAutoPreferDevice;
         (CF(buffer_info, alloc_info), ...);
+
         create_buffer(buffer_info, alloc_info);
     }
 

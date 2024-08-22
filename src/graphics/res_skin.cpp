@@ -109,6 +109,11 @@ fi::ResSkinDetails::~ResSkinDetails()
 
 void fi::ResSkinDetails::allocate_descriptor(vk::DescriptorPool des_pool)
 {
+    if (!set_layout_)
+    {
+        return;
+    }
+
     vk::DescriptorSetAllocateInfo alloc_info{};
     alloc_info.descriptorPool = des_pool;
     alloc_info.setSetLayouts(set_layout_);
