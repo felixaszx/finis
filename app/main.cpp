@@ -30,6 +30,7 @@ int main(int argc, char** argv)
 
     ExtensionLoader ext_loader("exe/pipeline0.dll");
     auto pipeline0 = ext_loader.load_ext_unique<GraphicsPipelineBase>(0);
+    pipeline0->get_pipeline_info(WIN_WIDTH, WIN_HEIGHT);
 
     Semaphore next_img;
     Semaphore submit;

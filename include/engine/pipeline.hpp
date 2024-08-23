@@ -9,16 +9,21 @@
 namespace fi
 {
     struct GraphicsPipelineBase : public Extension, //
-                                  private GraphicsObject
+                                  protected GraphicsObject
     {
         std::vector<vk::Image> images_{};
         std::vector<vma::Allocation> allocations_{};
         std::vector<vk::ImageView> views_{};
-        std::vector<vk::RenderingAttachmentInfo> atchm_info_{};
-        std::vector<ShaderModule> shaders_{};
+        std::vector<vk::RenderingAttachmentInfo> atchm_infos_{};
 
-        vk::RenderingInfo rendering_info_{};
-        vk::PipelineShaderStageCreateInfo shader_stages_{};
+        ShaderModule vs_{};
+        ShaderModule gs_{};
+        ShaderModule fs_{};
+
+        std::vector<vk::PipelineShaderStageCreateInfo> shader_stages_{};
+        std::vector<vk::PipelineColorBlendAttachmentState> atchm_blends_{};
+        std::vector<vk::DynamicState> dynamic_states_{};
+
         vk::PipelineRenderingCreateInfo pipeline_rendering_{};
         vk::PipelineInputAssemblyStateCreateInfo input_asm_{};
         vk::PipelineTessellationStateCreateInfo tesselation_info_{};
@@ -32,6 +37,9 @@ namespace fi
 
         vk::Pipeline pipeline_{};
         vk::PipelineLayout layout_{};
+        vk::RenderingInfo rendering_info_{};
+
+        virtual void get_pipeline_info(uint32_t width, uint32_t height) = 0;
     };
 
     struct ComputePipelineBase : public Extension, //

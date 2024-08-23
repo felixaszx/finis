@@ -957,7 +957,7 @@ void fi::ResDetails::lock_and_load()
     staging.unmap_memory();
 
     vk::CommandBuffer cmd = one_time_submit_cmd();
-    begin_cmd(cmd);
+    begin_cmd(cmd, vk::CommandBufferUsageFlagBits::eOneTimeSubmit);
     cmd.copyBuffer(staging, *buffer_, {{0, 0, buffer_->size()}});
     cmd.end();
     submit_one_time_cmd(cmd);
