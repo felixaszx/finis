@@ -39,7 +39,7 @@ namespace fi
         virtual void get_pipeline_info(uint32_t width, uint32_t height) = 0;
         virtual std::vector<vk::Image>& get_images() = 0;
         virtual std::vector<vk::ImageView>& get_image_views() = 0;
-        virtual std::vector<uint32_t> get_color_atchm_idx() = 0;
+        virtual std::vector<uint32_t> get_color_atchm_idx() { return {}; };
         virtual uint32_t get_depth_atchm_idx() { return -1; };
         virtual uint32_t get_stencil_atchm_idx() { return -1; };
         virtual uint32_t get_ds_atchm_idx() { return -1; };
