@@ -11,6 +11,7 @@ fi::SceneResources::SceneResources(const std::filesystem::path& res_path, uint32
     instancing_matrices_.resize(max_instances + instancing_infos_.size(), glm::identity<glm::mat4>());
     bounding_radius_.resize(instancing_infos_.size(), 0);
     renderables_.reserve(res_detail_->primitives_.size());
+
     for (size_t i = 0; i < instancing_infos_.size(); i++)
     {
         SceneRenderable& renderable = renderables_.emplace_back();
