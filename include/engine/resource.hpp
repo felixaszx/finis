@@ -21,7 +21,6 @@ namespace fi
 
     struct SceneRenderable
     {
-        uint32_t* avaliable_instances_ = nullptr;
         uint32_t* bounding_radius_ = nullptr;
         InstancingInfo* instancing_info_ = nullptr;
         std::vector<SceneRenderableRef> refs_{};
@@ -37,14 +36,12 @@ namespace fi
             vk::DeviceSize bounding_radius_ = 0;
         };
 
-        uint32_t avaliable_instances_ = 0;
-        std::vector<SceneRenderable> renderables_{};
-
       public:
         UniqueObj<ResDetails> res_detail_;               // set 0 in graphics
         UniqueObj<ResStructure> res_structure_{nullptr}; // set 1 in graphics
         UniqueObj<ResSkinDetails> res_skin_{nullptr};    // set 2 in graphics
         std::vector<std::vector<ResAnimation>> res_anims_{};
+        std::vector<SceneRenderable> renderables_{};
 
         std::array<vk::DescriptorPoolSize, 1> des_sizes_{};
         vk::DescriptorSetLayout set_layout_{};
@@ -69,6 +66,8 @@ namespace fi
                       uint32_t des_set);
         void compute(vk::CommandBuffer cmd, const glm::uvec3& work_group = {0, 0, 0});
     };
+
+    using ECSRenderable = SceneRenderableRef;
 }; // namespace fi
 
 #endif // ENGINE_RESOURCE_HPP

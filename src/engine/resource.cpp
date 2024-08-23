@@ -16,7 +16,6 @@ fi::SceneResources::SceneResources(const std::filesystem::path& res_path, uint32
     {
         SceneRenderable& renderable = renderables_.emplace_back();
         renderable.instancing_info_ = &instancing_infos_[i];
-        renderable.avaliable_instances_ = &avaliable_instances_;
         renderable.bounding_radius_ = &bounding_radius_[i];
         renderable.instancing_info_->instance_count_ = 1;
 
