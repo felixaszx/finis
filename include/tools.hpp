@@ -123,4 +123,8 @@ inline constexpr void make_shared2(std::shared_ptr<Ptr>& shared_ptr, Param&&... 
     shared_ptr.reset(new Ptr(std::forward<Param>(param)...));
 }
 
+struct DebugConsole
+{
+};
+
 #endif // INCLUDE_TOOLS_HPP
