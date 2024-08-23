@@ -114,112 +114,13 @@ void free_stl_container(C& container)
 template <typename Ptr, typename... Param>
 inline constexpr void make_unique2(std::unique_ptr<Ptr>& unique_ptr, Param&&... param)
 {
-    unique_ptr = std::make_unique<Ptr>(std::forward<Param>(param)...);
+    unique_ptr.reset(new Ptr(std::forward<Param>(param)...));
 }
 
 template <typename Ptr, typename... Param>
 inline constexpr void make_shared2(std::shared_ptr<Ptr>& shared_ptr, Param&&... param)
 {
-    shared_ptr = std::make_shared<Ptr>(std::forward<Param>(param)...);
+    shared_ptr.reset(new Ptr(std::forward<Param>(param)...));
 }
-
-template <typename T>
-struct UniqueObj : public std::unique_ptr<T>
-{
-    inline constexpr UniqueObj(std::nullptr_t obj)
-        : std::unique_ptr<T>(obj)
-    {
-    }
-
-    template <typename... Param>
-    inline constexpr UniqueObj(Param&&... param)
-        : std::unique_ptr<T>(new T(std::forward<Param>(param)...))
-    {
-    }
-
-    template <typename... Param>
-    inline constexpr void construct_with(Param&&... param)
-    {
-        this->reset(new T(std::forward<Param>(param)...));
-    }
-
-    operator T&() { return *this->get(); }
-    operator const T&() const { return *this->get(); }
-};
-
-template <typename T>
-struct RefObj
-{
-    T* ptr_ = nullptr;
-
-    RefObj() = default;
-    RefObj(T& target) { reference(target); }
-
-    operator T&() { return *ptr_; }
-    operator const T&() const { return *ptr_; }
-
-    void reference(T& target) { ptr_ = &target; }
-};
-
-template <typename T>
-struct SharedObj : public std::shared_ptr<T>
-{
-    struct Ref : public std::weak_ptr<T>
-    {
-        inline constexpr Ref(const SharedObj<T>& obj)
-            : std::weak_ptr<T>(obj)
-        {
-        }
-
-        T* test()
-        {
-            if (this->expired())
-            {
-                throw std::runtime_error("Reference to SharedObj expired\n");
-            }
-            else
-            {
-                *this->lock().get();
-            }
-        }
-
-        const T* test() const
-        {
-            if (this->expired())
-            {
-                throw std::runtime_error("Reference to SharedObj expired\n");
-            }
-            else
-            {
-                *this->lock().get();
-            }
-        }
-
-        operator T&() { return *test(); }
-        operator const T&() const { return *test(); }
-    };
-
-    inline constexpr SharedObj(std::nullptr_t obj)
-        : std::shared_ptr<T>(obj)
-    {
-    }
-
-    template <typename... Param>
-    inline constexpr SharedObj(Param&&... param)
-        : std::shared_ptr<T>(new T(std::forward<Param>(param)...))
-    {
-    }
-
-    template <typename... Param>
-    inline constexpr void construct_with(Param&&... param)
-    {
-        this->reset(new T(std::forward<Param>(param)...));
-    }
-
-    operator T&() { return *this->get(); }
-    operator const T&() const { return *this->get(); }
-
-    SharedObj<T>::Ref reference() { return {*this}; }
-};
 
 #endif // INCLUDE_TOOLS_HPP

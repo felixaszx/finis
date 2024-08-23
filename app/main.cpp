@@ -5,6 +5,7 @@
 #include "graphics/graphics.hpp"
 #include "graphics/swapchain.hpp"
 #include "engine/resource.hpp"
+#include "engine/pipeline.hpp"
 #include "fltk/fl_ext.hpp"
 
 int main(int argc, char** argv)
@@ -27,7 +28,8 @@ int main(int argc, char** argv)
     Swapchain sc;
     sc.create();
 
-    SceneResources scene_res("res/models");
+    ExtensionLoader ext_loader("exe/pipeline0.dll");
+    auto pipeline0 = ext_loader.load_ext_unique<GraphicsPipelineBase>(0);
 
     Semaphore next_img;
     Semaphore submit;

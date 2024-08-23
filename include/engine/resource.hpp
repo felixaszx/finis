@@ -39,9 +39,9 @@ namespace fi
 
       public:
         uint32_t ext_instance_count_ = 0;
-        UniqueObj<ResDetails> res_detail_;               // set 0 in graphics
-        UniqueObj<ResStructure> res_structure_{nullptr}; // set 1 in graphics
-        UniqueObj<ResSkinDetails> res_skin_{nullptr};    // set 2 in graphics
+        std::unique_ptr<ResDetails> res_detail_;               // set 0 in graphics
+        std::unique_ptr<ResStructure> res_structure_{nullptr}; // set 1 in graphics
+        std::unique_ptr<ResSkinDetails> res_skin_{nullptr};    // set 2 in graphics
         std::vector<std::vector<ResAnimation>> res_anims_{};
         std::vector<SceneRenderable> renderables_{};
 
@@ -53,7 +53,7 @@ namespace fi
         std::vector<InstancingInfo> instancing_infos_{}; // binding 1
         std::vector<glm::mat4> instancing_matrices_{};   // binding 2
         std::vector<uint32_t> bounding_radius_{};        // binding 3
-        UniqueObj<Buffer<BufferOffsets, storage, seq_write, host_coherent, presistant>> buffer_{nullptr};
+        std::unique_ptr<Buffer<BufferOffsets, storage, seq_write, host_coherent, presistant>> buffer_{nullptr};
 
         std::filesystem::path res_path_ = "";
 

@@ -3,6 +3,7 @@
 fi::SceneResources::SceneResources(const std::filesystem::path& res_path, uint32_t max_instances)
 {
     std::filesystem::directory_iterator file_iter(res_path);
+    make_unique2(res_detail_);
     for (const auto& file : file_iter)
     {
         res_detail_->add_gltf_file(file.path());
@@ -22,11 +23,11 @@ fi::SceneResources::SceneResources(const std::filesystem::path& res_path, uint32
         renderable_ref.matrix_ = &instancing_matrices_[i];
     }
 
-    res_structure_.construct_with(res_detail_);
-    res_skin_.construct_with(res_detail_, res_structure_);
+    make_unique2(res_structure_, *res_detail_);
+    make_unique2(res_skin_, *res_detail_, *res_structure_);
     for (size_t g = 0; g < res_detail_->gltf_.size(); g++)
     {
-        res_anims_.push_back(get_res_animations(res_detail_, res_structure_, g));
+        res_anims_.push_back(get_res_animations(*res_detail_, *res_structure_, g));
     }
     res_detail_->lock_and_load();
 
@@ -38,7 +39,7 @@ fi::SceneResources::SceneResources(const std::filesystem::path& res_path, uint32
         bounding_radius_.push_back(EMPTY);
     }
 
-    buffer_.construct_with(sizeof_arr(instancing_infos_) + padding + sizeof_arr(instancing_matrices_));
+    make_unique2(buffer_,sizeof_arr(instancing_infos_) + padding + sizeof_arr(instancing_matrices_));
     buffer_->instancing_infos_ = 0;
     buffer_->instancing_matrices_ = sizeof_arr(instancing_infos_) + padding;
     buffer_->bounding_radius_ = buffer_->instancing_matrices_ + sizeof_arr(instancing_matrices_);
