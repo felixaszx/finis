@@ -12,7 +12,6 @@ namespace fi
     {
         InstanceIdx first_matrix_ = EMPTY;
         uint32_t instance_count_ = 0;
-        uint32_t max_instance_ = 0;
     };
 
     struct SceneRenderableRef
@@ -22,8 +21,8 @@ namespace fi
 
     struct SceneRenderable
     {
-        RefObj<uint32_t> avaliable_instances_{};
-        RefObj<uint32_t> bounding_radius_{};
+        uint32_t* avaliable_instances_ = nullptr;
+        uint32_t* bounding_radius_ = nullptr;
         InstancingInfo* instancing_info_ = nullptr;
         std::vector<SceneRenderableRef> refs_{};
     };

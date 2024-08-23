@@ -15,8 +15,12 @@ fi::SceneResources::SceneResources(const std::filesystem::path& res_path, uint32
     {
         SceneRenderable& renderable = renderables_.emplace_back();
         renderable.instancing_info_ = &instancing_infos_[i];
-        renderable.avaliable_instances_.reference(avaliable_instances_);
-        renderable.bounding_radius_.reference(bounding_radius_[i]);
+        renderable.avaliable_instances_ = &avaliable_instances_;
+        renderable.bounding_radius_ = &bounding_radius_[i];
+        renderable.instancing_info_->instance_count_ = 1;
+
+        SceneRenderableRef& renderable_ref = renderable.refs_.emplace_back();
+        renderable_ref.matrix_ = &instancing_matrices_[i];
     }
 
     res_structure_.construct_with(res_detail_);
