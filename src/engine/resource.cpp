@@ -17,7 +17,6 @@ fi::SceneResources::SceneResources(const std::filesystem::path& res_path, uint32
         SceneRenderable& renderable = renderables_.emplace_back();
         renderable.instancing_info_ = &instancing_infos_[i];
         renderable.bounding_radius_ = &bounding_radius_[i];
-        renderable.instancing_info_->instance_count_ = 1;
 
         SceneRenderableRef& renderable_ref = renderable.refs_.emplace_back();
         renderable_ref.matrix_ = &instancing_matrices_[i];
@@ -118,4 +117,13 @@ void fi::SceneResources::bind_res(vk::CommandBuffer cmd,
 void fi::SceneResources::compute(vk::CommandBuffer cmd, const glm::uvec3& work_group)
 {
     dispatch_cmd(cmd, work_group);
+}
+fi::SceneRenderableRef* fi::SceneResources::add_renderable_ref(PrimIdx renderable_idx)
+{
+    if (ext_instance_count_ + instancing_infos_.size() >= instancing_matrices_.size())
+    {
+        return nullptr;
+    }
+    ext_instance_count_++;
+    return &renderables_[renderable_idx].refs_.emplace_back(&instancing_matrices_[ext_instance_count_ - 1]);
 }

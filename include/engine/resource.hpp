@@ -36,7 +36,9 @@ namespace fi
             vk::DeviceSize bounding_radius_ = 0;
         };
 
+
       public:
+        uint32_t ext_instance_count_ = 0;
         UniqueObj<ResDetails> res_detail_;               // set 0 in graphics
         UniqueObj<ResStructure> res_structure_{nullptr}; // set 1 in graphics
         UniqueObj<ResSkinDetails> res_skin_{nullptr};    // set 2 in graphics
@@ -65,6 +67,7 @@ namespace fi
                       vk::PipelineLayout pipeline_layout,
                       uint32_t des_set);
         void compute(vk::CommandBuffer cmd, const glm::uvec3& work_group = {0, 0, 0});
+        SceneRenderableRef* add_renderable_ref(PrimIdx renderable_idx);
     };
 
     using ECSRenderable = SceneRenderableRef;
