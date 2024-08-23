@@ -111,44 +111,6 @@ void fi::SceneResources::bind_res(vk::CommandBuffer cmd,
     cmd.bindDescriptorSets(bind_point, pipeline_layout, des_set, des_set_, {});
 }
 
-void fi::SceneResources::bind_details_res(vk::CommandBuffer cmd,
-                                          vk::PipelineBindPoint bind_point, //
-                                          vk::PipelineLayout pipeline_layout,
-                                          uint32_t des_set)
-{
-    res_detail_->bind_res(cmd, bind_point, pipeline_layout, des_set);
-}
-
-void fi::SceneResources::bind_structure_res(vk::CommandBuffer cmd,
-                                            vk::PipelineBindPoint bind_point, //
-                                            vk::PipelineLayout pipeline_layout,
-                                            uint32_t des_set)
-{
-    res_structure_->bind_res(cmd, bind_point, pipeline_layout, des_set);
-}
-
-void fi::SceneResources::bind_all_sub_res(vk::CommandBuffer cmd,
-                                          vk::PipelineBindPoint bind_point, //
-                                          vk::PipelineLayout pipeline_layout,
-                                          uint32_t des_set)
-{
-    if (res_skin_->des_set_)
-    {
-        cmd.bindDescriptorSets(bind_point, pipeline_layout, des_set,
-                               {res_detail_->des_set_,    //
-                                res_structure_->des_set_, //
-                                res_skin_->des_set_},
-                               {});
-    }
-    else
-    {
-        cmd.bindDescriptorSets(bind_point, pipeline_layout, des_set,
-                               {res_detail_->des_set_, //
-                                res_structure_->des_set_},
-                               {});
-    }
-}
-
 void fi::SceneResources::compute(vk::CommandBuffer cmd, const glm::uvec3& work_group)
 {
     dispatch_cmd(cmd, work_group);

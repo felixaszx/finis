@@ -52,9 +52,9 @@ namespace fi
         vk::DescriptorSet des_set_{};
 
         // storage
-        std::vector<InstancingInfo> instancing_infos_{}; // set 0 in compute
-        std::vector<glm::mat4> instancing_matrices_{};
-        std::vector<uint32_t> bounding_radius_{};
+        std::vector<InstancingInfo> instancing_infos_{}; // binding 1
+        std::vector<glm::mat4> instancing_matrices_{};   // binding 2
+        std::vector<uint32_t> bounding_radius_{};        // binding 3
         UniqueObj<Buffer<BufferOffsets, storage, seq_write, host_coherent, presistant>> buffer_{nullptr};
 
         std::filesystem::path res_path_ = "";
@@ -68,18 +68,6 @@ namespace fi
                       vk::PipelineBindPoint bind_point, //
                       vk::PipelineLayout pipeline_layout,
                       uint32_t des_set);
-        void bind_details_res(vk::CommandBuffer cmd,
-                              vk::PipelineBindPoint bind_point, //
-                              vk::PipelineLayout pipeline_layout,
-                              uint32_t des_set);
-        void bind_structure_res(vk::CommandBuffer cmd,
-                                vk::PipelineBindPoint bind_point, //
-                                vk::PipelineLayout pipeline_layout,
-                                uint32_t des_set);
-        void bind_all_sub_res(vk::CommandBuffer cmd,
-                              vk::PipelineBindPoint bind_point, //
-                              vk::PipelineLayout pipeline_layout,
-                              uint32_t des_set);
         void compute(vk::CommandBuffer cmd, const glm::uvec3& work_group = {0, 0, 0});
     };
 }; // namespace fi
