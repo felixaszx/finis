@@ -17,13 +17,6 @@ int main(int argc, char** argv)
     const uint32_t WIN_WIDTH = 1920;
     const uint32_t WIN_HEIGHT = 1080;
 
-    fle::DoubleWindow fltk(800, 600, "finis pannel");
-    fltk.end();
-    fle::Flow flow(0, 0, 800, 600);
-    fltk.add(flow);
-    fltk.resizable(flow);
-    fltk.show();
-
     Graphics g(WIN_WIDTH, WIN_HEIGHT, "finis");
     Swapchain sc;
     sc.create();
@@ -56,7 +49,7 @@ int main(int argc, char** argv)
 
         CpuClock::TimePoint curr_time = clock.get_elapsed();
 
-        while (fle::Global::check(), glfwGetWindowAttrib(g.window(), GLFW_ICONIFIED))
+        while (glfwGetWindowAttrib(g.window(), GLFW_ICONIFIED))
         {
             std::this_thread::sleep_for(1ms);
             g.update();
@@ -64,11 +57,6 @@ int main(int argc, char** argv)
         if (!g.update())
         {
             break;
-        }
-
-        if (glfwGetKey(g.window(), GLFW_KEY_P))
-        {
-            fltk.show();
         }
 
         cmds[0].reset();
@@ -91,7 +79,6 @@ int main(int argc, char** argv)
     sc.destory();
     g.device().destroyCommandPool(cmd_pool);
 
-    fltk.hide();
     fle::Global::check();
     return EXIT_SUCCESS;
 }
