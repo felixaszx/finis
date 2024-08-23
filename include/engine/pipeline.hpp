@@ -36,6 +36,8 @@ namespace fi
         vk::PipelineLayout layout_{};
         vk::RenderingInfo rendering_info_{};
 
+        virtual ~GraphicsPipelineBase() = default;
+
         virtual void get_pipeline_info(uint32_t width, uint32_t height) = 0;
         virtual std::vector<vk::Image>& get_images() = 0;
         virtual std::vector<vk::ImageView>& get_image_views() = 0;
@@ -55,6 +57,8 @@ namespace fi
 
         vk::Pipeline pipeline_{};
         vk::PipelineLayout layout_{};
+
+        virtual ~ComputePipelineBase() = default;
     };
 }; // namespace fi
 

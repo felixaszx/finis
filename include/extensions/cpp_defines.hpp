@@ -30,7 +30,6 @@ namespace fi
 {
     struct Extension
     {
-      public:
         std::string id_ = "";
         std::string description_ = "";
         virtual ~Extension() = default;
