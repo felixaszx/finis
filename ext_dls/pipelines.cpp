@@ -12,12 +12,14 @@ struct Pipeline0 : public fi::GraphicsPipelineBase
 {
     std::vector<vk::Format> formats_;
 
-    void get_pipeline_info(uint32_t width, uint32_t height) override
+    static inline const vk::Format COLOR_ATCHM_FORMAT_ = vk::Format::eR32G32B32A32Sfloat;
+    static inline const vk::Format DEPTH_ATCHM_FORMAT = vk::Format::eD16UnormS8Uint;
+    void create_res(uint32_t width, uint32_t height)
     {
         using namespace fi;
         vk::ImageCreateInfo atchm_info{{},
                                        vk::ImageType::e2D,
-                                       vk::Format::eR32G32B32A32Sfloat,
+                                       COLOR_ATCHM_FORMAT_,
                                        {width, height, 1},
                                        1,
                                        1,
@@ -97,6 +99,12 @@ struct Pipeline0 : public fi::GraphicsPipelineBase
                             {}, {}, {}, barrier);
         cmd.end();
         submit_one_time_cmd(cmd);
+    }
+
+    void get_pipeline_info(uint32_t width, uint32_t height) override
+    {
+        using namespace fi;
+        create_res(width, height);
 
         atchm_infos_.resize(5);
         for (int i = 0; i < 4; i++)
@@ -138,10 +146,9 @@ struct Pipeline0 : public fi::GraphicsPipelineBase
         dynamic_states_ = {vk::DynamicState::eScissor, vk::DynamicState::eViewport};
         dynamic_state_info_.setDynamicStates(dynamic_states_);
 
-        formats_ = {atchm_info.format, atchm_info.format, atchm_info.format, atchm_info.format};
+        formats_.resize(4, COLOR_ATCHM_FORMAT_);
         pipeline_rendering_.setColorAttachmentFormats(formats_);
-        pipeline_rendering_.setDepthAttachmentFormat(ds_info.format);
-        pipeline_rendering_.setStencilAttachmentFormat(ds_info.format);
+        pipeline_rendering_.setDepthAttachmentFormat(DEPTH_ATCHM_FORMAT);
 
         vk::GraphicsPipelineCreateInfo pso_info{};
         pso_info.pNext = &pipeline_rendering_;
