@@ -28,7 +28,7 @@ int main(int argc, char** argv)
     Swapchain sc;
     sc.create();
 
-    ExtensionLoader ext_loader("exe/pipeline0.dll");
+    ExtensionLoader ext_loader("exe/pipelines.dll");
     auto pipeline0 = ext_loader.load_ext_unique<GraphicsPipelineBase>(0);
     pipeline0->get_pipeline_info(WIN_WIDTH, WIN_HEIGHT);
 

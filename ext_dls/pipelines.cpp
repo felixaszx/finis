@@ -4,6 +4,10 @@
 #include "engine/pipeline.hpp"
 #include "tools.hpp"
 
+std::vector<vk::Image> images_{};
+std::vector<vma::Allocation> allocations_{};
+std::vector<vk::ImageView> views_{};
+
 struct Pipeline0 : public fi::GraphicsPipelineBase
 {
     std::vector<vk::Format> formats_;
@@ -157,6 +161,12 @@ struct Pipeline0 : public fi::GraphicsPipelineBase
         rendering_info_.layerCount = 1;
         rendering_info_.renderArea = {{}, width, height};
     }
+
+    std::vector<vk::Image>& get_images() override { return images_; }
+    std::vector<vk::ImageView>& get_image_views() override { return views_; }
+
+    std::vector<uint32_t> get_color_atchm_idx() override { return {0, 1, 2, 3}; }
+    uint32_t get_depth_atchm_idx() override { return 4; }
 
     ~Pipeline0()
     { // free resources
