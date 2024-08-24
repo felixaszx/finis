@@ -57,25 +57,7 @@ namespace fi
     {
         cmd.dispatch(work_group.x, work_group.y, work_group.z);
     }
-
-    template <typename T>
-    inline std::string indx_error(const T& arr, size_t idx, const std::string& details = "")
-    {
-        return std::format("Index {}[{}] out of range{}", details, idx, arr.size());
-    }
 };
-
-template <typename T>
-float get_normalized(T integer)
-{
-    return integer / (float)std::numeric_limits<T>::max();
-}
-
-template <typename T>
-float get_normalized(T* integer)
-{
-    return get_normalized(*integer);
-}
 
 template <typename T, typename Q>
 void sset(T& dst, const Q& src)
@@ -122,9 +104,5 @@ inline constexpr void make_shared2(std::shared_ptr<Ptr>& shared_ptr, Param&&... 
 {
     shared_ptr.reset(new Ptr(std::forward<Param>(param)...));
 }
-
-struct DebugConsole
-{
-};
 
 #endif // INCLUDE_TOOLS_HPP

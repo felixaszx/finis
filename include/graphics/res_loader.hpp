@@ -49,9 +49,9 @@ namespace fi
         std::vector<glm::vec4> vtx_colors_{};
         std::vector<glm::uvec4> vtx_joints_{};
         std::vector<glm::vec4> vtx_weights_{};
-        std::vector<glm::vec3> target_positions_{};                // tbd AOS style
-        std::vector<glm::vec3> target_normals_{};                  // tbd AOS style
-        std::vector<glm::vec4> target_tangents_{};                 // tbd AOS style
+        std::vector<glm::vec3> target_positions_{};
+        std::vector<glm::vec3> target_normals_{};
+        std::vector<glm::vec4> target_tangents_{};
         std::vector<vk::DrawIndexedIndirectCommand> draw_calls_{}; // indexed by PrimIdx
 
         // storage
