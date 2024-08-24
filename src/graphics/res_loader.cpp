@@ -54,7 +54,6 @@ void fi::ResDetails::add_gltf_file(const std::filesystem::path& path)
                                        path.parent_path(),                         //
                                        fgltf::Options::LoadExternalBuffers |       //
                                            fgltf::Options::LoadExternalImages |    //
-                                           fgltf::Options::DecomposeNodeMatrices | //
                                            fgltf::Options::GenerateMeshIndices));
     if (!gltf_.back())
     {

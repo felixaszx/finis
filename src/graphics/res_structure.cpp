@@ -34,7 +34,7 @@ inline glm::mat4 get_node_transform(const fi::ResStructure::NodeInfo& node, cons
     glm::mat4 translation = glm::translate(node.translation_);
     glm::mat4 rotation(node.rotation_);
     glm::mat4 scale = glm::scale(node.scale_);
-    return parents * translation * rotation * scale;
+    return parents * translation * rotation * scale * node.transform_;
 }
 
 fi::ResStructure::ResStructure(ResDetails& res_details)
@@ -70,12 +70,14 @@ fi::ResStructure::ResStructure(ResDetails& res_details)
                 for (const auto& node_in : gltf->nodes)
                 {
                     const fgltf::TRS& trs = std::get<0>(node_in.transform);
+                    const fgltf::math::fmat4x4& transform = std::get<1>(node_in.transform);
                     NodeInfo& node = tmp_nodes.emplace_back();
                     node.self_idx_ = tmp_nodes.size() - 1;
                     node.name_ = node_in.name;
                     glms::assign_value(node.translation_, trs.translation, trs.translation.size());
                     glms::assign_value(node.rotation_, trs.rotation, trs.rotation.size());
                     glms::assign_value(node.scale_, trs.scale, trs.scale.size());
+                    memcpy(&node.transform_, transform.data(), sizeof(transform));
 
                     if (node_in.meshIndex)
                     {

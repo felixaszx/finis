@@ -28,6 +28,7 @@ namespace fi
             glm::vec3 translation_ = {0, 0, 0};
             glm::quat rotation_ = {0, 0, 0, 1};
             glm::vec3 scale_ = {1, 1, 1};
+            glm::mat4 transform_ = glm::identity<glm::mat4>();
         };
 
       private:
