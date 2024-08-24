@@ -22,16 +22,24 @@ namespace fi
             requires std::derived_from<T, Extension>
         [[nodiscard]] std::unique_ptr<T> load_ext_unique(size_t idx = 0)
         {
-            Extension* ext_ptr = dl_.get<Extension*()>(std::format("load_extension_{}", idx))();
-            return std::unique_ptr<T>(dynamic_cast<T*>(ext_ptr));
+            if (!valid())
+            {
+                Extension* ext_ptr = dl_.get<Extension*()>(std::format("load_extension_{}", idx))();
+                return std::unique_ptr<T>(dynamic_cast<T*>(ext_ptr));
+            }
+            throw std::runtime_error(std::format("DLL {} is not loaded", dl_.location().generic_string()));
         }
 
         template <typename T>
             requires std::derived_from<T, Extension>
         [[nodiscard]] std::shared_ptr<T> load_ext_shared(size_t idx = 0)
         {
-            Extension* ext_ptr = dl_.get<Extension*()>(std::format("load_extension_{}", idx))();
-            return std::shared_ptr<T>(dynamic_cast<T*>(ext_ptr));
+            if (valid())
+            {
+                Extension* ext_ptr = dl_.get<Extension*()>(std::format("load_extension_{}", idx))();
+                return std::shared_ptr<T>(dynamic_cast<T*>(ext_ptr));
+            }
+            throw std::runtime_error(std::format("DLL {} is not loaded", dl_.location().generic_string()));
         }
     };
 }; // namespace fi
