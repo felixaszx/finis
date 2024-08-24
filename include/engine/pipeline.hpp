@@ -8,6 +8,12 @@
 
 namespace fi
 {
+    struct ProxyPipelineBase : public Extension, //
+                               protected GraphicsObject
+    {
+        virtual ~ProxyPipelineBase() = default;
+    };
+
     struct GraphicsPipelineBase : public Extension, //
                                   protected GraphicsObject
     {
