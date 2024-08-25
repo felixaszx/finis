@@ -15,38 +15,68 @@
 
 namespace fi
 {
+    // all pointer use as pointer to uint32_t
     inline static const uint32_t EMPTY = -1;
-    inline static const size_t EMPTY_L = -1;
+    inline static const uint64_t EMPTY_L = -1;
 
     struct PrimInfo
     {
-        uint32_t positon_ = EMPTY;
-        uint32_t normal_ = EMPTY;
-        uint32_t tangent_ = EMPTY;
-        uint32_t texcoord_ = EMPTY;
-        uint32_t joints_ = EMPTY;
-        uint32_t weights_ = EMPTY;
+        enum Attribute
+        {
+            POSITON,
+            NORMAL,
+            TANGENT,
+            TEXCOORD,
+            JOINTS,
+            WEIGHTS
+        };
 
-        uint32_t mesh_ = EMPTY;
-        uint32_t material_ = EMPTY;
+        uint64_t positon_ = EMPTY_L;  // vec3[]
+        uint64_t normal_ = EMPTY_L;   // vec3[]
+        uint64_t tangent_ = EMPTY_L;  // vec4[]
+        uint64_t texcoord_ = EMPTY_L; // vec2[]
+        uint64_t joints_ = EMPTY_L;   // uvec4[]
+        uint64_t weights_ = EMPTY_L;  // vec4[]
+
+        uint64_t mesh_ = EMPTY_L;     // MeshInfo*
+        uint64_t material_ = EMPTY_L; // MaterialInfo*
+
+        uint64_t& get_attrib_ptr(Attribute attrib)
+        {
+            switch (attrib)
+            {
+                case POSITON:
+                    return positon_;
+                case NORMAL:
+                    return normal_;
+                case TANGENT:
+                    return tangent_;
+                case TEXCOORD:
+                    return texcoord_;
+                case JOINTS:
+                    return joints_;
+                case WEIGHTS:
+                    return weights_;
+            }
+        }
     };
 
     struct MorphInfo
     {
-        uint32_t position_ = EMPTY;
-        uint32_t normal_ = EMPTY;
-        uint32_t tangent_ = EMPTY;
+        uint64_t position_ = EMPTY_L; // vec3[]
+        uint64_t normal_ = EMPTY_L;   // vec3[]
+        uint64_t tangent_ = EMPTY_L;  // vec4[]
 
-        uint32_t position_count_ = 0;
-        uint32_t normal_count_ = 0;
-        uint32_t tangent_count_ = 0;
+        uint64_t position_count_ = 0; // scalar
+        uint64_t normal_count_ = 0;   // scalar
+        uint64_t tangent_count_ = 0;  // scalar
     };
 
     struct MeshInfo
     {
-        uint32_t node_ = EMPTY;
-        uint32_t morph_weights_ = EMPTY;
-        uint32_t joint_ = EMPTY;
+        uint64_t node_ = EMPTY_L;          // mat4*
+        uint64_t morph_weights_ = EMPTY_L; // float[]
+        uint64_t joint_ = EMPTY_L;         // uint32_t[]
     };
 
     struct MaterialInfo
@@ -77,8 +107,9 @@ namespace fi
         uint32_t sheen_roughtness_ = EMPTY;
     };
 
-#define sizeof_as_uint32_t(type)    (sizeof(type) / sizeof(uint32_t))
-#define sizeof_arr_as_uint32_t(arr) ((arr.size() * sizeof(arr[0])) / sizeof(uint32_t))
+#define size_as_uint32_t(bytes)     (bytes / sizeof(uint32_t))
+#define sizeof_as_uint32_t(type)    (size_as_uint32_t(sizeof(type)))
+#define sizeof_arr_as_uint32_t(arr) (arr.size() * sizeof_as_uint32_t(arr[0]))
 
 }; // namespace fi
 

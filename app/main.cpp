@@ -3,6 +3,7 @@
 
 #include "extensions/loader.hpp"
 #include "graphics/graphics.hpp"
+#include "graphics/prims.hpp"
 #include "graphics/swapchain.hpp"
 
 int main(int argc, char** argv)
@@ -17,6 +18,8 @@ int main(int argc, char** argv)
     Graphics g(WIN_WIDTH, WIN_HEIGHT, "finis");
     Swapchain sc;
     sc.create();
+
+    Primitives prims(20_mb, 2000);
 
     Semaphore next_img;
     Semaphore submit;
