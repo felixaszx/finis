@@ -1,5 +1,8 @@
 #version 460 core
-#extension GL_EXT_nonuniform_qualifier : enable
+#extension GL_ARB_shader_draw_parameters : require
+#extension GL_EXT_nonuniform_qualifier : require
+#extension GL_EXT_scalar_block_layout : require
+#extension GL_EXT_buffer_reference : require
 
 // Declares
 
@@ -66,14 +69,8 @@ layout(location = 0) in struct
 } FRAG_DATA;
 layout(location = 6) in flat int PRIM_IDX;
 
-layout(std430, set = 0, binding = 13) readonly buffer _PRIMITIVES
-{
-    PrimInfo PRIMITIVES[];
-};
-layout(std430, set = 0, binding = 14) readonly buffer _MATERIALS
-{
-    MaterialInfo MATERIALS[];
-};
+layout(std430, set = 0, binding = 13) readonly buffer _PRIMITIVES { PrimInfo PRIMITIVES[]; };
+layout(std430, set = 0, binding = 14) readonly buffer _MATERIALS { MaterialInfo MATERIALS[]; };
 layout(set = 0, binding = 15) uniform sampler2D textures_arr[];
 
 // Code
