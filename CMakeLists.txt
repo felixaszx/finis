@@ -11,7 +11,6 @@ set(CMAKE_RUNTIME_OUTPUT_DIRECTORY ${CMAKE_SOURCE_DIR}/exe)
 
 add_subdirectory(src/graphics)
 add_subdirectory(src/extensions)
-add_subdirectory(src/engine)
 add_subdirectory(ext_dls)
 
 file(GLOB_RECURSE SRC app/*.cpp )
@@ -20,7 +19,6 @@ target_include_directories(finis PRIVATE ${CMAKE_SOURCE_DIR}/include)
 target_link_libraries(finis PRIVATE fltk)
 
 target_link_libraries(finis PRIVATE finis_extension)
-target_link_libraries(finis PRIVATE finis_engine)
 target_link_libraries(finis PRIVATE finis_graphics)
 
 add_executable(fltk_test fltk.cpp)

@@ -3,7 +3,7 @@ BasedOnStyle: Microsoft
 AlignAfterOpenBracket: Align
 AlignConsecutiveMacros: true
 AlignEscapedNewlines: Left
-AllowShortFunctionsOnASingleLine: InlineOnly
+AllowShortFunctionsOnASingleLine: All
 SortIncludes: false
 NamespaceIndentation: All
 PointerAlignment: Left
@@ -11,6 +11,7 @@ ColumnLimit: 120
 AlwaysBreakTemplateDeclarations: Yes
 PackConstructorInitializers: Never
 BreakAfterAttributes: Never
+IndentCaseLabels: true
 BinPackParameters: false
 AllowAllParametersOfDeclarationOnNextLine: false
 Cpp11BracedListStyle: true

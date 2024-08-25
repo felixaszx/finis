@@ -25,6 +25,7 @@
 
 #define GLFW_INCLUDE_VULKAN
 #include <GLFW/glfw3.h>
+#define VULKAN_HPP_NO_CONSTRUCTORS
 #include <vulkan/vulkan.hpp>
 
 #include "glms.hpp"
@@ -43,8 +44,6 @@
 
 namespace fi
 {
-    namespace fgltf = fastgltf;
-
     struct Graphics;
     class GraphicsObject
     {

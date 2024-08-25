@@ -4,9 +4,6 @@
 #include "extensions/loader.hpp"
 #include "graphics/graphics.hpp"
 #include "graphics/swapchain.hpp"
-#include "engine/resource.hpp"
-#include "engine/pipeline.hpp"
-#include "fltk/fl_ext.hpp"
 
 int main(int argc, char** argv)
 {
@@ -20,10 +17,6 @@ int main(int argc, char** argv)
     Graphics g(WIN_WIDTH, WIN_HEIGHT, "finis");
     Swapchain sc;
     sc.create();
-
-    ExtensionLoader ext_loader("exe/pipelines.dll");
-    auto pipeline0 = ext_loader.load_ext_unique<GraphicsPipelineBase>(0);
-    pipeline0->get_pipeline_info(WIN_WIDTH, WIN_HEIGHT);
 
     Semaphore next_img;
     Semaphore submit;
@@ -79,6 +72,5 @@ int main(int argc, char** argv)
     sc.destory();
     g.device().destroyCommandPool(cmd_pool);
 
-    fle::Global::check();
     return EXIT_SUCCESS;
 }

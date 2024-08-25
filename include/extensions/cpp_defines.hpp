@@ -2,7 +2,6 @@
 #define EXTENSIONS_CPP_DEFINES_HPP
 
 #include <memory>
-#include <concepts>
 #include <boost/config.hpp>
 #include <boost/dll.hpp>
 
