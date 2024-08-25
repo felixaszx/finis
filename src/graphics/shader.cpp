@@ -47,7 +47,7 @@ void fi::ShaderModule::reset()
     sstr << file.rdbuf();
     std::string code = sstr.str();
 
-    auto kind_func = [&]() -> shaderc_shader_kind
+    auto kind_func = [&]()
     {
         switch (stage)
         {
@@ -60,7 +60,7 @@ void fi::ShaderModule::reset()
             case vk::ShaderStageFlagBits::eCompute:
                 return shaderc_compute_shader;
             default:
-                return shaderc_mesh_shader;
+                return shaderc_vertex_shader;
         }
     };
 

@@ -1,6 +1,7 @@
 #version 460 core
 #extension GL_ARB_shader_draw_parameters : require
 #extension GL_EXT_nonuniform_qualifier : require
+#extension GL_EXT_scalar_block_layout : enable
 
 #define EMPTY -1
 

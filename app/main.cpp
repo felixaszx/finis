@@ -56,9 +56,9 @@ int main(int argc, char** argv)
         begin_cmd(cmds[0]);
         cmds[0].end();
 
-        std::vector<vk::PipelineStageFlags> waiting_stages = {vk::PipelineStageFlagBits::eColorAttachmentOutput};
-        std::vector<vk::Semaphore> submit_sems = {submit};
-        std::vector<vk::Semaphore> wait_sems = {next_img};
+        std::array<vk::PipelineStageFlags, 1> waiting_stages = {vk::PipelineStageFlagBits::eColorAttachmentOutput};
+        std::array<vk::Semaphore, 1> submit_sems = {submit};
+        std::array<vk::Semaphore, 1> wait_sems = {next_img};
         vk::SubmitInfo submit_info{};
         submit_info.setSignalSemaphores(submit_sems);
         submit_info.setWaitSemaphores(wait_sems);
