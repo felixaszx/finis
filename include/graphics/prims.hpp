@@ -11,6 +11,7 @@ namespace fi
       public:
         struct AttribSetter
         {
+            std::mutex alloc_lock_;
             Primitives* prims_ = nullptr;
 
             AttribSetter& add_positions(const std::vector<glm::vec3>& positions);
