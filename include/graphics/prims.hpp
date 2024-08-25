@@ -9,7 +9,7 @@ namespace fi
     struct Primitives
     {
       public:
-        struct AttribSetter
+        struct AttribSetter // thread safe
         {
             std::mutex alloc_lock_;
             Primitives* prims_ = nullptr;
