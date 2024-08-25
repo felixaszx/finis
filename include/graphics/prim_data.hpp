@@ -77,6 +77,9 @@ namespace fi
         uint32_t sheen_roughtness_ = EMPTY;
     };
 
+#define sizeof_as_uint32_t(type)    (sizeof(type) / sizeof(uint32_t))
+#define sizeof_arr_as_uint32_t(arr) ((arr.size() * sizeof(arr[0])) / sizeof(uint32_t))
+
 }; // namespace fi
 
 #endif // GRAPHICS_PRIM_DATA_HPP
