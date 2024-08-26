@@ -4,6 +4,8 @@
 #include <queue>
 #include <cstring>
 
+#include <vulkan/vulkan.hpp>
+
 namespace fi::graphics
 {
     class CircularSpan
@@ -24,6 +26,7 @@ namespace fi::graphics
         void pop_front();
         void pop_front_cleared();
         bool copy_front_to(std::byte* dst);
+        std::array<std::pair<size_t, size_t>, 2> front_region();
         size_t front_block_size() { return blocks_.front().second; }
         size_t front() { return front_; }
         size_t empty() { return !size_; }

@@ -71,3 +71,14 @@ bool fi::graphics::CircularSpan::copy_front_to(std::byte* dst)
     }
     return false;
 }
+
+std::array<std::pair<size_t, size_t>, 2> fi::graphics::CircularSpan::front_region()
+{
+    std::pair<std::byte*, size_t>& block = blocks_.front();
+    std::array<std::pair<size_t, size_t>, 2> seeks;
+    seeks[0].first = front_;
+    seeks[0].second = std::min(block.second, capacity() - front_);
+    seeks[1].first = 0;
+    seeks[1].second = block.second - seeks[0].second;
+    return seeks;
+}
