@@ -9,6 +9,12 @@ void fi::graphics::CircularSpan::reference(void* data, size_t size)
 {
     begin_ = (std::byte*)data;
     end_ = (std::byte*)data + size;
+    front_ = 0;
+    size_ = 0;
+    while (!blocks_.empty())
+    {
+        blocks_.pop();
+    }
 }
 
 bool fi::graphics::CircularSpan::push_back(void* data, size_t new_size)
@@ -55,7 +61,7 @@ void fi::graphics::CircularSpan::pop_front_cleared()
     pop_front();
 }
 
-bool fi::graphics::CircularSpan::copy_front_to(std::byte* dst)
+bool fi::graphics::CircularSpan::copy_front_block_to(std::byte* dst)
 {
     if (size_)
     {
@@ -72,7 +78,7 @@ bool fi::graphics::CircularSpan::copy_front_to(std::byte* dst)
     return false;
 }
 
-std::array<std::pair<size_t, size_t>, 2> fi::graphics::CircularSpan::front_region()
+std::array<std::pair<size_t, size_t>, 2> fi::graphics::CircularSpan::front_block_region()
 {
     std::pair<std::byte*, size_t>& block = blocks_.front();
     std::array<std::pair<size_t, size_t>, 2> seeks;
