@@ -74,7 +74,7 @@ namespace fi
         inline static GLFWwindow* window_{};
 
         inline static std::vector<vk::CommandPool> cmd_pools_{};
-        inline static std::unique_ptr<bst::thread_pool> thread_pool_{};
+        inline static bst::thread_pool thread_pool_{};
 
       public:
         static vk::Instance instance();
@@ -89,7 +89,7 @@ namespace fi
         static vk::CommandBuffer one_time_submit_cmd();
         static void submit_one_time_cmd(vk::CommandBuffer cmd);
         static bst::thread_pool& thread_pool();
-        static const std::vector<vk::CommandPool>& cmd_pools();
+        static const vk::CommandPool cmd_pools();
     };
 
     struct Graphics : public GraphicsObject
