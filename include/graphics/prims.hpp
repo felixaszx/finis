@@ -15,8 +15,8 @@ namespace fi
         struct
         {
             vk::DeviceSize curr_size_ = 0;
-            const vk::DeviceSize max_size_ = 0;
-            
+            const vk::DeviceSize capacity_ = 0;
+
             vk::Buffer buffer_{};
             vma::Allocation alloc_{};
         } data_; // buffer 0
@@ -24,8 +24,8 @@ namespace fi
 
         struct
         {
-            uint32_t prim_count_ = 0;
-            const uint32_t max_prims_ = 0;
+            uint32_t count_ = 0;
+            const uint32_t capacity_ = 0;
 
             vk::Buffer buffer_{}; // buffer 1
             vma::Allocation alloc_{};
@@ -39,7 +39,7 @@ namespace fi
         } addresses_{};
 
       public:
-        Primitives(vk::DeviceSize max_data_size, uint32_t max_prim_count);
+        Primitives(vk::DeviceSize data_size_limit, uint32_t prim_limit);
         ~Primitives();
     };
 }; // namespace fi

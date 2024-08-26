@@ -229,6 +229,10 @@ void fi::GraphicsObject::submit_one_time_cmd(vk::CommandBuffer cmd)
     auto r = device_.waitForFences(fence, true, std::numeric_limits<uint64_t>::max());
 }
 
+fi::bst::thread_pool& fi::GraphicsObject::thread_pool() { return *thread_pool_; }
+
+const std::vector<vk::CommandPool>& fi::GraphicsObject::cmd_pools() { return cmd_pools_; }
+
 vk::Fence fi::create_vk_fence(vk::Device device, bool signal)
 {
     vk::FenceCreateInfo create_info{};

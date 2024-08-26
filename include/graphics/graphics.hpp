@@ -38,12 +38,12 @@
     while (false)
 #include "vma/vk_mem_alloc.hpp"
 
-#include "fastgltf/core.hpp"
-#include "fastgltf/tools.hpp"
-#include "fastgltf/glm_element_traits.hpp"
+#include "bs_th_pool/BS_thread_pool.hpp"
 
 namespace fi
 {
+    namespace bst = BS;
+
     struct Graphics;
     class GraphicsObject
     {
@@ -73,6 +73,9 @@ namespace fi
         inline static vma::Allocator allocator_{};
         inline static GLFWwindow* window_{};
 
+        inline static std::vector<vk::CommandPool> cmd_pools_{};
+        inline static std::unique_ptr<bst::thread_pool> thread_pool_{};
+
       public:
         static vk::Instance instance();
         static vk::SurfaceKHR surface();
@@ -85,6 +88,8 @@ namespace fi
         static GLFWwindow* window();
         static vk::CommandBuffer one_time_submit_cmd();
         static void submit_one_time_cmd(vk::CommandBuffer cmd);
+        static bst::thread_pool& thread_pool();
+        static const std::vector<vk::CommandPool>& cmd_pools();
     };
 
     struct Graphics : public GraphicsObject
