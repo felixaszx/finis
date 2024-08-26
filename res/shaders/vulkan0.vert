@@ -38,15 +38,42 @@ struct MeshInfo
     uint64_t joint_;         // uint32_t[]
 };
 
-layout(buffer_reference, scalar) readonly buffer RawBuffer { uint arr_[]; };
-layout(buffer_reference, scalar) readonly buffer PrimInfoBuffer { PrimInfo arr_[]; };
-layout(buffer_reference, scalar) readonly buffer MorphInfoBuffer { MorphInfo arr_[]; };
-layout(buffer_reference, scalar) readonly buffer MeshInfoBuffer { MeshInfo arr_[]; };
-layout(buffer_reference, scalar) readonly buffer Vec2Buffer { vec3 arr_[]; };
-layout(buffer_reference, scalar) readonly buffer Vec3Buffer { vec3 arr_[]; };
-layout(buffer_reference, scalar) readonly buffer Vec4Buffer { vec4 arr_[]; };
-layout(buffer_reference, scalar) readonly buffer UVec4Buffer { vec4 arr_[]; };
-layout(buffer_reference, scalar) readonly buffer Mat4Buffer { mat4 arr_[]; };
+layout(buffer_reference, scalar) readonly buffer RawBuffer
+{
+    uint arr_[];
+};
+layout(buffer_reference, scalar) readonly buffer PrimInfoBuffer
+{
+    PrimInfo arr_[];
+};
+layout(buffer_reference, scalar) readonly buffer MorphInfoBuffer
+{
+    MorphInfo arr_[];
+};
+layout(buffer_reference, scalar) readonly buffer MeshInfoBuffer
+{
+    MeshInfo arr_[];
+};
+layout(buffer_reference, scalar) readonly buffer Vec2Buffer
+{
+    vec3 arr_[];
+};
+layout(buffer_reference, scalar) readonly buffer Vec3Buffer
+{
+    vec3 arr_[];
+};
+layout(buffer_reference, scalar) readonly buffer Vec4Buffer
+{
+    vec4 arr_[];
+};
+layout(buffer_reference, scalar) readonly buffer UVec4Buffer
+{
+    vec4 arr_[];
+};
+layout(buffer_reference, scalar) readonly buffer Mat4Buffer
+{
+    mat4 arr_[];
+};
 
 // out put
 layout(location = 0) out struct
@@ -60,4 +87,7 @@ layout(location = 0) out struct
 } FRAG_DATA;
 layout(location = 6) out flat int MATERIAL_IDX;
 
-void main() { MATERIAL_IDX = gl_DrawIDARB; }
+void main()
+{
+    MATERIAL_IDX = gl_DrawIDARB;
+}

@@ -3,7 +3,7 @@ BasedOnStyle: Microsoft
 AlignAfterOpenBracket: Align
 AlignConsecutiveMacros: true
 AlignEscapedNewlines: Left
-AllowShortFunctionsOnASingleLine: All
+AllowShortFunctionsOnASingleLine: InlineOnly
 SortIncludes: false
 NamespaceIndentation: All
 PointerAlignment: Left

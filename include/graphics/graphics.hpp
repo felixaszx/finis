@@ -89,7 +89,7 @@ namespace fi
         static vk::CommandBuffer one_time_submit_cmd();
         static void submit_one_time_cmd(vk::CommandBuffer cmd);
         static bst::thread_pool& thread_pool();
-        static const vk::CommandPool cmd_pools();
+        static const vk::CommandPool cmd_pool();
     };
 
     struct Graphics : public GraphicsObject
