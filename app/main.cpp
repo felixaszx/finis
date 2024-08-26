@@ -15,7 +15,6 @@ int main(int argc, char** argv)
     const uint32_t WIN_WIDTH = 1920;
     const uint32_t WIN_HEIGHT = 1080;
     
-
     Graphics g(WIN_WIDTH, WIN_HEIGHT, "finis");
     Swapchain sc;
     sc.create();
