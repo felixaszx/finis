@@ -28,7 +28,9 @@ namespace fi
             TANGENT,
             TEXCOORD,
             JOINTS,
-            WEIGHTS
+            WEIGHTS,
+            MESH,
+            MATERIAL
         };
 
         uint64_t positon_ = EMPTY_L;  // vec3[]
@@ -57,6 +59,10 @@ namespace fi
                     return joints_;
                 case WEIGHTS:
                     return weights_;
+                case MESH:
+                    return mesh_;
+                case MATERIAL:
+                    return material_;
             }
         }
     };

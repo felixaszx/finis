@@ -36,8 +36,11 @@ struct MaterialInfo
     uint sheen_color_;
     uint sheen_roughtness_;
 };
-// Datas
 
+layout(buffer_reference, scalar) readonly buffer RawBuffer { uint arr_[]; };
+layout(buffer_reference, scalar) readonly buffer MaterialBuffer { MaterialInfo arr_[]; };
+
+// Datas
 layout(location = 0) out vec4 POSITION;
 layout(location = 1) out vec4 NORMAL;
 layout(location = 2) out vec4 COLOR;
@@ -56,6 +59,4 @@ layout(location = 6) in flat uint MATERIAL_IDX;
 
 // Code
 
-void main()
-{
-}
+void main() {}

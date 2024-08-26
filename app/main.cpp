@@ -5,16 +5,18 @@
 #include "graphics/graphics.hpp"
 #include "graphics/prims.hpp"
 #include "graphics/swapchain.hpp"
+#include "bs_th_pool/BS_thread_pool.hpp"
 
 int main(int argc, char** argv)
 {
     using namespace fi;
     using namespace glms::literal;
     using namespace std::chrono_literals;
+    namespace bs = BS;
 
     const uint32_t WIN_WIDTH = 1920;
     const uint32_t WIN_HEIGHT = 1080;
-    
+
     Graphics g(WIN_WIDTH, WIN_HEIGHT, "finis");
     Swapchain sc;
     sc.create();
