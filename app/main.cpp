@@ -12,6 +12,7 @@ int main(int argc, char** argv)
     using namespace fi;
     using namespace glms::literal;
     using namespace std::chrono_literals;
+    using namespace fi::graphics;
     namespace bs = BS;
 
     const uint32_t WIN_WIDTH = 1920;
@@ -22,6 +23,7 @@ int main(int argc, char** argv)
     sc.create();
 
     Primitives prims(20_mb, 2000);
+    prims.generate_staging_buffer(20_mb);
 
     Semaphore next_img;
     Semaphore submit;

@@ -19,7 +19,7 @@
 #include "graphics.hpp"
 #include "tools.hpp"
 
-namespace fi
+namespace fi::graphics
 {
     class ShaderModule : public vk::ShaderModule,                  //
                          public vk::PipelineShaderStageCreateInfo, //

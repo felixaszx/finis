@@ -40,7 +40,7 @@
 
 #include "bs_th_pool/BS_thread_pool.hpp"
 
-namespace fi
+namespace fi::graphics
 {
     namespace bst = BS;
 

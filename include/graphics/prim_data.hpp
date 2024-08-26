@@ -13,7 +13,7 @@
 
 #include "graphics.hpp"
 
-namespace fi
+namespace fi::graphics
 {
     // all pointer use as pointer to uint32_t
     inline static const uint32_t EMPTY = -1;

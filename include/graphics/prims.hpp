@@ -4,8 +4,9 @@
 #include "graphics.hpp"
 #include "tools.hpp"
 #include "prim_data.hpp"
+#include "circular_span.hpp"
 
-namespace fi
+namespace fi::graphics
 {
     struct Primitives : private GraphicsObject
     {
@@ -38,10 +39,15 @@ namespace fi
             vk::DeviceAddress prim_buffer_ = 0;
         } addresses_{};
 
+        vk::Buffer staging_buffer_{};
+        vma::Allocation staging_alloc_{};
+        CircularSpan staging_span_{};
+
       public:
         Primitives(vk::DeviceSize data_size_limit, uint32_t prim_limit);
+        void generate_staging_buffer(vk::DeviceSize limit);
         ~Primitives();
     };
-}; // namespace fi
+}; // namespace fi::graphics
 
 #endif // GRAPHICS_PRIMS_HPP

@@ -10,19 +10,19 @@
  */
 #include "graphics/shader.hpp"
 
-fi::ShaderModule::ShaderModule(const std::string& file_name, //
+fi::graphics::ShaderModule::ShaderModule(const std::string& file_name, //
                                vk::ShaderStageFlagBits stage)
     : file_name_(file_name)
 {
     reset(file_name, stage);
 }
 
-fi::ShaderModule::~ShaderModule()
+fi::graphics::ShaderModule::~ShaderModule()
 {
     device().destroyShaderModule(*this);
 }
 
-void fi::ShaderModule::reset(const std::string& file_name, //
+void fi::graphics::ShaderModule::reset(const std::string& file_name, //
                              vk::ShaderStageFlagBits stage)
 {
     file_name_ = file_name;
@@ -30,7 +30,7 @@ void fi::ShaderModule::reset(const std::string& file_name, //
     reset();
 }
 
-void fi::ShaderModule::reset()
+void fi::graphics::ShaderModule::reset()
 {
     if (static_cast<vk::ShaderModule>(*this))
     {

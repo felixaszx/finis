@@ -1,16 +1,16 @@
 /**
  * @file swapchain.cpp
  * @author Felix Xing (felixaszx@outlook.com)
- * @brief 
+ * @brief
  * @version 0.1
  * @date 2024-08-15
- * 
+ *
  * @copyright MIT License Copyright (c) 2024 Felixaszx (Felix Xing)
- * 
+ *
  */
 #include "graphics/swapchain.hpp"
 
-void fi::Swapchain::create()
+void fi::graphics::Swapchain::create()
 {
     int w = 0;
     int h = 0;
@@ -18,7 +18,7 @@ void fi::Swapchain::create()
     create(vk::Extent2D(w, h));
 }
 
-void fi::Swapchain::create(const vk::Extent2D& extent)
+void fi::graphics::Swapchain::create(const vk::Extent2D& extent)
 {
     std::vector<vk::SurfaceFormatKHR> surface_formats = physical().getSurfaceFormatsKHR(surface());
     std::vector<vk::PresentModeKHR> present_modes = physical().getSurfacePresentModesKHR(surface());
@@ -67,21 +67,6 @@ void fi::Swapchain::create(const vk::Extent2D& extent)
     images_.reserve(image_count);
     image_format_ = selected_format.format;
 
-    views_.resize(images_.size());
-    for (int i = 0; i < images_.size(); i++)
-    {
-        vk::ImageViewCreateInfo create_info{};
-        create_info.image = images_[i];
-        create_info.viewType = vk::ImageViewType::e2D;
-        create_info.format = image_format_;
-        create_info.subresourceRange.aspectMask = vk::ImageAspectFlagBits::eColor;
-        create_info.subresourceRange.baseMipLevel = 0;
-        create_info.subresourceRange.levelCount = 1;
-        create_info.subresourceRange.baseArrayLayer = 0;
-        create_info.subresourceRange.layerCount = 1;
-        views_[i] = device().createImageView(create_info);
-    }
-
     vk::CommandPoolCreateInfo pool_info{};
     pool_info.queueFamilyIndex = queue_indices(GRAPHICS);
     vk::CommandPool cmd_pool = device().createCommandPool(pool_info);
@@ -118,23 +103,18 @@ void fi::Swapchain::create(const vk::Extent2D& extent)
     device().destroyCommandPool(cmd_pool);
 }
 
-void fi::Swapchain::destory()
+void fi::graphics::Swapchain::destory()
 {
-    for (auto view : views_)
-    {
-        device().destroyImageView(view);
-        view = nullptr;
-    }
     device().destroySwapchainKHR(*this);
 }
 
-uint32_t fi::Swapchain::aquire_next_image(vk::Semaphore sem, vk::Fence fence, uint64_t timeout)
+uint32_t fi::graphics::Swapchain::aquire_next_image(vk::Semaphore sem, vk::Fence fence, uint64_t timeout)
 {
     curr_idx_ = device().acquireNextImageKHR(*this, timeout, sem, fence).value;
     return curr_idx_;
 }
 
-vk::Result fi::Swapchain::present(const vk::ArrayProxyNoTemporaries<const vk::Semaphore>& wait_sems)
+vk::Result fi::graphics::Swapchain::present(const vk::ArrayProxyNoTemporaries<const vk::Semaphore>& wait_sems)
 {
     vk::PresentInfoKHR present_info{};
     present_info.setWaitSemaphores(wait_sems);

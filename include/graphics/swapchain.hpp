@@ -13,7 +13,7 @@
 
 #include "graphics.hpp"
 
-namespace fi
+namespace fi::graphics
 {
     struct Swapchain : public vk::SwapchainKHR, //
                        private GraphicsObject
@@ -28,7 +28,6 @@ namespace fi
         Swapchain& operator=(const Swapchain&) = delete;
         Swapchain& operator=(Swapchain&&) = delete;
         std::vector<vk::Image> images_{};
-        std::vector<vk::ImageView> views_{};
         vk::Format image_format_{};
 
         operator vk::SwapchainKHR*() { return this; }
@@ -42,6 +41,6 @@ namespace fi
                                    uint64_t timeout = std::numeric_limits<uint64_t>::max());
         vk::Result present(const vk::ArrayProxyNoTemporaries<const vk::Semaphore>& wait_sems);
     };
-}; // namespace fi
+}; // namespace fi::graphics
 
 #endif // GRAPHICS_SWAPCHAIN_HPP
