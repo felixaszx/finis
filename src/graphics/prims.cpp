@@ -53,17 +53,41 @@ fi::Primitives::AttribSetter& fi::Primitives::add_primitives(
 vk::DeviceSize fi::Primitives::AttribSetter::alloc_mem(vk::DeviceSize required)
 {
     std::lock_guard lk(alloc_lock_);
+    while (prims_->curr_size_ % 16)
+    {
+        prims_->curr_size_ += 4;
+    }
+
     prims_->curr_size_ += required;
     if (prims_->curr_size_ > prims_->max_size_)
     {
-        throw std::runtime_error("Prim reserved not enougth");
+        throw std::runtime_error("Not enougth memory");
     }
     return prims_->curr_size_ - required;
 }
 
-void fi::Primitives::AttribSetter::copy_buffer(vk::Buffer src, vk::Buffer dst, vk::BufferCopy region)
+void fi::Primitives::AttribSetter::copy_buffer(vk::CommandPool submission_pool,
+                                               vk::Buffer src,
+                                               vk::Buffer dst,
+                                               vk::BufferCopy region)
 {
     std::lock_guard lk(copy_lock_);
+    vk::CommandBufferAllocateInfo cmd_info{.commandPool = submission_pool, //
+                                           .commandBufferCount = 1};
+
+    vk::CommandBuffer cmd = device().allocateCommandBuffers(cmd_info)[0];
+    vk::CommandBufferBeginInfo begin{.flags = vk::CommandBufferUsageFlagBits::eOneTimeSubmit};
+    cmd.begin(begin);
+    cmd.copyBuffer(src, dst, region);
+    cmd.end();
+
+    Fence fence;
+    device().resetFences(fence);
+
+    vk::SubmitInfo submit{};
+    submit.setCommandBuffers(cmd);
+    queues(GRAPHICS).submit(submit, fence);
+    auto r = device().waitForFences(fence, true, std::numeric_limits<uint64_t>::max());
 }
 
 void fi::Primitives::AttribSetter::update_gpu() { free_stl_container(staging_); }

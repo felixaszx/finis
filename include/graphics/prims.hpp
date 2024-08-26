@@ -21,10 +21,11 @@ namespace fi
             std::vector<PrimInfo> staging_{};
 
             vk::DeviceSize alloc_mem(vk::DeviceSize required);
-            void copy_buffer(vk::Buffer src, vk::Buffer dst, vk::BufferCopy region);
+            void copy_buffer(vk::CommandPool submission_pool, vk::Buffer src, vk::Buffer dst, vk::BufferCopy region);
 
             template <typename T>
-            AttribSetter& add_data(PrimInfo::Attribute attribute,
+            AttribSetter& add_data(vk::CommandPool submission_pool,
+                                   PrimInfo::Attribute attribute,
                                    const std::vector<T>& data,
                                    const std::vector<size_t>& count_per_prim = {})
             {
@@ -50,7 +51,8 @@ namespace fi
                 vma::AllocationInfo alloc{};
                 auto allocated = allocator().createBuffer(buffer_info, alloc_info, alloc);
                 memcpy(alloc.pMappedData, data.data(), buffer_info.size);
-                copy_buffer(allocated.first, prims_->data_buffer_, {0, offset * sizeof(uint32_t), buffer_info.size});
+                copy_buffer(submission_pool, allocated.first, prims_->data_buffer_,
+                            {0, offset * sizeof(uint32_t), buffer_info.size});
                 allocator().destroyBuffer(allocated.first, allocated.second);
                 return *this;
             }
