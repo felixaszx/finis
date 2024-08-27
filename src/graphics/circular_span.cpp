@@ -1,11 +1,11 @@
 #include "graphics/circular_span.hpp"
 
-fi::graphics::CircularSpan::CircularSpan(void* data, size_t size)
+fi::graphics::circular_span::circular_span(void* data, std::size_t size)
 {
     reference(data, size);
 }
 
-void fi::graphics::CircularSpan::reference(void* data, size_t size)
+void fi::graphics::circular_span::reference(void* data, std::size_t size)
 {
     begin_ = (std::byte*)data;
     end_ = (std::byte*)data + size;
@@ -17,13 +17,13 @@ void fi::graphics::CircularSpan::reference(void* data, size_t size)
     }
 }
 
-bool fi::graphics::CircularSpan::push_back(void* data, size_t new_size)
+bool fi::graphics::circular_span::push_back(void* data, std::size_t new_size)
 {
     if (remainning() >= new_size)
     {
-        size_t seek0 = (front_ + size_) % capacity();
-        size_t seek0_size = std::min(new_size, capacity() - seek0);
-        size_t seek1_size = new_size - seek0_size;
+        std::size_t seek0 = (front_ + size_) % capacity();
+        std::size_t seek0_size = std::min(new_size, capacity() - seek0);
+        std::size_t seek1_size = new_size - seek0_size;
         memcpy(begin_ + seek0, data, seek0_size);
         if (seek1_size)
         {
@@ -37,54 +37,54 @@ bool fi::graphics::CircularSpan::push_back(void* data, size_t new_size)
     return false;
 }
 
-void fi::graphics::CircularSpan::pop_front()
+void fi::graphics::circular_span::pop_front()
 {
     if (size_)
     {
-        size_ -= blocks_.front().second;
-        front_ += blocks_.front().second;
+        size_ -= blocks_.front().size_;
+        front_ += blocks_.front().size_;
         front_ %= capacity();
         blocks_.pop();
     }
 }
 
-void fi::graphics::CircularSpan::pop_front_cleared()
+void fi::graphics::circular_span::pop_front_cleared()
 {
-    std::pair<std::byte*, size_t>& block = blocks_.front();
-    size_t seek0_size = std::min(block.second, capacity() - front_);
-    size_t seek1_size = block.second - seek0_size;
-    memset(block.first, 0x0, seek0_size);
+    block& block = blocks_.front();
+    std::size_t seek0_size = std::min(block.size_, capacity() - front_);
+    std::size_t seek1_size = block.size_ - seek0_size;
+    memset(block.data_, 0x0, seek0_size);
     if (seek1_size)
     {
-        memset(block.first + seek0_size, 0x0, seek0_size);
+        memset(block.data_ + seek0_size, 0x0, seek0_size);
     }
     pop_front();
 }
 
-bool fi::graphics::CircularSpan::copy_front_block_to(std::byte* dst)
+bool fi::graphics::circular_span::copy_front_block_to(std::byte* dst)
 {
     if (size_)
     {
-        std::pair<std::byte*, size_t>& block = blocks_.front();
-        size_t seek0_size = std::min(block.second, capacity() - front_);
-        size_t seek1_size = block.second - seek0_size;
-        memcpy(dst, block.first, seek0_size);
+        block& block = blocks_.front();
+        std::size_t seek0_size = std::min(block.size_, capacity() - front_);
+        std::size_t seek1_size = block.size_ - seek0_size;
+        memcpy(dst, block.data_, seek0_size);
         if (seek1_size)
         {
-            memcpy(dst, block.first + seek0_size, seek1_size);
+            memcpy(dst + seek0_size, begin_, seek1_size);
         }
         return true;
     }
     return false;
 }
 
-std::array<std::pair<size_t, size_t>, 2> fi::graphics::CircularSpan::front_block_region()
+std::array<fi::graphics::circular_span::block, 2> fi::graphics::circular_span::front_block_region()
 {
-    std::pair<std::byte*, size_t>& block = blocks_.front();
-    std::array<std::pair<size_t, size_t>, 2> seeks;
-    seeks[0].first = front_;
-    seeks[0].second = std::min(block.second, capacity() - front_);
-    seeks[1].first = 0;
-    seeks[1].second = block.second - seeks[0].second;
+    block& b = blocks_.front();
+    std::array<block, 2> seeks;
+    seeks[0].data_ = begin_ + front_;
+    seeks[0].size_ = std::min(b.size_, capacity() - front_);
+    seeks[1].data_ = begin_;
+    seeks[1].size_ = b.size_ - seeks[0].size_;
     return seeks;
 }

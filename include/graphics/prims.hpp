@@ -41,7 +41,7 @@ namespace fi::graphics
 
         vk::Buffer staging_buffer_{};
         vma::Allocation staging_alloc_{};
-        CircularSpan staging_span_{};
+        circular_span staging_span_{};
 
       public:
         Primitives(vk::DeviceSize data_size_limit, uint32_t prim_limit);
