@@ -93,7 +93,7 @@ namespace fi::graphics
         uint64_t normal_count_ = 0;   // scalar
         uint64_t tangent_count_ = 0;  // scalar
 
-        uint64_t& get_attrib(Attribute attrib, uint64_t count)
+        uint64_t& set_attrib(Attribute attrib, uint64_t count)
         {
             switch (attrib)
             {

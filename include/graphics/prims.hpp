@@ -55,6 +55,8 @@ namespace fi::graphics
         void free_staging_buffer();
         uint32_t add_primitives(size_t count);
         void reload_draw_calls(vk::CommandPool pool);
+        [[nodiscard]] vk::DeviceSize addresses_size() const { return sizeof(addresses_); }
+        [[nodiscard]] const std::byte* addresses() const { return castr(const std::byte*, &addresses_); }
 
         template <typename T>
         static std::vector<size_t> get_elm_offset_per_prim(const T& data)
@@ -69,8 +71,9 @@ namespace fi::graphics
             }
         }
 
+        // below loaders do not include range for better performance
         template <typename T>
-        Primitives& add_attribute_data(vk::CommandPool pool, // this does not include range for performances reason
+        Primitives& add_attribute_data(vk::CommandPool pool,
                                        PrimInfo::Attribute attrib,
                                        const T& data,
                                        const std::vector<size_t>& offset_per_prim = {})
@@ -97,8 +100,8 @@ namespace fi::graphics
         template <typename T>
         Primitives& load_morph_data(vk::CommandPool pool,
                                     MorphInfo::Attribute attrib,
-                                    std::vector<MorphInfo>& infos,
                                     const T& data,
+                                    std::vector<MorphInfo>& infos,
                                     const std::vector<int64_t>& morph_count,
                                     const std::vector<size_t>& offset_per_prim = {})
         {
@@ -111,11 +114,11 @@ namespace fi::graphics
             size_t i = 0;
             for (; i < offset_per_prim.size(); i++)
             {
-                infos[i].get_attrib(attrib, morph_count[i]) = offset + offset_per_prim[i];
+                infos[i].set_attrib(attrib, morph_count[i]) = offset + offset_per_prim[i];
             }
             for (i += curr_prim_; i < prim_infos_.size(); i++)
             {
-                infos[i].get_attrib(attrib, morph_count[i]) = offset;
+                infos[i].set_attrib(attrib, morph_count[i]) = offset;
             }
             return *this;
         }

@@ -21,12 +21,6 @@ int main(int argc, char** argv)
     Swapchain sc;
     sc.create();
 
-    Primitives prims(20_mb, 2000);
-    prims.generate_staging_buffer(20_mb);
-    prims.add_primitives(10);
-    prims.add_attribute_data(nullptr, PrimInfo::POSITON, std::vector<glm::vec3>(12))
-        .add_attribute_data(nullptr, PrimInfo::TANGENT, std::vector<glm::vec4>(12));
-
     Semaphore next_img;
     Semaphore submit;
     Fence frame_fence;
@@ -36,13 +30,30 @@ int main(int argc, char** argv)
     pool_info.queueFamilyIndex = g.queue_indices(Graphics::GRAPHICS);
     vk::CommandPool cmd_pool = g.device().createCommandPool(pool_info);
 
+    Primitives prims(20_mb, 2000);
+    prims.generate_staging_buffer(10_kb);
+    prims.add_primitives(10);
+    prims.add_attribute_data(cmd_pool, PrimInfo::POSITON, std::vector<std::byte>(2_kb))
+        .add_attribute_data(cmd_pool, PrimInfo::TANGENT, std::vector<std::byte>(2_kb))
+        .add_attribute_data(cmd_pool, PrimInfo::TANGENT, std::vector<std::byte>(2_kb))
+        .add_attribute_data(cmd_pool, PrimInfo::TANGENT, std::vector<std::byte>(2_kb))
+        .add_attribute_data(cmd_pool, PrimInfo::TANGENT, std::vector<std::byte>(2_kb))
+        .add_attribute_data(cmd_pool, PrimInfo::TANGENT, std::vector<std::byte>(2_kb))
+        .add_attribute_data(cmd_pool, PrimInfo::TANGENT, std::vector<std::byte>(2_kb))
+        .add_attribute_data(cmd_pool, PrimInfo::TANGENT, std::vector<std::byte>(2_kb))
+        .add_attribute_data(cmd_pool, PrimInfo::TANGENT, std::vector<std::byte>(2_kb))
+        .add_attribute_data(cmd_pool, PrimInfo::TANGENT, std::vector<std::byte>(2_kb))
+        .add_attribute_data(cmd_pool, PrimInfo::TANGENT, std::vector<std::byte>(2_kb))
+        .add_attribute_data(cmd_pool, PrimInfo::TANGENT, std::vector<std::byte>(2_kb))
+        .add_attribute_data(cmd_pool, PrimInfo::TANGENT, std::vector<std::byte>(2_kb))
+        .add_attribute_data(cmd_pool, PrimInfo::TANGENT, std::vector<std::byte>(2_kb))
+        .add_attribute_data(cmd_pool, PrimInfo::TANGENT, std::vector<std::byte>(2_kb));
+
     vk::CommandBufferAllocateInfo cmd_alloc{};
     cmd_alloc.commandBufferCount = 1;
     cmd_alloc.commandPool = cmd_pool;
     cmd_alloc.level = vk::CommandBufferLevel::ePrimary;
     auto cmds = g.device().allocateCommandBuffers(cmd_alloc);
-
-    bst::thread_pool th_pool;
 
     CpuClock clock;
     while (true)
@@ -69,7 +80,7 @@ int main(int argc, char** argv)
         cmds[0].end();
 
         vk::CommandBufferSubmitInfo cmd_submit{.commandBuffer = cmds[0]};
-        vk::SemaphoreSubmitInfo signal_submit = submit.submit_info(vk::PipelineStageFlagBits2::eColorAttachmentOutput);
+        vk::SemaphoreSubmitInfo signal_submit = submit.submit_info(vk::PipelineStageFlagBits2::eBottomOfPipe);
         vk::SemaphoreSubmitInfo waite_submit = next_img.submit_info(vk::PipelineStageFlagBits2::eBottomOfPipe);
         vk::SubmitInfo2 submit2{};
         submit2.setCommandBufferInfos(cmd_submit);

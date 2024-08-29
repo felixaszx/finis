@@ -168,6 +168,7 @@ fi::graphics::Graphics::~Graphics()
 {
     device_.waitIdle();
 
+    device().destroyPipelineCache(pipeline_cache_);
     instance_.destroySurfaceKHR(surface_);
     allocator_.destroy();
     device_.destroy();

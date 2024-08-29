@@ -56,6 +56,12 @@ void fi::graphics::Primitives::generate_staging_buffer(vk::DeviceSize limit)
 
 void fi::graphics::Primitives::flush_staging_memory(vk::CommandPool pool)
 {
+    if (staging_span_.empty())
+    {
+        return;
+    }
+
+    std::cout << 1;
     Fence fence;
     device().resetFences(fence);
     vk::CommandBufferAllocateInfo cmd_alloc{.commandPool = pool, //
@@ -93,6 +99,7 @@ void fi::graphics::Primitives::flush_staging_memory(vk::CommandPool pool)
     {
         throw std::runtime_error("Memory copy over time.");
     }
+    device().freeCommandBuffers(pool, cmd);
 }
 
 void fi::graphics::Primitives::free_staging_buffer()
@@ -121,6 +128,47 @@ uint32_t fi::graphics::Primitives::add_primitives(size_t count)
 void fi::graphics::Primitives::reload_draw_calls(vk::CommandPool pool)
 {
     flush_staging_memory(pool);
+    staging_span_.push_back(castr(const std::byte*, prim_infos_.data()), sizeof_arr(prim_infos_));
+    staging_span_.push_back(castr(const std::byte*, draw_calls_.data()), sizeof_arr(draw_calls_));
+
+    Fence fence;
+    device().resetFences(fence);
+    vk::CommandBufferAllocateInfo cmd_alloc{.commandPool = pool, //
+                                            .commandBufferCount = 1};
+    vk::CommandBuffer cmd = device().allocateCommandBuffers(cmd_alloc)[0];
+    vk::CommandBufferBeginInfo begin{.flags = vk::CommandBufferUsageFlagBits::eOneTimeSubmit};
+
+    cmd.begin(begin);
+    vk::DeviceSize dst_offset = 0;
+    while (!staging_span_.empty())
+    {
+        auto blocks = staging_span_.front_block_region();
+        vk::BufferCopy region{.srcOffset = staging_span_.offset(blocks[0]), //
+                              .dstOffset = dst_offset,
+                              .size = blocks[0].size_};
+        cmd.copyBuffer(staging_buffer_, prims_.buffer_, region);
+        if (blocks[1].size_)
+        {
+            region.srcOffset = staging_span_.offset(blocks[1]);
+            region.dstOffset = dst_offset + blocks[0].size_;
+            region.size = blocks[1].size_;
+            cmd.copyBuffer(staging_buffer_, prims_.buffer_, region);
+        }
+        dst_offset += sizeof_arr(prim_infos_);
+        staging_span_.pop_front();
+    }
+    cmd.end();
+
+    vk::CommandBufferSubmitInfo cmd_submit{.commandBuffer = cmd};
+    vk::SubmitInfo2 submit2{};
+    submit2.setCommandBufferInfos(cmd_submit);
+    queues(GRAPHICS).submit2(submit2, fence);
+    staging_span_.reset();
+    if (device().waitForFences(fence, true, std::numeric_limits<uint64_t>::max()) != vk::Result::eSuccess)
+    {
+        throw std::runtime_error("Memory copy over time.");
+    }
+    device().freeCommandBuffers(pool, cmd);
 }
 
 vk::DeviceSize fi::graphics::Primitives::load_staging_memory(const std::byte* data, vk::DeviceSize size)
