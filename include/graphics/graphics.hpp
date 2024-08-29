@@ -73,7 +73,7 @@ namespace fi::graphics
         inline static vma::Allocator allocator_{};
         inline static GLFWwindow* window_{};
 
-        inline static std::vector<vk::CommandPool> cmd_pools_{};
+        inline static std::vector<vk::CommandPool> cmd_pools_{}; // only graphics queue
         inline static bst::thread_pool thread_pool_{};
 
       public:
@@ -158,6 +158,6 @@ namespace fi::graphics
         void start();
         void reset();
     };
-}; // namespace fi
+}; // namespace fi::graphics
 
 #endif // GRAPHICS_GRAPHICS_HPP

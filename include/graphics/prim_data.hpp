@@ -40,6 +40,7 @@ namespace fi::graphics
         uint64_t joints_ = EMPTY_L;   // uvec4[]
         uint64_t weights_ = EMPTY_L;  // vec4[]
 
+        uint64_t idx_ = EMPTY_L;      // uint32_t[]
         uint64_t mesh_ = EMPTY_L;     // MeshInfo*
         uint64_t material_ = EMPTY_L; // MaterialInfo*
 
@@ -117,6 +118,6 @@ namespace fi::graphics
 #define sizeof_as_uint32_t(type)    (size_as_uint32_t(sizeof(type)))
 #define sizeof_arr_as_uint32_t(arr) (arr.size() * sizeof_as_uint32_t(arr[0]))
 
-}; // namespace fi
+}; // namespace fi::graphics
 
 #endif // GRAPHICS_PRIM_DATA_HPP

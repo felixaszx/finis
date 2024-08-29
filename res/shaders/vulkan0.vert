@@ -16,6 +16,7 @@ struct PrimInfo
     uint64_t joints_;   // uvec4[]
     uint64_t weights_;  // vec4[]
 
+    uint64_t idx_;      // uint32_t[]
     uint64_t mesh_;     // MeshInfo*
     uint64_t material_; // MaterialInfo*
 };

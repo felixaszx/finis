@@ -21,7 +21,6 @@ namespace fi::graphics
             vk::Buffer buffer_{};
             vma::Allocation alloc_{};
         } data_; // buffer 0
-        vk::DeviceSize idx_buffer_offset_ = EMPTY_L;
 
         struct
         {
@@ -45,8 +44,10 @@ namespace fi::graphics
 
       public:
         Primitives(vk::DeviceSize data_size_limit, uint32_t prim_limit);
-        void generate_staging_buffer(vk::DeviceSize limit);
         ~Primitives();
+
+        void generate_staging_buffer(vk::DeviceSize limit);
+        void free_staging_buffer();
     };
 }; // namespace fi::graphics
 

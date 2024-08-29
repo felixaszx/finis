@@ -179,6 +179,11 @@ fi::graphics::Graphics::~Graphics()
 {
     device_.waitIdle();
 
+    for (auto pool : cmd_pools_)
+    {
+        device().destroyCommandPool(pool);
+    }
+
     device_.destroyPipelineCache(pipeline_cache_);
     device_.destroyCommandPool(one_time_submit_pool_);
 
