@@ -17,6 +17,5 @@ target_include_directories(finis_graphics PRIVATE "${CMAKE_SOURCE_DIR}/include")
 
 target_link_libraries(finis_graphics PUBLIC glfw)
 target_link_libraries(finis_graphics PUBLIC vulkan-1)
-target_link_libraries(finis_graphics PUBLIC shaderc_shared)
 target_link_libraries(finis_graphics PUBLIC fastgltf)
 target_link_libraries(finis_graphics PUBLIC simdjson)

@@ -9,9 +9,9 @@ set(CMAKE_SHARED_LIBRARY_PREFIX "")
 set(CMAKE_STATIC_LIBRARY_PREFIX "")
 set(CMAKE_RUNTIME_OUTPUT_DIRECTORY ${CMAKE_SOURCE_DIR}/exe)
 
-add_subdirectory(src/graphics)
-add_subdirectory(src/extensions)
-add_subdirectory(ext_dls)
+add_subdirectory("src/graphics")
+add_subdirectory("src/extensions")
+add_subdirectory("ext_dls")
 
 file(GLOB_RECURSE SRC app/*.cpp )
 add_executable(finis ${SRC})
