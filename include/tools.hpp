@@ -26,37 +26,6 @@
 #define castf(type, value)  ((type)(value))
 #define sizeof_arr(std_arr) (std_arr.size() * sizeof(std_arr[0]))
 
-namespace fi
-{
-    inline void begin_cmd(const vk::CommandBuffer& cmd,           //
-                          vk::CommandBufferUsageFlags flags = {}, //
-                          const vk::CommandBufferInheritanceInfo* inheritance = nullptr)
-    {
-        vk::CommandBufferBeginInfo begin_info{};
-        begin_info.pInheritanceInfo = inheritance;
-        begin_info.flags = flags;
-        cmd.begin(begin_info);
-    }
-
-    inline void dispatch_cmd(const vk::CommandBuffer& cmd, const glm::uvec3& work_group)
-    {
-        cmd.dispatch(work_group.x, work_group.y, work_group.z);
-    }
-}; // namespace fi
-
-template <typename T, typename Q>
-void sset(T& dst, const Q& src)
-{
-    casts(Q&, dst) = src;
-}
-
-template <typename T, typename V, typename... Q>
-void sset(T& dst, const V& src_f, const Q&... src_b)
-{
-    sset(dst, src_f);
-    sset(dst, src_b...);
-}
-
 template <typename T>
 T max_of_all(const std::vector<T>& datas)
 {

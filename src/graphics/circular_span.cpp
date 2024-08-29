@@ -17,7 +17,7 @@ void fi::graphics::circular_span::reference(void* data, std::size_t size)
     }
 }
 
-bool fi::graphics::circular_span::push_back(void* data, std::size_t new_size)
+bool fi::graphics::circular_span::push_back(std::byte* data, std::size_t new_size)
 {
     if (remainning() >= new_size)
     {

@@ -47,6 +47,8 @@ namespace fi::graphics
 
         void generate_staging_buffer(vk::DeviceSize limit);
         void free_staging_buffer();
+        bool allocate_staging_memory(std::byte* data, vk::DeviceSize size);
+        bool allocate_data_memory(vk::CommandPool cmd_pool);
     };
 }; // namespace fi::graphics
 

@@ -34,7 +34,7 @@ namespace fi::graphics
         }
 
         void reference(void* data, std::size_t size);
-        bool push_back(void* data, std::size_t new_size);
+        bool push_back(std::byte* data, std::size_t new_size);
         void pop_front();
         void pop_front_cleared();
         bool copy_front_block_to(std::byte* dst);

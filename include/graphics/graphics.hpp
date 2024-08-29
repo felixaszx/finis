@@ -28,7 +28,6 @@
 #define VULKAN_HPP_NO_CONSTRUCTORS
 #include <vulkan/vulkan.hpp>
 
-#include "glms.hpp"
 #define VMA_LEAK_LOG_FORMAT(format, ...) \
     do                                   \
     {                                    \
@@ -39,6 +38,7 @@
 #include "vma/vk_mem_alloc.hpp"
 
 #include "bs_th_pool/BS_thread_pool.hpp"
+#include "glms.hpp"
 
 namespace fi::graphics
 {

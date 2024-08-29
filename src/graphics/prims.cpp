@@ -37,6 +37,7 @@ fi::graphics::Primitives::~Primitives()
 
 void fi::graphics::Primitives::generate_staging_buffer(vk::DeviceSize limit)
 {
+    free_staging_buffer();
     vk::BufferCreateInfo buffer_info{.size = limit, //
                                      .usage = vk::BufferUsageFlagBits::eTransferSrc |
                                               vk::BufferUsageFlagBits::eVertexBuffer};
@@ -60,4 +61,23 @@ void fi::graphics::Primitives::free_staging_buffer()
         staging_alloc_ = nullptr;
         staging_span_.reference(nullptr, 0);
     }
+}
+
+bool fi::graphics::Primitives::allocate_staging_memory(std::byte* data, vk::DeviceSize size)
+{
+    static std::mutex lock;
+    std::lock_guard guard(lock);
+    return staging_span_.push_back(data, size);
+}
+
+bool fi::graphics::Primitives::allocate_data_memory(vk::CommandPool cmd_pool)
+{
+    static std::mutex lock;
+    std::lock_guard guard(lock);
+    data_.curr_size_ += staging_span_.front_block_size();
+    if (data_.curr_size_ < data_.capacity_)
+    {
+        return true;
+    }
+    return false;
 }
