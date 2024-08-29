@@ -78,8 +78,8 @@ namespace fi::graphics
         static vk::Device device();
         static vk::PhysicalDevice physical();
         static vk::PipelineCache pipeline_cache();
-        static vk::Queue queues(QueueType type);
-        static uint32_t queue_indices(QueueType type);
+        static vk::Queue queues(QueueType type = GRAPHICS);
+        static uint32_t queue_indices(QueueType type = GRAPHICS);
         static vma::Allocator allocator();
         static GLFWwindow* window();
     };
