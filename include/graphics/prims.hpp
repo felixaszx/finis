@@ -53,7 +53,7 @@ namespace fi::graphics
         void flush_staging_memory(vk::CommandPool pool);
         vk::DeviceSize load_staging_memory(const std::byte* data, vk::DeviceSize size);
         void free_staging_buffer();
-        uint32_t add_primitives(size_t count);
+        uint32_t add_primitives(const std::vector<vk::DrawIndirectCommand>& draw_calls);
         void reload_draw_calls(vk::CommandPool pool);
         [[nodiscard]] vk::DeviceSize addresses_size() const { return sizeof(addresses_); }
         [[nodiscard]] const std::byte* addresses() const { return castr(const std::byte*, &addresses_); }

@@ -112,15 +112,16 @@ void fi::graphics::Primitives::free_staging_buffer()
     }
 }
 
-uint32_t fi::graphics::Primitives::add_primitives(size_t count)
+uint32_t fi::graphics::Primitives::add_primitives(const std::vector<vk::DrawIndirectCommand>& draw_calls)
 {
     curr_prim_ = prims_.count_;
-    if (prims_.capacity_ - prims_.count_ < count)
+    if (prims_.capacity_ - prims_.count_ < draw_calls.size())
     {
         return prims_.capacity_ - prims_.count_;
     }
-    prims_.count_ += count;
+    prims_.count_ += draw_calls.size();
     prim_infos_.resize(prims_.count_);
+    draw_calls_.insert(draw_calls_.end(), draw_calls.begin(), draw_calls.end());
     return EMPTY;
 }
 
@@ -178,11 +179,11 @@ vk::DeviceSize fi::graphics::Primitives::load_staging_memory(const std::byte* da
         throw std::runtime_error("Not enought reserved memory");
     }
 
-    staging_queue_.push(data_.curr_size_ - size);
-    if (!staging_span_.push_back(data, size))
+    if (staging_span_.remainning() < size)
     {
-        staging_queue_.pop();
         return EMPTY_L;
     }
+    staging_span_.push_back(data, size);
+    staging_queue_.push(data_.curr_size_ - size);
     return data_.curr_size_ - size;
 }

@@ -32,22 +32,6 @@ int main(int argc, char** argv)
 
     Primitives prims(20_mb, 2000);
     prims.generate_staging_buffer(10_kb);
-    prims.add_primitives(10);
-    prims.add_attribute_data(cmd_pool, PrimInfo::POSITON, std::vector<std::byte>(2_kb))
-        .add_attribute_data(cmd_pool, PrimInfo::TANGENT, std::vector<std::byte>(2_kb))
-        .add_attribute_data(cmd_pool, PrimInfo::TANGENT, std::vector<std::byte>(2_kb))
-        .add_attribute_data(cmd_pool, PrimInfo::TANGENT, std::vector<std::byte>(2_kb))
-        .add_attribute_data(cmd_pool, PrimInfo::TANGENT, std::vector<std::byte>(2_kb))
-        .add_attribute_data(cmd_pool, PrimInfo::TANGENT, std::vector<std::byte>(2_kb))
-        .add_attribute_data(cmd_pool, PrimInfo::TANGENT, std::vector<std::byte>(2_kb))
-        .add_attribute_data(cmd_pool, PrimInfo::TANGENT, std::vector<std::byte>(2_kb))
-        .add_attribute_data(cmd_pool, PrimInfo::TANGENT, std::vector<std::byte>(2_kb))
-        .add_attribute_data(cmd_pool, PrimInfo::TANGENT, std::vector<std::byte>(2_kb))
-        .add_attribute_data(cmd_pool, PrimInfo::TANGENT, std::vector<std::byte>(2_kb))
-        .add_attribute_data(cmd_pool, PrimInfo::TANGENT, std::vector<std::byte>(2_kb))
-        .add_attribute_data(cmd_pool, PrimInfo::TANGENT, std::vector<std::byte>(2_kb))
-        .add_attribute_data(cmd_pool, PrimInfo::TANGENT, std::vector<std::byte>(2_kb))
-        .add_attribute_data(cmd_pool, PrimInfo::TANGENT, std::vector<std::byte>(2_kb));
 
     vk::CommandBufferAllocateInfo cmd_alloc{};
     cmd_alloc.commandBufferCount = 1;
