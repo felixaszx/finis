@@ -103,7 +103,7 @@ namespace fi::graphics
                                     const T& data,
                                     std::vector<MorphInfo>& infos,
                                     const std::vector<int64_t>& morph_count,
-                                    const std::vector<size_t>& offset_per_prim = {})
+                                    const std::vector<size_t>& offset_per_info = {})
         {
             size_t offset = load_staging_memory(castr(const std::byte*, data.data()), sizeof_arr(data));
             if (offset == EMPTY_L)
@@ -113,9 +113,9 @@ namespace fi::graphics
             }
 
             size_t i = 0;
-            for (; i < offset_per_prim.size(); i++)
+            for (; i < offset_per_info.size(); i++)
             {
-                infos[i].set_attrib(attrib, morph_count[i]) = offset + offset_per_prim[i];
+                infos[i].set_attrib(attrib, morph_count[i]) = offset + offset_per_info[i];
             }
             for (; i < infos.size(); i++)
             {
