@@ -111,12 +111,13 @@ namespace fi::graphics
                 flush_staging_memory(pool);
                 offset = load_staging_memory(castr(const std::byte*, data.data()), sizeof_arr(data));
             }
+
             size_t i = 0;
             for (; i < offset_per_prim.size(); i++)
             {
                 infos[i].set_attrib(attrib, morph_count[i]) = offset + offset_per_prim[i];
             }
-            for (i += curr_prim_; i < prim_infos_.size(); i++)
+            for (; i < infos.size(); i++)
             {
                 infos[i].set_attrib(attrib, morph_count[i]) = offset;
             }
