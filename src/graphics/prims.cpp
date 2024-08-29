@@ -61,7 +61,6 @@ void fi::graphics::Primitives::flush_staging_memory(vk::CommandPool pool)
         return;
     }
 
-    std::cout << 1;
     Fence fence;
     device().resetFences(fence);
     vk::CommandBufferAllocateInfo cmd_alloc{.commandPool = pool, //
