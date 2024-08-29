@@ -91,7 +91,6 @@ inline constexpr void make_shared2(std::shared_ptr<Ptr>& shared_ptr, Param&&... 
 }
 
 inline consteval size_t operator""_b(unsigned long long b) { return b; }
-inline consteval size_t operator""_b(long double b) { return b; }
 inline consteval size_t operator""_kb(unsigned long long kb) { return 1024_b * kb; }
 inline consteval size_t operator""_kb(long double kb) { return 1024_b * kb; }
 inline consteval size_t operator""_mb(unsigned long long mb) { return 1024_kb * mb; }

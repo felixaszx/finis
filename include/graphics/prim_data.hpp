@@ -15,7 +15,7 @@
 
 namespace fi::graphics
 {
-    // all pointer use as pointer to uint32_t
+    // all pointers used as pointer to uint32_t
     inline static const uint32_t EMPTY = -1;
     inline static const uint64_t EMPTY_L = -1;
 
@@ -29,6 +29,7 @@ namespace fi::graphics
             TEXCOORD,
             JOINTS,
             WEIGHTS,
+            INDEX,
             MESH,
             MATERIAL
         };
@@ -44,7 +45,7 @@ namespace fi::graphics
         uint64_t mesh_ = EMPTY_L;     // MeshInfo*
         uint64_t material_ = EMPTY_L; // MaterialInfo*
 
-        uint64_t& get_attrib_ptr(Attribute attrib)
+        uint64_t& get_attrib(Attribute attrib)
         {
             switch (attrib)
             {
@@ -60,6 +61,8 @@ namespace fi::graphics
                     return joints_;
                 case WEIGHTS:
                     return weights_;
+                case INDEX:
+                    return idx_;
                 case MESH:
                     return mesh_;
                 case MATERIAL:

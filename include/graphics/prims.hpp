@@ -11,8 +11,7 @@ namespace fi::graphics
     struct Primitives : private GraphicsObject
     {
       private:
-      private:
-        // min alignment in data_buffer is 16 byte
+        // min alignment in buffer is 16 byte
         struct
         {
             vk::DeviceSize curr_size_ = 0;
