@@ -62,16 +62,15 @@ int main(int argc, char** argv)
         begin_cmd(cmds[0]);
         cmds[0].end();
 
-        std::array<vk::PipelineStageFlags, 1> waiting_stages = {vk::PipelineStageFlagBits::eColorAttachmentOutput};
-        std::array<vk::Semaphore, 1> submit_sems = {submit};
-        std::array<vk::Semaphore, 1> wait_sems = {next_img};
-        vk::SubmitInfo submit_info{};
-        submit_info.setSignalSemaphores(submit_sems);
-        submit_info.setWaitSemaphores(wait_sems);
-        submit_info.setWaitDstStageMask(waiting_stages);
-        submit_info.setCommandBuffers(cmds);
-        g.queues(GraphicsObject::GRAPHICS).submit(submit_info, frame_fence);
-        sc.present(submit_sems);
+        vk::CommandBufferSubmitInfo cmd_submit{.commandBuffer = cmds[0]};
+        vk::SemaphoreSubmitInfo signal_submit = submit.submit_info(vk::PipelineStageFlagBits2::eColorAttachmentOutput);
+        vk::SemaphoreSubmitInfo waite_submit = next_img.submit_info(vk::PipelineStageFlagBits2::eBottomOfPipe);
+        vk::SubmitInfo2 submit2{};
+        submit2.setCommandBufferInfos(cmd_submit);
+        submit2.setSignalSemaphoreInfos(signal_submit);
+        submit2.setWaitSemaphoreInfos(waite_submit);
+        g.queues(GraphicsObject::GRAPHICS).submit2(submit2, frame_fence);
+        sc.present({submit});
     }
     g.device().waitIdle();
 

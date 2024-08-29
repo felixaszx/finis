@@ -111,6 +111,8 @@ namespace fi::graphics
     {
         Semaphore();
         ~Semaphore();
+
+        vk::SemaphoreSubmitInfo submit_info(vk::PipelineStageFlags2 stage);
     };
 
     struct Event : public vk::Event, //

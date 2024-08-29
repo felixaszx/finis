@@ -302,6 +302,14 @@ fi::graphics::Semaphore::~Semaphore()
     device().destroySemaphore(*this);
 }
 
+vk::SemaphoreSubmitInfo fi::graphics::Semaphore::submit_info(vk::PipelineStageFlags2 stage)
+{
+    vk::SemaphoreSubmitInfo submit{};
+    submit.setSemaphore(*this);
+    submit.stageMask = stage;
+    return submit;
+}
+
 fi::graphics::Event::Event(bool host_event)
     : vk::Event(create_vk_event(device(), host_event))
 {
