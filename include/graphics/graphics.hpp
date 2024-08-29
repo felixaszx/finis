@@ -68,7 +68,6 @@ namespace fi::graphics
 
         inline static std::array<vk::Queue, 3> queues_{};
         inline static std::array<uint32_t, 3> queue_indices_{};
-        inline static vk::CommandPool one_time_submit_pool_{};
 
         inline static vma::Allocator allocator_{};
         inline static GLFWwindow* window_{};
@@ -83,8 +82,6 @@ namespace fi::graphics
         static uint32_t queue_indices(QueueType type);
         static vma::Allocator allocator();
         static GLFWwindow* window();
-        static vk::CommandBuffer one_time_submit_cmd();
-        static void submit_one_time_cmd(vk::CommandBuffer cmd);
     };
 
     struct Graphics : public GraphicsObject

@@ -39,6 +39,8 @@ int main(int argc, char** argv)
     cmd_alloc.level = vk::CommandBufferLevel::ePrimary;
     auto cmds = g.device().allocateCommandBuffers(cmd_alloc);
 
+    bst::thread_pool th_pool;
+
     CpuClock clock;
     while (true)
     {
@@ -59,7 +61,8 @@ int main(int argc, char** argv)
         }
 
         cmds[0].reset();
-        begin_cmd(cmds[0]);
+        vk::CommandBufferBeginInfo begin_info{};
+        cmds[0].begin(begin_info);
         cmds[0].end();
 
         vk::CommandBufferSubmitInfo cmd_submit{.commandBuffer = cmds[0]};

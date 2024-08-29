@@ -160,11 +160,6 @@ fi::graphics::Graphics::Graphics(int width, int height, const std::string& title
     vma_create_info.device = device_;
     allocator_ = vma::createAllocator(vma_create_info);
 
-    vk::CommandPoolCreateInfo pool_info{};
-    pool_info.flags = vk::CommandPoolCreateFlagBits::eResetCommandBuffer;
-    pool_info.queueFamilyIndex = queue_indices_[GRAPHICS];
-    one_time_submit_pool_ = device_.createCommandPool(pool_info);
-
     vk::PipelineCacheCreateInfo pc_info{};
     pipeline_cache_ = device_.createPipelineCache(pc_info);
 }
@@ -172,9 +167,6 @@ fi::graphics::Graphics::Graphics(int width, int height, const std::string& title
 fi::graphics::Graphics::~Graphics()
 {
     device_.waitIdle();
-
-    device_.destroyPipelineCache(pipeline_cache_);
-    device_.destroyCommandPool(one_time_submit_pool_);
 
     instance_.destroySurfaceKHR(surface_);
     allocator_.destroy();
@@ -236,25 +228,6 @@ GLFWwindow* fi::graphics::GraphicsObject::window()
 {
     return window_;
 };
-
-vk::CommandBuffer fi::graphics::GraphicsObject::one_time_submit_cmd()
-{
-    vk::CommandBufferAllocateInfo alloc_info{};
-    alloc_info.commandBufferCount = 1;
-    alloc_info.commandPool = one_time_submit_pool_;
-    return device().allocateCommandBuffers(alloc_info)[0];
-}
-
-void fi::graphics::GraphicsObject::submit_one_time_cmd(vk::CommandBuffer cmd)
-{
-    Fence fence;
-    device_.resetFences(fence);
-
-    vk::SubmitInfo submit{};
-    submit.setCommandBuffers(cmd);
-    queues_[GRAPHICS].submit(submit, fence);
-    auto r = device_.waitForFences(fence, true, std::numeric_limits<uint64_t>::max());
-}
 
 vk::Fence fi::graphics::create_vk_fence(vk::Device device, bool signal)
 {
