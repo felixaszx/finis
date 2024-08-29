@@ -30,6 +30,9 @@ namespace fi::graphics
             vma::Allocation alloc_{};
             vk::DeviceSize draw_call_offset_ = EMPTY_L;
         } prims_;
+        uint32_t curr_prim_ = EMPTY;
+        std::vector<PrimInfo> prim_infos_{};
+        std::vector<vk::DrawIndirectCommand> draw_calls_{};
 
         struct
         {
@@ -40,15 +43,82 @@ namespace fi::graphics
         vk::Buffer staging_buffer_{};
         vma::Allocation staging_alloc_{};
         circular_span staging_span_{};
+        std::queue<vk::DeviceSize> staging_queue_{};
 
       public:
         Primitives(vk::DeviceSize data_size_limit, uint32_t prim_limit);
         ~Primitives();
 
         void generate_staging_buffer(vk::DeviceSize limit);
+        void flush_staging_memory(vk::CommandPool pool);
+        vk::DeviceSize load_staging_memory(const std::byte* data, vk::DeviceSize size);
         void free_staging_buffer();
-        bool allocate_staging_memory(std::byte* data, vk::DeviceSize size);
-        bool allocate_data_memory(vk::CommandPool cmd_pool);
+        uint32_t add_primitives(size_t count);
+        void reload_draw_calls(vk::CommandPool pool);
+
+        template <typename T>
+        static std::vector<size_t> get_elm_offset_per_prim(const T& data)
+        {
+            std::vector<size_t> offsets(data.size());
+            offsets[0] = 0;
+
+            auto offset_iter = offsets.begin() + 1;
+            while (offset_iter != offsets.end())
+            {
+                *offset_iter = *(offset_iter - 1) + sizeof(data[0]);
+            }
+        }
+
+        template <typename T>
+        Primitives& add_attribute_data(vk::CommandPool pool, // this does not include range for performances reason
+                                       PrimInfo::Attribute attrib,
+                                       const T& data,
+                                       const std::vector<size_t>& offset_per_prim = {})
+        {
+            size_t offset = load_staging_memory(castr(const std::byte*, data.data()), sizeof_arr(data));
+            if (offset == EMPTY_L)
+            {
+                flush_staging_memory(pool);
+                offset = load_staging_memory(castr(const std::byte*, data.data()), sizeof_arr(data));
+            }
+
+            size_t i = 0;
+            for (; i < offset_per_prim.size(); i++)
+            {
+                prim_infos_[curr_prim_ + i].get_attrib(attrib) = offset + offset_per_prim[i];
+            }
+            for (i += curr_prim_; i < prim_infos_.size(); i++)
+            {
+                prim_infos_[i].get_attrib(attrib) = offset;
+            }
+            return *this;
+        }
+
+        template <typename T>
+        Primitives& load_morph_data(vk::CommandPool pool,
+                                    MorphInfo::Attribute attrib,
+                                    std::vector<MorphInfo>& infos,
+                                    const T& data,
+                                    const std::vector<int64_t>& morph_count,
+                                    const std::vector<size_t>& offset_per_prim = {})
+        {
+            size_t offset = load_staging_memory(castr(const std::byte*, data.data()), sizeof_arr(data));
+            if (offset == EMPTY_L)
+            {
+                flush_staging_memory(pool);
+                offset = load_staging_memory(castr(const std::byte*, data.data()), sizeof_arr(data));
+            }
+            size_t i = 0;
+            for (; i < offset_per_prim.size(); i++)
+            {
+                infos[i].get_attrib(attrib, morph_count[i]) = offset + offset_per_prim[i];
+            }
+            for (i += curr_prim_; i < prim_infos_.size(); i++)
+            {
+                infos[i].get_attrib(attrib, morph_count[i]) = offset;
+            }
+            return *this;
+        }
     };
 }; // namespace fi::graphics
 

@@ -23,6 +23,9 @@ int main(int argc, char** argv)
 
     Primitives prims(20_mb, 2000);
     prims.generate_staging_buffer(20_mb);
+    prims.add_primitives(10);
+    prims.add_attribute_data(nullptr, PrimInfo::POSITON, std::vector<glm::vec3>(12))
+        .add_attribute_data(nullptr, PrimInfo::TANGENT, std::vector<glm::vec4>(12));
 
     Semaphore next_img;
     Semaphore submit;

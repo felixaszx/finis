@@ -15,7 +15,7 @@
 
 namespace fi::graphics
 {
-    // all pointers used as pointer to uint32_t
+    // all pointers used as pointer to uint8
     inline static const uint32_t EMPTY = -1;
     inline static const uint64_t EMPTY_L = -1;
 
@@ -31,10 +31,11 @@ namespace fi::graphics
             WEIGHTS,
             INDEX,
             MESH,
-            MATERIAL
+            MATERIAL,
+            MORPH
         };
 
-        uint64_t positon_ = EMPTY_L;  // vec3[]
+        uint64_t position_ = EMPTY_L; // vec3[]
         uint64_t normal_ = EMPTY_L;   // vec3[]
         uint64_t tangent_ = EMPTY_L;  // vec4[]
         uint64_t texcoord_ = EMPTY_L; // vec2[]
@@ -44,13 +45,14 @@ namespace fi::graphics
         uint64_t idx_ = EMPTY_L;      // uint32_t[]
         uint64_t mesh_ = EMPTY_L;     // MeshInfo*
         uint64_t material_ = EMPTY_L; // MaterialInfo*
+        uint64_t morph_ = EMPTY_L;    // MorphInfo*
 
         uint64_t& get_attrib(Attribute attrib)
         {
             switch (attrib)
             {
                 case POSITON:
-                    return positon_;
+                    return position_;
                 case NORMAL:
                     return normal_;
                 case TANGENT:
@@ -67,12 +69,22 @@ namespace fi::graphics
                     return mesh_;
                 case MATERIAL:
                     return material_;
+                case MORPH:
+                    return morph_;
             }
+            return position_;
         }
     };
 
     struct MorphInfo
     {
+        enum Attribute
+        {
+            POSITON,
+            NORMAL,
+            TANGENT
+        };
+
         uint64_t position_ = EMPTY_L; // vec3[]
         uint64_t normal_ = EMPTY_L;   // vec3[]
         uint64_t tangent_ = EMPTY_L;  // vec4[]
@@ -80,6 +92,23 @@ namespace fi::graphics
         uint64_t position_count_ = 0; // scalar
         uint64_t normal_count_ = 0;   // scalar
         uint64_t tangent_count_ = 0;  // scalar
+
+        uint64_t& get_attrib(Attribute attrib, uint64_t count)
+        {
+            switch (attrib)
+            {
+                case POSITON:
+                    position_count_ = count;
+                    return position_;
+                case NORMAL:
+                    normal_count_ = count;
+                    return normal_;
+                case TANGENT:
+                    tangent_count_ = count;
+                    return tangent_;
+            }
+            return position_;
+        }
     };
 
     struct MeshInfo
@@ -116,10 +145,6 @@ namespace fi::graphics
         uint32_t sheen_color_ = EMPTY;
         uint32_t sheen_roughtness_ = EMPTY;
     };
-
-#define size_as_uint32_t(bytes)     (bytes / sizeof(uint32_t))
-#define sizeof_as_uint32_t(type)    (size_as_uint32_t(sizeof(type)))
-#define sizeof_arr_as_uint32_t(arr) (arr.size() * sizeof_as_uint32_t(arr[0]))
 
 }; // namespace fi::graphics
 

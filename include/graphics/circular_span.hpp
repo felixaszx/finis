@@ -33,14 +33,16 @@ namespace fi::graphics
         {
         }
 
+        void reset();
         void reference(void* data, std::size_t size);
-        bool push_back(std::byte* data, std::size_t new_size);
+        bool push_back(const std::byte* data, std::size_t new_size);
         void pop_front();
         void pop_front_cleared();
         bool copy_front_block_to(std::byte* dst);
         std::array<block, 2> front_block_region();
         std::size_t front_block_size() { return blocks_.front().size_; }
         std::size_t front() { return front_; }
+        std::size_t offset(const block& block) { return block.data_ - begin_; }
         std::size_t empty() { return !size_; }
         std::size_t size() { return size_; }
         std::size_t capacity() { return end_ - begin_; }

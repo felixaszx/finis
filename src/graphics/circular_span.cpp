@@ -5,10 +5,8 @@ fi::graphics::circular_span::circular_span(void* data, std::size_t size)
     reference(data, size);
 }
 
-void fi::graphics::circular_span::reference(void* data, std::size_t size)
+void fi::graphics::circular_span::reset()
 {
-    begin_ = (std::byte*)data;
-    end_ = (std::byte*)data + size;
     front_ = 0;
     size_ = 0;
     while (!blocks_.empty())
@@ -17,7 +15,14 @@ void fi::graphics::circular_span::reference(void* data, std::size_t size)
     }
 }
 
-bool fi::graphics::circular_span::push_back(std::byte* data, std::size_t new_size)
+void fi::graphics::circular_span::reference(void* data, std::size_t size)
+{
+    begin_ = (std::byte*)data;
+    end_ = (std::byte*)data + size;
+    reset();
+}
+
+bool fi::graphics::circular_span::push_back(const std::byte* data, std::size_t new_size)
 {
     if (remainning() >= new_size)
     {

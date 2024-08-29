@@ -23,6 +23,7 @@
 #define casts(type, value)  (static_cast<type>(value))
 #define castr(type, value)  (reinterpret_cast<type>(value))
 #define castc(type, value)  (const_cast<type>(value))
+#define castd(type, value)  (dynamic_cast<type>(value))
 #define castf(type, value)  ((type)(value))
 #define sizeof_arr(std_arr) (std_arr.size() * sizeof(std_arr[0]))
 
@@ -59,12 +60,33 @@ inline constexpr void make_shared2(std::shared_ptr<Ptr>& shared_ptr, Param&&... 
     shared_ptr.reset(new Ptr(std::forward<Param>(param)...));
 }
 
-inline consteval size_t operator""_b(unsigned long long b) { return b; }
-inline consteval size_t operator""_kb(unsigned long long kb) { return 1024_b * kb; }
-inline consteval size_t operator""_kb(long double kb) { return 1024_b * kb; }
-inline consteval size_t operator""_mb(unsigned long long mb) { return 1024_kb * mb; }
-inline consteval size_t operator""_mb(long double mb) { return 1024_kb * mb; }
-inline consteval size_t operator""_gb(unsigned long long gb) { return 1024_mb * gb; }
-inline consteval size_t operator""_gb(long double gb) { return 1024_mb * gb; }
+inline consteval size_t operator""_b(unsigned long long b)
+{
+    return b;
+}
+inline consteval size_t operator""_kb(unsigned long long kb)
+{
+    return 1024_b * kb;
+}
+inline consteval size_t operator""_kb(long double kb)
+{
+    return 1024_b * kb;
+}
+inline consteval size_t operator""_mb(unsigned long long mb)
+{
+    return 1024_kb * mb;
+}
+inline consteval size_t operator""_mb(long double mb)
+{
+    return 1024_kb * mb;
+}
+inline consteval size_t operator""_gb(unsigned long long gb)
+{
+    return 1024_mb * gb;
+}
+inline consteval size_t operator""_gb(long double gb)
+{
+    return 1024_mb * gb;
+}
 
 #endif // INCLUDE_TOOLS_HPP
