@@ -122,15 +122,15 @@ namespace fi::graphics
     {
         glm::vec4 color_factor_ = {1, 1, 1, 1};
         glm::vec4 emissive_factor_ = {0, 0, 0, 1};       // [3] = emissive strength
-        glm::vec4 sheen_color_factor_ = {0, 0, 0, 0};    // [3] = sheen roughtness factor
+        glm::vec4 sheen_color_factor_ = {0, 0, 0, 0};    // [3] = sheen roughness factor
         glm::vec4 specular_color_factor_ = {1, 1, 1, 1}; // [3] = specular factor
 
         float alpha_cutoff_ = 0; // -1 means blend, 0 means opaque, otherwise means mask
-        float metalic_factor_ = 1.0f;
-        float roughtness_factor_ = 1.0f;
-        uint32_t color_ = EMPTY;
-        uint32_t metalic_roughtness_ = EMPTY;
+        float metallic_factor_ = 1.0f;
+        float roughness_factor_ = 1.0f;
 
+        uint32_t color_ = EMPTY;
+        uint32_t metallic_roughness_ = EMPTY;
         uint32_t normal_ = EMPTY;
         uint32_t emissive_ = EMPTY;
         uint32_t occlusion_ = EMPTY;
@@ -143,7 +143,7 @@ namespace fi::graphics
         uint32_t spec_color_ = EMPTY;
 
         uint32_t sheen_color_ = EMPTY;
-        uint32_t sheen_roughtness_ = EMPTY;
+        uint32_t sheen_roughness_ = EMPTY;
     };
 
 }; // namespace fi::graphics
