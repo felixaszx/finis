@@ -13,7 +13,6 @@ int main(int argc, char** argv)
     using namespace glms::literal;
     using namespace std::chrono_literals;
     using namespace fi::graphics;
-    namespace bs = BS;
 
     const uint32_t WIN_WIDTH = 1920;
     const uint32_t WIN_HEIGHT = 1080;

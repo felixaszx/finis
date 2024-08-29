@@ -165,12 +165,6 @@ fi::graphics::Graphics::Graphics(int width, int height, const std::string& title
     pool_info.queueFamilyIndex = queue_indices_[GRAPHICS];
     one_time_submit_pool_ = device_.createCommandPool(pool_info);
 
-    cmd_pools_.resize(thread_pool_.get_thread_count());
-    for (vk::CommandPool& pool : cmd_pools_)
-    {
-        pool = device_.createCommandPool(pool_info);
-    }
-
     vk::PipelineCacheCreateInfo pc_info{};
     pipeline_cache_ = device_.createPipelineCache(pc_info);
 }
@@ -178,11 +172,6 @@ fi::graphics::Graphics::Graphics(int width, int height, const std::string& title
 fi::graphics::Graphics::~Graphics()
 {
     device_.waitIdle();
-
-    for (auto pool : cmd_pools_)
-    {
-        device().destroyCommandPool(pool);
-    }
 
     device_.destroyPipelineCache(pipeline_cache_);
     device_.destroyCommandPool(one_time_submit_pool_);
@@ -265,16 +254,6 @@ void fi::graphics::GraphicsObject::submit_one_time_cmd(vk::CommandBuffer cmd)
     submit.setCommandBuffers(cmd);
     queues_[GRAPHICS].submit(submit, fence);
     auto r = device_.waitForFences(fence, true, std::numeric_limits<uint64_t>::max());
-}
-
-fi::graphics::bst::thread_pool& fi::graphics::GraphicsObject::thread_pool()
-{
-    return thread_pool_;
-}
-
-const vk::CommandPool fi::graphics::GraphicsObject::cmd_pool()
-{
-    return cmd_pools_[bst::this_thread::get_index().value()];
 }
 
 vk::Fence fi::graphics::create_vk_fence(vk::Device device, bool signal)
