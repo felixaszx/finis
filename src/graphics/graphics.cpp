@@ -114,11 +114,17 @@ fi::graphics::Graphics::Graphics(int width, int height, const std::string& title
     feature.shaderSampledImageArrayDynamicIndexing = true;
     vk::PhysicalDeviceVulkan11Features feature11{};
     feature11.multiview = true;
+    feature11.variablePointersStorageBuffer = true;
+    feature11.uniformAndStorageBuffer16BitAccess = true;
+    feature11.variablePointers = true;
     feature11.shaderDrawParameters = true;
     vk::PhysicalDeviceVulkan12Features feature12{};
     feature12.runtimeDescriptorArray = true;
     feature12.bufferDeviceAddress = true;
     feature12.scalarBlockLayout = true;
+    feature12.shaderInt8 = true;
+    feature12.shaderFloat16 = true;
+    feature12.uniformAndStorageBuffer8BitAccess = true;
     vk::PhysicalDeviceVulkan13Features feature13{};
     feature13.dynamicRendering = true;
     feature13.synchronization2 = true;

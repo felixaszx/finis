@@ -133,7 +133,10 @@ fi::graphics::Shader::Shader(const std::filesystem::path& shader_file, const std
     {
         slang::VariableLayoutReflection* param = reflection->getParameterByIndex(pp);
         desc_in.emplace_back(param->getName());
+
         slang::ParameterCategory category = param->getCategory();
+        uint32_t index = param->getBindingIndex();
+        uint32_t space = param->getBindingSpace() + param->getOffset(castf(SlangParameterCategory, category));
     }
 }
 
