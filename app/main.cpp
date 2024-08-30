@@ -21,7 +21,7 @@ int main(int argc, char** argv)
     Swapchain sc;
     sc.create();
 
-    Shader vert("res/shaders/vert0.slang");
+    Shader vert("res/shaders/test.slang");
 
     Semaphore next_img;
     Semaphore submit;

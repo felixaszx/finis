@@ -16,10 +16,15 @@ slang::IGlobalSession& fi::graphics::Shader::get_global_session()
 
 fi::graphics::Shader::Shader(const std::filesystem::path& shader_file, const std::filesystem::path& include_path)
 {
+    if (!std::filesystem::exists(shader_file))
+    {
+        throw std::runtime_error(std::format("{} do not exist", shader_file.generic_string()));
+    }
+
     slang::TargetDesc target_desc;
     target_desc.forceGLSLScalarBufferLayout = true;
     target_desc.format = SLANG_SPIRV;
-    target_desc.profile = get_global_session().findProfile("glsl_450");
+    target_desc.profile = get_global_session().findProfile("glsl_460");
 
     std::string search_path = include_path.generic_string();
     if (search_path.empty())
@@ -142,4 +147,5 @@ fi::graphics::Shader::Shader(const std::filesystem::path& shader_file, const std
 
 fi::graphics::Shader::~Shader()
 {
+    device().destroyShaderModule(shader_);
 }
