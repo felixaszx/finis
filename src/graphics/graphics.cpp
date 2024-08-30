@@ -110,7 +110,6 @@ fi::graphics::Graphics::Graphics(int width, int height, const std::string& title
     feature.fillModeNonSolid = true;
     feature.geometryShader = true;
     feature.fillModeNonSolid = true;
-    feature.imageCubeArray = true;
     feature.multiDrawIndirect = true;
     feature.shaderSampledImageArrayDynamicIndexing = true;
     vk::PhysicalDeviceVulkan11Features feature11{};

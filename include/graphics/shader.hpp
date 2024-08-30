@@ -12,13 +12,16 @@ namespace fi::graphics
       private:
         vk::ShaderModule shader_{};
         vk::PipelineShaderStageCreateInfo stage_info_{};
+        std::vector<std::string> desc_in{};
 
       public:
-        inline static const char* const ENTRY_POINT_ = "main";
+        static inline const char* const ENTRY_POINT_ = "main";
         static slang::IGlobalSession& get_global_session();
-        Shader(const std::filesystem::path& shader_file,
-               const std::filesystem::path& include_path = "");
+
+        Shader(const std::filesystem::path& shader_file, const std::filesystem::path& include_path = "");
         ~Shader();
+
+        [[nodiscard]] std::vector<std::string> get_desc_in() const { return desc_in; }
     };
 }; // namespace fi::graphics
 

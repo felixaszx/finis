@@ -1,7 +1,7 @@
-StructuredBuffer<float> buffer0;
+StructuredBuffer<float4> buffer0;
 
 [shader("vertex")]
 float4 main(uint64_t iii: PrimitiveIndex)
 {
-    return { 0, 0, 0, 1 };
+    return buffer0[0];
 }
