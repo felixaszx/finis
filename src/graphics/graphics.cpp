@@ -111,6 +111,8 @@ fi::graphics::Graphics::Graphics(int width, int height, const std::string& title
     feature.geometryShader = true;
     feature.fillModeNonSolid = true;
     feature.multiDrawIndirect = true;
+    feature.shaderInt64 = true;
+    feature.shaderInt16 = true;
     feature.shaderSampledImageArrayDynamicIndexing = true;
     vk::PhysicalDeviceVulkan11Features feature11{};
     feature11.multiview = true;
