@@ -4,9 +4,9 @@
 #include "extensions/loader.hpp"
 #include "graphics/graphics.hpp"
 #include "graphics/prims.hpp"
+#include "graphics/shader.hpp"
 #include "graphics/swapchain.hpp"
 #include "bs_th_pool/BS_thread_pool.hpp"
-
 int main(int argc, char** argv)
 {
     using namespace fi;
@@ -20,6 +20,8 @@ int main(int argc, char** argv)
     Graphics g(WIN_WIDTH, WIN_HEIGHT, "finis");
     Swapchain sc;
     sc.create();
+
+    Shader vert("res/shaders/vert0.slang");
 
     Semaphore next_img;
     Semaphore submit;
