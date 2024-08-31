@@ -37,9 +37,6 @@ fi::graphics::Shader::Shader(const std::filesystem::path& shader_file, const std
     options.emplace_back(slang::CompilerOptionName::GLSLForceScalarLayout,
                          slang::CompilerOptionValue{.kind = slang::CompilerOptionValueKind::Int, //
                                                     .intValue0 = 1});
-    options.emplace_back(slang::CompilerOptionName::EntryPointName,
-                         slang::CompilerOptionValue{.kind = slang::CompilerOptionValueKind::String, //
-                                                    .stringValue0 = ENTRY_POINT_});
     options.emplace_back(slang::CompilerOptionName::Capability,
                          slang::CompilerOptionValue{.kind = slang::CompilerOptionValueKind::Int, //
                                                     .intValue0 = get_global_session().findCapability("all")});
@@ -68,142 +65,176 @@ fi::graphics::Shader::Shader(const std::filesystem::path& shader_file, const std
         throw std::runtime_error("Fail to compile shader");
     }
 
-    Slang::ComPtr<slang::IEntryPoint> entry_point;
-    module->findEntryPointByName(ENTRY_POINT_, entry_point.writeRef());
+    std::vector<Slang::ComPtr<slang::IEntryPoint>> entry_points_ref(module->getDefinedEntryPointCount());
+    std::vector<slang::IComponentType*> components = {module};
+    for (uint32_t i = 0; i < module->getDefinedEntryPointCount(); i++)
+    {
+        module->getDefinedEntryPoint(i, entry_points_ref[i].writeRef());
+        components.push_back(entry_points_ref[i]);
+    }
 
-    std::array<slang::IComponentType*, 2> components = {module, entry_point};
     Slang::ComPtr<slang::IComponentType> program;
-    session->createCompositeComponentType(components.data(), 2, program.writeRef());
+    session->createCompositeComponentType(components.data(), components.size(), program.writeRef());
 
     Slang::ComPtr<slang::IComponentType> linked_program;
     Slang::ComPtr<ISlangBlob> diagnostic_blob;
     program->link(linked_program.writeRef(), diagnostic_blob.writeRef());
 
     Slang::ComPtr<slang::IBlob> kernel_blob;
-    linked_program->getEntryPointCode(0, 0, kernel_blob.writeRef(), diagnostics.writeRef());
+    linked_program->getTargetCode(0, kernel_blob.writeRef(), diagnostics.writeRef());
     if (diagnostics)
     {
         std::cerr << castf(const char*, diagnostics->getBufferPointer());
     }
 
-    vk::ShaderModuleCreateInfo shader_info{.codeSize = kernel_blob->getBufferSize(),
-                                           .pCode = castr(const uint32_t*, kernel_blob->getBufferPointer())};
-    shader_ = device().createShaderModule(shader_info);
-    stage_info_.module = shader_;
-    stage_info_.pName = ENTRY_POINT_;
+    vk::ShaderModuleCreateInfo shader_info{};
+    shader_info.codeSize = kernel_blob->getBufferSize();
+    shader_info.pCode = castr(const uint32_t*, kernel_blob->getBufferPointer());
+    module_ = device().createShaderModule(shader_info);
 
-    slang::ProgramLayout* reflection = program->getLayout(0, diagnostics.writeRef());
-    if (diagnostics)
+    spvc::Compiler reflection(shader_info.pCode, shader_info.codeSize / sizeof(uint32_t));
+    spvc::SmallVector<spvc::EntryPoint> entry_points = reflection.get_entry_points_and_stages();
+    entrys_.reserve(entry_points.size());
+    stage_infos_.reserve(entry_points.size());
+    for (const auto& entry : entry_points)
     {
-        std::cerr << castf(const char*, diagnostics->getBufferPointer());
-        throw std::runtime_error("Fail to reflect shader");
-    }
-
-    auto extrat_shader_stage = [&]()
-    {
-        switch (reflection->getEntryPointByIndex(0)->getStage())
+        vk::PipelineShaderStageCreateInfo& stage_info = stage_infos_.emplace_back();
+        switch (entry.execution_model)
         {
-            case SLANG_STAGE_VERTEX:
-                return vk::ShaderStageFlagBits::eVertex;
-            case SLANG_STAGE_HULL:
-                return vk::ShaderStageFlagBits::eTessellationControl;
-            case SLANG_STAGE_DOMAIN:
-                return vk::ShaderStageFlagBits::eTessellationEvaluation;
-            case SLANG_STAGE_GEOMETRY:
-                return vk::ShaderStageFlagBits::eGeometry;
-            case SLANG_STAGE_FRAGMENT:
-                return vk::ShaderStageFlagBits::eFragment;
-            case SLANG_STAGE_COMPUTE:
-                return vk::ShaderStageFlagBits::eCompute;
-            case SLANG_STAGE_RAY_GENERATION:
-                return vk::ShaderStageFlagBits::eRaygenKHR;
-            case SLANG_STAGE_INTERSECTION:
-                return vk::ShaderStageFlagBits::eIntersectionKHR;
-            case SLANG_STAGE_ANY_HIT:
-                return vk::ShaderStageFlagBits::eAnyHitKHR;
-            case SLANG_STAGE_CLOSEST_HIT:
-                return vk::ShaderStageFlagBits::eClosestHitKHR;
-            case SLANG_STAGE_MISS:
-                return vk::ShaderStageFlagBits::eMissKHR;
-            case SLANG_STAGE_CALLABLE:
-                return vk::ShaderStageFlagBits::eCallableKHR;
-            case SLANG_STAGE_MESH:
-                return vk::ShaderStageFlagBits::eMeshEXT;
-            case SLANG_STAGE_AMPLIFICATION:
-                return vk::ShaderStageFlagBits::eTaskEXT;
-            case SLANG_STAGE_NONE:
-                return vk::ShaderStageFlagBits::eAll;
+            case spv::ExecutionModelVertex:
+                stage_info.stage = vk::ShaderStageFlagBits::eVertex;
+                break;
+            case spv::ExecutionModelTessellationControl:
+                stage_info.stage = vk::ShaderStageFlagBits::eTessellationControl;
+                break;
+            case spv::ExecutionModelTessellationEvaluation:
+                stage_info.stage = vk::ShaderStageFlagBits::eTessellationEvaluation;
+                break;
+            case spv::ExecutionModelGeometry:
+                stage_info.stage = vk::ShaderStageFlagBits::eGeometry;
+                break;
+            case spv::ExecutionModelFragment:
+                stage_info.stage = vk::ShaderStageFlagBits::eFragment;
+                break;
+            case spv::ExecutionModelGLCompute:
+                stage_info.stage = vk::ShaderStageFlagBits::eCompute;
+                break;
+            case spv::ExecutionModelTaskNV:
+                stage_info.stage = vk::ShaderStageFlagBits::eTaskNV;
+                break;
+            case spv::ExecutionModelMeshNV:
+                stage_info.stage = vk::ShaderStageFlagBits::eMeshNV;
+                break;
+            case spv::ExecutionModelRayGenerationKHR:
+                stage_info.stage = vk::ShaderStageFlagBits::eRaygenKHR;
+                break;
+            case spv::ExecutionModelIntersectionKHR:
+                stage_info.stage = vk::ShaderStageFlagBits::eIntersectionKHR;
+                break;
+            case spv::ExecutionModelAnyHitKHR:
+                stage_info.stage = vk::ShaderStageFlagBits::eAnyHitKHR;
+                break;
+            case spv::ExecutionModelClosestHitKHR:
+                stage_info.stage = vk::ShaderStageFlagBits::eClosestHitKHR;
+                break;
+            case spv::ExecutionModelMissKHR:
+                stage_info.stage = vk::ShaderStageFlagBits::eMissKHR;
+                break;
+            case spv::ExecutionModelCallableKHR:
+                stage_info.stage = vk::ShaderStageFlagBits::eCallableKHR;
+                break;
+            case spv::ExecutionModelTaskEXT:
+                stage_info.stage = vk::ShaderStageFlagBits::eTaskEXT;
+                break;
+            case spv::ExecutionModelMeshEXT:
+                stage_info.stage = vk::ShaderStageFlagBits::eMeshEXT;
+                break;
+            case spv::ExecutionModelKernel:
+            case spv::ExecutionModelMax:
+                stage_info.stage = vk::ShaderStageFlagBits::eAll;
+                break;
         }
-        return vk::ShaderStageFlagBits::eAll;
-    };
+        entrys_.push_back(entry.name);
+        stage_info.pName = entrys_.back().c_str();
+        stage_info.module = module_;
+    }
 
-    stage_info_.stage = extrat_shader_stage();
-    desc_in.resize(reflection->getParameterCount());
-    for (uint32_t pp = 0; pp < desc_in.size(); pp++)
+    auto get_binding_info = [&](const spvc::Resource& res, vk::DescriptorType desc_type)
     {
-        slang::VariableLayoutReflection* param = reflection->getParameterByIndex(pp);
-        desc_in[pp] = param->getName();
+        const spvc::SPIRType& type = reflection.get_type(res.type_id);
+        uint32_t set = reflection.get_decoration(res.id, spv::DecorationDescriptorSet);
+        desc_sets_.resize(set + 1);
+        desc_names_.resize(set + 1);
 
-        for (uint32_t cc = 0; cc < param->getCategoryCount(); cc++)
+        auto& binding = desc_sets_[set].emplace_back();
+        desc_names_[set].push_back(res.name);
+        binding.binding = reflection.get_decoration(res.id, spv::DecorationBinding);
+        binding.stageFlags = vk::ShaderStageFlagBits::eAll;
+        binding.descriptorType = desc_type;
+        binding.descriptorCount = type.array.size() ? -1 : 1;
+
+        bool fixed_arr = true;
+        for (bool literal : type.array_size_literal)
         {
-            slang::ParameterCategory category = param->getCategoryByIndex(cc);
-            slang::TypeLayoutReflection* type_layout = param->getTypeLayout();
-            slang::TypeReflection::Kind kind = type_layout->getKind();
+            fixed_arr = literal && fixed_arr;
+        }
 
-            switch (category)
+        if (fixed_arr)
+        {
+            for (uint32_t arr_size : type.array)
             {
-                case slang::ParameterCategory::Uniform:
-                case slang::ParameterCategory::DescriptorTableSlot:
-                {
-                    uint32_t desc_binding = param->getBindingIndex();
-                    if (desc_binding >= desc_sets_.size())
-                    {
-                        desc_sets_.emplace_back(desc_bindings_.size(), desc_bindings_.size());
-                    }
-                    desc_sets_[desc_binding].second++;
-                    vk::DescriptorSetLayoutBinding& set_binding = desc_bindings_.emplace_back();
-                    set_binding.descriptorCount = type_layout->getSize(castf(SlangParameterCategory, category));
-                    set_binding.binding = desc_binding;
-                    set_binding.stageFlags = stage_info_.stage;
-                    switch (kind)
-                    {
-                        case slang::TypeReflection::Kind::Resource:
-                        case slang::TypeReflection::Kind::ShaderStorageBuffer:
-                        case slang::TypeReflection::Kind::ConstantBuffer:
-                            break;
-                        case slang::TypeReflection::Kind::Struct:
-                        case slang::TypeReflection::Kind::Array:
-                        case slang::TypeReflection::Kind::Matrix:
-                        case slang::TypeReflection::Kind::Vector:
-                        case slang::TypeReflection::Kind::Scalar:
-                        case slang::TypeReflection::Kind::SamplerState:
-                        case slang::TypeReflection::Kind::TextureBuffer:
-                        case slang::TypeReflection::Kind::ParameterBlock:
-                        case slang::TypeReflection::Kind::GenericTypeParameter:
-                        case slang::TypeReflection::Kind::Interface:
-                        case slang::TypeReflection::Kind::OutputStream:
-                        case slang::TypeReflection::Kind::Specialized:
-                        case slang::TypeReflection::Kind::Feedback:
-                        case slang::TypeReflection::Kind::DynamicResource:
-                        case slang::TypeReflection::Kind::Pointer:
-                        case slang::TypeReflection::Kind::None:
-                            break;
-                    }
-                    break;
-                }
-                case slang::ParameterCategory::PushConstantBuffer:
-                {
-                    push_constant_idx_ = pp;
-                    break;
-                }
-                default:
-                    break;
+                binding.descriptorCount += arr_size;
             }
         }
+
+        if (desc_type == vk::DescriptorType::eSampledImage && type.image.dim == spv::DimBuffer)
+        {
+            binding.descriptorType = vk::DescriptorType::eUniformTexelBuffer;
+        }
+        else if (desc_type == vk::DescriptorType::eStorageImage)
+        {
+            binding.descriptorType = vk::DescriptorType::eStorageTexelBuffer;
+        }
+        return binding;
+    };
+
+    spvc::ShaderResources reses = reflection.get_shader_resources();
+    for (const auto& res : reses.push_constant_buffers)
+    {
+        push_const_names_.push_back(res.name);
     }
+    for (const auto& res : reses.sampled_images)
+    {
+        get_binding_info(res, vk::DescriptorType::eCombinedImageSampler);
+    }
+    for (const auto& res : reses.separate_images)
+    {
+        get_binding_info(res, vk::DescriptorType::eSampledImage);
+    }
+    for (const auto& res : reses.storage_images)
+    {
+        get_binding_info(res, vk::DescriptorType::eStorageImage);
+    }
+    for (const auto& res : reses.separate_samplers)
+    {
+        get_binding_info(res, vk::DescriptorType::eSampler);
+    }
+    for (const auto& res : reses.uniform_buffers)
+    {
+        get_binding_info(res, vk::DescriptorType::eUniformBuffer);
+    }
+    for (const auto& res : reses.subpass_inputs)
+    {
+        get_binding_info(res, vk::DescriptorType::eInputAttachment);
+    }
+    for (const auto& res : reses.storage_buffers)
+    {
+        get_binding_info(res, vk::DescriptorType::eStorageBuffer);
+    }
+    atchm_blends_.resize(reses.stage_outputs.size());
 }
 
 fi::graphics::Shader::~Shader()
 {
-    device().destroyShaderModule(shader_);
+    device().destroyShaderModule(module_);
 }

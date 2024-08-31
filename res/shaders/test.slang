@@ -1,7 +1,3 @@
-struct PushConstant
-{
-    byte* storage;
-};
 typealias byte = uint;
 
 struct PrimInfo
@@ -19,14 +15,20 @@ struct PrimInfo
     uint64_t morph_ = -1;    // MorphInfo*
 };
 
+
 ConstantBuffer<float4> tt;
-Sampler2D textures[10];
+Sampler2D textures[];
 StructuredBuffer<PrimInfo> PRIM_INFOS_;
-StructuredBuffer<PrimInfo> PRIM_INFOS2_;
+StructuredBuffer<PrimInfo> PRIM_INFOS1_;
 
 [shader("vertex")]
-float4 main(uint64_t iii: PrimitiveIndex)
+float4 vertex_main(uint64_t iii: PrimitiveIndex)
 {
-    float4 sampled = textures[0].Sample( { 0, 0 });
-    return sampled;
+    return { 0, PRIM_INFOS_[0].idx_, PRIM_INFOS1_[0].idx_, 0 };
+}
+
+[shader("fragment")]
+float4 fragment_main()
+{
+    return { 0, PRIM_INFOS_[0].idx_, PRIM_INFOS1_[0].idx_, textures[0].Sample( { 0, 0 }).r };
 }
