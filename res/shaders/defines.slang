@@ -13,7 +13,6 @@ public struct PrimInfo
     public uint64_t mesh_;     // MeshInfo*
     public uint64_t material_; // MaterialInfo*
     public uint64_t morph_;    // MorphInfo*
-    public float4 gmorph_;    // MorphInfo*
 };
 
 public struct MorphInfo
