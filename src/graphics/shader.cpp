@@ -40,6 +40,10 @@ fi::graphics::Shader::Shader(const std::filesystem::path& shader_file, const std
     options.emplace_back(slang::CompilerOptionName::Capability,
                          slang::CompilerOptionValue{.kind = slang::CompilerOptionValueKind::Int, //
                                                     .intValue0 = get_global_session().findCapability("all")});
+    options.emplace_back(
+        slang::CompilerOptionName::Optimization,
+        slang::CompilerOptionValue{.kind = slang::CompilerOptionValueKind::Int, //
+                                   .intValue0 = SlangOptimizationLevel::SLANG_OPTIMIZATION_LEVEL_HIGH});
 
     slang::SessionDesc session_desc{
         .targets = &target_desc,
