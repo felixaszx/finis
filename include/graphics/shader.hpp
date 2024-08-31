@@ -1,6 +1,8 @@
 #ifndef GRAPHICS_SHADER_HPP
 #define GRAPHICS_SHADER_HPP
 
+#include <map>
+
 #include "tools.hpp"
 #include "graphics.hpp"
 #include "slang.h"
@@ -13,6 +15,11 @@ namespace fi::graphics
         vk::ShaderModule shader_{};
         vk::PipelineShaderStageCreateInfo stage_info_{};
         std::vector<std::string> desc_in{};
+        std::vector<std::pair<uint32_t, uint32_t>> desc_sets_{};
+        std::vector<vk::DescriptorSetLayoutBinding> desc_bindings_{};
+
+        uint32_t push_constant_idx_ = -1;
+        vk::PushConstantRange push_range_{};
 
       public:
         static inline const char* const ENTRY_POINT_ = "main";

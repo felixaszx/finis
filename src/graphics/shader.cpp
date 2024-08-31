@@ -24,7 +24,7 @@ fi::graphics::Shader::Shader(const std::filesystem::path& shader_file, const std
     slang::TargetDesc target_desc;
     target_desc.forceGLSLScalarBufferLayout = true;
     target_desc.format = SLANG_SPIRV;
-    target_desc.profile = get_global_session().findProfile("glsl_460");
+    target_desc.profile = get_global_session().findProfile("spirv_1_6");
 
     std::string search_path = include_path.generic_string();
     if (search_path.empty())
@@ -40,6 +40,9 @@ fi::graphics::Shader::Shader(const std::filesystem::path& shader_file, const std
     options.emplace_back(slang::CompilerOptionName::EntryPointName,
                          slang::CompilerOptionValue{.kind = slang::CompilerOptionValueKind::String, //
                                                     .stringValue0 = ENTRY_POINT_});
+    options.emplace_back(slang::CompilerOptionName::Capability,
+                         slang::CompilerOptionValue{.kind = slang::CompilerOptionValueKind::Int, //
+                                                    .intValue0 = get_global_session().findCapability("all")});
 
     slang::SessionDesc session_desc{
         .targets = &target_desc,
@@ -62,6 +65,7 @@ fi::graphics::Shader::Shader(const std::filesystem::path& shader_file, const std
     if (diagnostics)
     {
         std::cerr << castf(const char*, diagnostics->getBufferPointer());
+        throw std::runtime_error("Fail to compile shader");
     }
 
     Slang::ComPtr<slang::IEntryPoint> entry_point;
@@ -92,6 +96,7 @@ fi::graphics::Shader::Shader(const std::filesystem::path& shader_file, const std
     if (diagnostics)
     {
         std::cerr << castf(const char*, diagnostics->getBufferPointer());
+        throw std::runtime_error("Fail to reflect shader");
     }
 
     auto extrat_shader_stage = [&]()
@@ -133,15 +138,68 @@ fi::graphics::Shader::Shader(const std::filesystem::path& shader_file, const std
     };
 
     stage_info_.stage = extrat_shader_stage();
-    uint32_t param_count = reflection->getParameterCount();
-    for (unsigned pp = 0; pp < param_count; pp++)
+    desc_in.resize(reflection->getParameterCount());
+    for (uint32_t pp = 0; pp < desc_in.size(); pp++)
     {
         slang::VariableLayoutReflection* param = reflection->getParameterByIndex(pp);
-        desc_in.emplace_back(param->getName());
+        desc_in[pp] = param->getName();
 
-        slang::ParameterCategory category = param->getCategory();
-        uint32_t index = param->getBindingIndex();
-        uint32_t space = param->getBindingSpace() + param->getOffset(castf(SlangParameterCategory, category));
+        for (uint32_t cc = 0; cc < param->getCategoryCount(); cc++)
+        {
+            slang::ParameterCategory category = param->getCategoryByIndex(cc);
+            slang::TypeLayoutReflection* type_layout = param->getTypeLayout();
+            slang::TypeReflection::Kind kind = type_layout->getKind();
+
+            switch (category)
+            {
+                case slang::ParameterCategory::Uniform:
+                case slang::ParameterCategory::DescriptorTableSlot:
+                {
+                    uint32_t desc_binding = param->getBindingIndex();
+                    if (desc_binding >= desc_sets_.size())
+                    {
+                        desc_sets_.emplace_back(desc_bindings_.size(), desc_bindings_.size());
+                    }
+                    desc_sets_[desc_binding].second++;
+                    vk::DescriptorSetLayoutBinding& set_binding = desc_bindings_.emplace_back();
+                    set_binding.descriptorCount = type_layout->getSize(castf(SlangParameterCategory, category));
+                    set_binding.binding = desc_binding;
+                    set_binding.stageFlags = stage_info_.stage;
+                    switch (kind)
+                    {
+                        case slang::TypeReflection::Kind::Resource:
+                        case slang::TypeReflection::Kind::ShaderStorageBuffer:
+                        case slang::TypeReflection::Kind::ConstantBuffer:
+                            break;
+                        case slang::TypeReflection::Kind::Struct:
+                        case slang::TypeReflection::Kind::Array:
+                        case slang::TypeReflection::Kind::Matrix:
+                        case slang::TypeReflection::Kind::Vector:
+                        case slang::TypeReflection::Kind::Scalar:
+                        case slang::TypeReflection::Kind::SamplerState:
+                        case slang::TypeReflection::Kind::TextureBuffer:
+                        case slang::TypeReflection::Kind::ParameterBlock:
+                        case slang::TypeReflection::Kind::GenericTypeParameter:
+                        case slang::TypeReflection::Kind::Interface:
+                        case slang::TypeReflection::Kind::OutputStream:
+                        case slang::TypeReflection::Kind::Specialized:
+                        case slang::TypeReflection::Kind::Feedback:
+                        case slang::TypeReflection::Kind::DynamicResource:
+                        case slang::TypeReflection::Kind::Pointer:
+                        case slang::TypeReflection::Kind::None:
+                            break;
+                    }
+                    break;
+                }
+                case slang::ParameterCategory::PushConstantBuffer:
+                {
+                    push_constant_idx_ = pp;
+                    break;
+                }
+                default:
+                    break;
+            }
+        }
     }
 }
 

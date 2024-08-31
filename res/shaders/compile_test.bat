@@ -1,1 +1,1 @@
-slangc.exe -force-glsl-scalar-layout test.slang -profile glsl_460 -target spirv -o test.spv -entry main
+slangc.exe -force-glsl-scalar-layout -profile spirv_1_6+all test.slang -target glsl -o test.glsl -entry main
