@@ -7,36 +7,36 @@
 #include "cpp_defines.hpp"
 #include "tools.hpp"
 
-namespace fi
+namespace fi::ext
 { // the loading extension must be wirtten as a function
-    class ext_loader
+    class loader
     {
       private:
         boost::dll::shared_library dl_;
 
       public:
-        ext_loader(const std::filesystem::path& dl_name);
+        loader(const std::filesystem::path& dl_name);
         [[nodiscard]] const bool valid() const;
 
         template <typename T>
-            requires std::derived_from<T, ext>
-        [[nodiscard]] std::unique_ptr<T> load_ext_unique(size_t idx = 0)
+            requires std::derived_from<T, base>
+        [[nodiscard]] std::unique_ptr<T> load_unique(size_t idx = 0)
         {
-            if (!valid())
+            if (valid())
             {
-                ext* ext_ptr = dl_.get<ext*()>(std::format("load_extension_{}", idx))();
+                base* ext_ptr = dl_.get<base*()>(std::format("load_extension_{}", idx))();
                 return std::unique_ptr<T>(dynamic_cast<T*>(ext_ptr));
             }
             throw std::runtime_error(std::format("DLL {} is not loaded", dl_.location().generic_string()));
         }
 
         template <typename T>
-            requires std::derived_from<T, ext>
-        [[nodiscard]] std::shared_ptr<T> load_ext_shared(size_t idx = 0)
+            requires std::derived_from<T, base>
+        [[nodiscard]] std::shared_ptr<T> load_shared(size_t idx = 0)
         {
             if (valid())
             {
-                ext* ext_ptr = dl_.get<ext*()>(std::format("load_extension_{}", idx))();
+                base* ext_ptr = dl_.get<base*()>(std::format("load_extension_{}", idx))();
                 return std::shared_ptr<T>(dynamic_cast<T*>(ext_ptr));
             }
             throw std::runtime_error(std::format("DLL {} is not loaded", dl_.location().generic_string()));

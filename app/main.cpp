@@ -14,6 +14,7 @@ int main(int argc, char** argv)
     using namespace glms::literal;
     using namespace std::chrono_literals;
     using namespace fi::graphics;
+    using namespace fi::ext;
 
     const uint32_t WIN_WIDTH = 1920;
     const uint32_t WIN_HEIGHT = 1080;
@@ -21,6 +22,9 @@ int main(int argc, char** argv)
     context g(WIN_WIDTH, WIN_HEIGHT, "finis");
     swapchain sc;
     sc.create();
+
+    ext::loader loader("exe/pipelines.dll");
+    std::unique_ptr<ext::base> ext = loader.load_unique<ext::base>();
 
     shader pipeline_shader("res/shaders/test.slang");
 
