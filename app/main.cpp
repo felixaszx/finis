@@ -7,6 +7,7 @@
 #include "graphics/shader.hpp"
 #include "graphics/swapchain.hpp"
 #include "bs_th_pool/BS_thread_pool.hpp"
+
 int main(int argc, char** argv)
 {
     using namespace fi;
