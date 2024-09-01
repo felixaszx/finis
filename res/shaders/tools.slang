@@ -1,7 +1,5 @@
 module tools;
 
-typedef uint8_t byte;
-
 public uint get_draw_idx()
 {
     return spirv_asm
