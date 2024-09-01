@@ -11,14 +11,13 @@
 #ifndef GRAPHICS_PRIM_DATA_HPP
 #define GRAPHICS_PRIM_DATA_HPP
 
-#include "graphics.hpp"
+#include <cstdint>
+
+#include "glms.hpp"
 
 namespace fi::gfx
 {
     // all pointers used as pointer to uint8
-    inline static const uint32_t EMPTY = -1;
-    inline static const uint64_t EMPTY_L = -1;
-
     struct prim_info
     {
         enum attrib
@@ -35,17 +34,17 @@ namespace fi::gfx
             MORPH
         };
 
-        uint64_t position_ = EMPTY_L; // vec3[]
-        uint64_t normal_ = EMPTY_L;   // vec3[]
-        uint64_t tangent_ = EMPTY_L;  // vec4[]
-        uint64_t texcoord_ = EMPTY_L; // vec2[]
-        uint64_t joints_ = EMPTY_L;   // uvec4[]
-        uint64_t weights_ = EMPTY_L;  // vec4[]
+        uint64_t position_ = -1; // vec3[]
+        uint64_t normal_ = -1;   // vec3[]
+        uint64_t tangent_ = -1;  // vec4[]
+        uint64_t texcoord_ = -1; // vec2[]
+        uint64_t joints_ = -1;   // uvec4[]
+        uint64_t weights_ = -1;  // vec4[]
 
-        uint64_t idx_ = EMPTY_L;      // uint32_t[]
-        uint64_t mesh_ = EMPTY_L;     // MeshInfo*
-        uint64_t material_ = EMPTY_L; // MaterialInfo*
-        uint64_t morph_ = EMPTY_L;    // morph_info*
+        uint64_t idx_ = -1;      // uint32_t[]
+        uint64_t mesh_ = -1;     // MeshInfo*
+        uint64_t material_ = -1; // MaterialInfo*
+        uint64_t morph_ = -1;    // morph_info*
 
         uint64_t& get_attrib(attrib attrib)
         {
@@ -85,9 +84,9 @@ namespace fi::gfx
             TANGENT
         };
 
-        uint64_t position_ = EMPTY_L; // vec3[]
-        uint64_t normal_ = EMPTY_L;   // vec3[]
-        uint64_t tangent_ = EMPTY_L;  // vec4[]
+        uint64_t position_ = -1; // vec3[]
+        uint64_t normal_ = -1;   // vec3[]
+        uint64_t tangent_ = -1;  // vec4[]
 
         uint64_t position_count_ = 0; // scalar
         uint64_t normal_count_ = 0;   // scalar
@@ -113,9 +112,9 @@ namespace fi::gfx
 
     struct mesh_info
     {
-        uint64_t node_ = EMPTY_L;          // mat4*
-        uint64_t morph_weights_ = EMPTY_L; // float[]
-        uint64_t joint_ = EMPTY_L;         // uint32_t[]
+        uint64_t node_ = -1;          // mat4*
+        uint64_t morph_weights_ = -1; // float[]
+        uint64_t joint_ = -1;         // uint32_t[]
     };
 
     struct mat_info
@@ -129,21 +128,21 @@ namespace fi::gfx
         float metallic_factor_ = 1.0f;
         float roughness_factor_ = 1.0f;
 
-        uint32_t color_ = EMPTY;
-        uint32_t metallic_roughness_ = EMPTY;
-        uint32_t normal_ = EMPTY;
-        uint32_t emissive_ = EMPTY;
-        uint32_t occlusion_ = EMPTY;
+        uint32_t color_ = -1;
+        uint32_t metallic_roughness_ = -1;
+        uint32_t normal_ = -1;
+        uint32_t emissive_ = -1;
+        uint32_t occlusion_ = -1;
 
         float anisotropy_rotation_ = 0;
         float anisotropy_strength_ = 0;
-        uint32_t anisotropy_ = EMPTY;
+        uint32_t anisotropy_ = -1;
 
-        uint32_t specular_ = EMPTY;
-        uint32_t spec_color_ = EMPTY;
+        uint32_t specular_ = -1;
+        uint32_t spec_color_ = -1;
 
-        uint32_t sheen_color_ = EMPTY;
-        uint32_t sheen_roughness_ = EMPTY;
+        uint32_t sheen_color_ = -1;
+        uint32_t sheen_roughness_ = -1;
     };
 
 }; // namespace fi::gfx

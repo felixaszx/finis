@@ -28,9 +28,9 @@ namespace fi::gfx
 
             vk::Buffer buffer_{}; // buffer 1
             vma::Allocation alloc_{};
-            vk::DeviceSize draw_call_offset_ = EMPTY_L;
+            vk::DeviceSize draw_call_offset_ = -1;
         } prims_;
-        uint32_t curr_prim_ = EMPTY;
+        uint32_t curr_prim_ = -1;
         std::vector<prim_info> prim_infos_{};
         std::vector<vk::DrawIndirectCommand> draw_calls_{};
 
@@ -79,7 +79,7 @@ namespace fi::gfx
                                        const std::vector<size_t>& offset_per_prim = {})
         {
             size_t offset = load_staging_memory(castr(const std::byte*, data.data()), sizeof_arr(data));
-            if (offset == EMPTY_L)
+            if (offset == -1)
             {
                 flush_staging_memory(pool);
                 offset = load_staging_memory(castr(const std::byte*, data.data()), sizeof_arr(data));
@@ -106,7 +106,7 @@ namespace fi::gfx
                                     const std::vector<size_t>& offset_per_info = {})
         {
             size_t offset = load_staging_memory(castr(const std::byte*, data.data()), sizeof_arr(data));
-            if (offset == EMPTY_L)
+            if (offset == -1)
             {
                 flush_staging_memory(pool);
                 offset = load_staging_memory(castr(const std::byte*, data.data()), sizeof_arr(data));

@@ -7,6 +7,7 @@
 #include "graphics/pipeline.hpp"
 #include "graphics/shader.hpp"
 #include "graphics/swapchain.hpp"
+#include "resources/gltf_file.hpp"
 #include "bs_th_pool/BS_thread_pool.hpp"
 
 int main(int argc, char** argv)
@@ -18,13 +19,11 @@ int main(int argc, char** argv)
     const uint32_t WIN_WIDTH = 1920;
     const uint32_t WIN_HEIGHT = 1080;
 
+    res::gltf_file gltf_file("res/models/sparta.glb");
+
     gfx::context g(WIN_WIDTH, WIN_HEIGHT, "finis");
     gfx::swapchain sc;
     sc.create();
-
-    gfx::Semaphore next_img;
-    gfx::Semaphore submit;
-    gfx::Fence frame_fence;
 
     vk::CommandPoolCreateInfo pool_info{};
     pool_info.flags = vk::CommandPoolCreateFlagBits::eResetCommandBuffer;
@@ -34,7 +33,6 @@ int main(int argc, char** argv)
     gfx::shader pipeline_shader("res/shaders/test.slang");
     ext::loader pl_loader("exe/pipelines.dll");
     auto pl0 = pl_loader.load_unique<gfx::gfx_pipeline>();
-    auto pl1 = pl_loader.load_unique<gfx::gfx_pipeline>();
 
     gfx::primitives prims(20_mb, 2000);
     prims.generate_staging_buffer(10_kb);
@@ -46,6 +44,9 @@ int main(int argc, char** argv)
     auto cmds = g.device().allocateCommandBuffers(cmd_alloc);
 
     gfx::cpu_clock clock;
+    gfx::semaphore next_img;
+    gfx::semaphore submit;
+    gfx::fence frame_fence;
     while (true)
     {
         auto r = g.device().waitForFences(frame_fence, true, std::numeric_limits<uint64_t>::max());

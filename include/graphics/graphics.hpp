@@ -96,27 +96,27 @@ namespace fi::gfx
     vk::Semaphore create_vk_semaphore(vk::Device device);
     vk::Event create_vk_event(vk::Device device, bool host_event = false);
 
-    struct Fence : public vk::Fence, //
+    struct fence : public vk::Fence, //
                    private graphcis_obj
     {
-        Fence(bool signal = true);
-        ~Fence();
+        fence(bool signal = true);
+        ~fence();
     };
 
-    struct Semaphore : public vk::Semaphore, //
+    struct semaphore : public vk::Semaphore, //
                        private graphcis_obj
     {
-        Semaphore();
-        ~Semaphore();
+        semaphore();
+        ~semaphore();
 
         vk::SemaphoreSubmitInfo submit_info(vk::PipelineStageFlags2 stage);
     };
 
-    struct Event : public vk::Event, //
+    struct event : public vk::Event, //
                    private graphcis_obj
     {
-        Event(bool host_event = false);
-        ~Event();
+        event(bool host_event = false);
+        ~event();
     };
 
     class cpu_clock

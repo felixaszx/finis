@@ -263,27 +263,27 @@ vk::Event fi::gfx::create_vk_event(vk::Device device, bool host_event)
     return device.createEvent(create_info);
 }
 
-fi::gfx::Fence::Fence(bool signal)
+fi::gfx::fence::fence(bool signal)
     : vk::Fence(create_vk_fence(device(), signal))
 {
 }
 
-fi::gfx::Fence::~Fence()
+fi::gfx::fence::~fence()
 {
     device().destroyFence(*this);
 }
 
-fi::gfx::Semaphore::Semaphore()
+fi::gfx::semaphore::semaphore()
     : vk::Semaphore(create_vk_semaphore(device()))
 {
 }
 
-fi::gfx::Semaphore::~Semaphore()
+fi::gfx::semaphore::~semaphore()
 {
     device().destroySemaphore(*this);
 }
 
-vk::SemaphoreSubmitInfo fi::gfx::Semaphore::submit_info(vk::PipelineStageFlags2 stage)
+vk::SemaphoreSubmitInfo fi::gfx::semaphore::submit_info(vk::PipelineStageFlags2 stage)
 {
     vk::SemaphoreSubmitInfo submit{};
     submit.setSemaphore(*this);
@@ -291,13 +291,13 @@ vk::SemaphoreSubmitInfo fi::gfx::Semaphore::submit_info(vk::PipelineStageFlags2 
     return submit;
 }
 
-fi::gfx::Event::Event(bool host_event)
+fi::gfx::event::event(bool host_event)
     : vk::Event(create_vk_event(device(), host_event))
 {
     std::cout << 1;
 }
 
-fi::gfx::Event::~Event()
+fi::gfx::event::~event()
 {
     std::cout << 2;
     device().destroyEvent(*this);

@@ -61,7 +61,7 @@ void fi::gfx::primitives::flush_staging_memory(vk::CommandPool pool)
         return;
     }
 
-    Fence fence;
+    gfx::fence fence;
     device().resetFences(fence);
     vk::CommandBufferAllocateInfo cmd_alloc{.commandPool = pool, //
                                             .commandBufferCount = 1};
@@ -122,7 +122,7 @@ uint32_t fi::gfx::primitives::add_primitives(const std::vector<vk::DrawIndirectC
     prims_.count_ += draw_calls.size();
     prim_infos_.resize(prims_.count_);
     draw_calls_.insert(draw_calls_.end(), draw_calls.begin(), draw_calls.end());
-    return EMPTY;
+    return -1;
 }
 
 void fi::gfx::primitives::reload_draw_calls(vk::CommandPool pool)
@@ -131,7 +131,7 @@ void fi::gfx::primitives::reload_draw_calls(vk::CommandPool pool)
     staging_span_.push_back(castr(const std::byte*, prim_infos_.data()), sizeof_arr(prim_infos_));
     staging_span_.push_back(castr(const std::byte*, draw_calls_.data()), sizeof_arr(draw_calls_));
 
-    Fence fence;
+    gfx::fence fence;
     device().resetFences(fence);
     vk::CommandBufferAllocateInfo cmd_alloc{.commandPool = pool, //
                                             .commandBufferCount = 1};
@@ -181,7 +181,7 @@ vk::DeviceSize fi::gfx::primitives::load_staging_memory(const std::byte* data, v
 
     if (staging_span_.remainning() < size)
     {
-        return EMPTY_L;
+        return -1;
     }
     staging_span_.push_back(data, size);
     staging_queue_.push(data_.curr_size_ - size);
