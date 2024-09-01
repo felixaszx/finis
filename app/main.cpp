@@ -4,6 +4,7 @@
 #include "extensions/loader.hpp"
 #include "graphics/graphics.hpp"
 #include "graphics/prims.hpp"
+#include "graphics/pipeline.hpp"
 #include "graphics/shader.hpp"
 #include "graphics/swapchain.hpp"
 #include "bs_th_pool/BS_thread_pool.hpp"
@@ -13,31 +14,29 @@ int main(int argc, char** argv)
     using namespace fi;
     using namespace glms::literal;
     using namespace std::chrono_literals;
-    using namespace fi::graphics;
-    using namespace fi::ext;
 
     const uint32_t WIN_WIDTH = 1920;
     const uint32_t WIN_HEIGHT = 1080;
 
-    context g(WIN_WIDTH, WIN_HEIGHT, "finis");
-    swapchain sc;
+    gfx::context g(WIN_WIDTH, WIN_HEIGHT, "finis");
+    gfx::swapchain sc;
     sc.create();
 
-    ext::loader loader("exe/pipelines.dll");
-    std::unique_ptr<ext::base> ext = loader.load_unique<ext::base>();
-
-    shader pipeline_shader("res/shaders/test.slang");
-
-    Semaphore next_img;
-    Semaphore submit;
-    Fence frame_fence;
+    gfx::Semaphore next_img;
+    gfx::Semaphore submit;
+    gfx::Fence frame_fence;
 
     vk::CommandPoolCreateInfo pool_info{};
     pool_info.flags = vk::CommandPoolCreateFlagBits::eResetCommandBuffer;
-    pool_info.queueFamilyIndex = g.queue_indices(context::GRAPHICS);
+    pool_info.queueFamilyIndex = g.queue_indices(gfx::context::GRAPHICS);
     vk::CommandPool cmd_pool = g.device().createCommandPool(pool_info);
 
-    primitives prims(20_mb, 2000);
+    gfx::shader pipeline_shader("res/shaders/test.slang");
+    ext::loader pl_loader("exe/pipelines.dll");
+    auto pl0 = pl_loader.load_unique<gfx::gfx_pipeline>();
+    auto pl1 = pl_loader.load_unique<gfx::gfx_pipeline>();
+
+    gfx::primitives prims(20_mb, 2000);
     prims.generate_staging_buffer(10_kb);
 
     vk::CommandBufferAllocateInfo cmd_alloc{};
@@ -46,14 +45,14 @@ int main(int argc, char** argv)
     cmd_alloc.level = vk::CommandBufferLevel::ePrimary;
     auto cmds = g.device().allocateCommandBuffers(cmd_alloc);
 
-    cpu_clock clock;
+    gfx::cpu_clock clock;
     while (true)
     {
         auto r = g.device().waitForFences(frame_fence, true, std::numeric_limits<uint64_t>::max());
         uint32_t img_idx = sc.aquire_next_image(next_img);
         g.device().resetFences(frame_fence);
 
-        cpu_clock::time_pt curr_time = clock.get_elapsed();
+        gfx::cpu_clock::time_pt curr_time = clock.get_elapsed();
 
         while (glfwGetWindowAttrib(g.window(), GLFW_ICONIFIED))
         {
@@ -77,7 +76,7 @@ int main(int argc, char** argv)
         submit2.setCommandBufferInfos(cmd_submit);
         submit2.setSignalSemaphoreInfos(signal_submit);
         submit2.setWaitSemaphoreInfos(waite_submit);
-        g.queues(context::GRAPHICS).submit2(submit2, frame_fence);
+        g.queues(gfx::context::GRAPHICS).submit2(submit2, frame_fence);
         sc.present({submit});
     }
     g.device().waitIdle();

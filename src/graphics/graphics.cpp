@@ -15,7 +15,7 @@
 #include "graphics/graphics.hpp"
 #include <glm/glm.hpp>
 
-fi::graphics::context::context(int width, int height, const std::string& title)
+fi::gfx::context::context(int width, int height, const std::string& title)
 {
     glfwInit();
     glfwWindowHint(GLFW_CLIENT_API, GLFW_NO_API);
@@ -171,7 +171,7 @@ fi::graphics::context::context(int width, int height, const std::string& title)
     pipeline_cache_ = device_.createPipelineCache(pc_info);
 }
 
-fi::graphics::context::~context()
+fi::gfx::context::~context()
 {
     device_.waitIdle();
 
@@ -185,59 +185,59 @@ fi::graphics::context::~context()
     glfwTerminate();
 }
 
-bool fi::graphics::context::update()
+bool fi::gfx::context::update()
 {
     bool running = !glfwWindowShouldClose(window_);
     glfwPollEvents();
     return running;
 }
 
-vk::Instance fi::graphics::graphcis_obj::instance()
+vk::Instance fi::gfx::graphcis_obj::instance()
 {
     return instance_;
 };
 
-vk::SurfaceKHR fi::graphics::graphcis_obj::surface()
+vk::SurfaceKHR fi::gfx::graphcis_obj::surface()
 {
     return surface_;
 };
 
-vk::Device fi::graphics::graphcis_obj::device()
+vk::Device fi::gfx::graphcis_obj::device()
 {
     return device_;
 };
 
-vk::PhysicalDevice fi::graphics::graphcis_obj::physical()
+vk::PhysicalDevice fi::gfx::graphcis_obj::physical()
 {
     return physical_;
 };
 
-vk::PipelineCache fi::graphics::graphcis_obj::pipeline_cache()
+vk::PipelineCache fi::gfx::graphcis_obj::pipeline_cache()
 {
     return pipeline_cache_;
 };
 
-vk::Queue fi::graphics::graphcis_obj::queues(queue_type type)
+vk::Queue fi::gfx::graphcis_obj::queues(queue_type type)
 {
     return queues_[type];
 };
 
-uint32_t fi::graphics::graphcis_obj::queue_indices(queue_type type)
+uint32_t fi::gfx::graphcis_obj::queue_indices(queue_type type)
 {
     return queue_indices_[type];
 };
 
-vma::Allocator fi::graphics::graphcis_obj::allocator()
+vma::Allocator fi::gfx::graphcis_obj::allocator()
 {
     return allocator_;
 };
 
-GLFWwindow* fi::graphics::graphcis_obj::window()
+GLFWwindow* fi::gfx::graphcis_obj::window()
 {
     return window_;
 };
 
-vk::Fence fi::graphics::create_vk_fence(vk::Device device, bool signal)
+vk::Fence fi::gfx::create_vk_fence(vk::Device device, bool signal)
 {
     vk::FenceCreateInfo create_info{};
     if (signal)
@@ -247,13 +247,13 @@ vk::Fence fi::graphics::create_vk_fence(vk::Device device, bool signal)
     return device.createFence(create_info);
 }
 
-vk::Semaphore fi::graphics::create_vk_semaphore(vk::Device device)
+vk::Semaphore fi::gfx::create_vk_semaphore(vk::Device device)
 {
     vk::SemaphoreCreateInfo create_info{};
     return device.createSemaphore(create_info);
 }
 
-vk::Event fi::graphics::create_vk_event(vk::Device device, bool host_event)
+vk::Event fi::gfx::create_vk_event(vk::Device device, bool host_event)
 {
     vk::EventCreateInfo create_info{.flags = vk::EventCreateFlagBits::eDeviceOnly};
     if (host_event)
@@ -263,27 +263,27 @@ vk::Event fi::graphics::create_vk_event(vk::Device device, bool host_event)
     return device.createEvent(create_info);
 }
 
-fi::graphics::Fence::Fence(bool signal)
+fi::gfx::Fence::Fence(bool signal)
     : vk::Fence(create_vk_fence(device(), signal))
 {
 }
 
-fi::graphics::Fence::~Fence()
+fi::gfx::Fence::~Fence()
 {
     device().destroyFence(*this);
 }
 
-fi::graphics::Semaphore::Semaphore()
+fi::gfx::Semaphore::Semaphore()
     : vk::Semaphore(create_vk_semaphore(device()))
 {
 }
 
-fi::graphics::Semaphore::~Semaphore()
+fi::gfx::Semaphore::~Semaphore()
 {
     device().destroySemaphore(*this);
 }
 
-vk::SemaphoreSubmitInfo fi::graphics::Semaphore::submit_info(vk::PipelineStageFlags2 stage)
+vk::SemaphoreSubmitInfo fi::gfx::Semaphore::submit_info(vk::PipelineStageFlags2 stage)
 {
     vk::SemaphoreSubmitInfo submit{};
     submit.setSemaphore(*this);
@@ -291,45 +291,45 @@ vk::SemaphoreSubmitInfo fi::graphics::Semaphore::submit_info(vk::PipelineStageFl
     return submit;
 }
 
-fi::graphics::Event::Event(bool host_event)
+fi::gfx::Event::Event(bool host_event)
     : vk::Event(create_vk_event(device(), host_event))
 {
     std::cout << 1;
 }
 
-fi::graphics::Event::~Event()
+fi::gfx::Event::~Event()
 {
     std::cout << 2;
     device().destroyEvent(*this);
 }
 
-fi::graphics::cpu_clock::cpu_clock()
+fi::gfx::cpu_clock::cpu_clock()
     : init_(std::chrono::high_resolution_clock::now()),
       begin_(init_)
 {
 }
 
-fi::graphics::cpu_clock::time_pt fi::graphics::cpu_clock::get_elapsed()
+fi::gfx::cpu_clock::time_pt fi::gfx::cpu_clock::get_elapsed()
 {
     return {std::chrono::duration_cast<std::chrono::milliseconds>(std::chrono::high_resolution_clock::now() - init_)};
 }
 
-fi::graphics::cpu_clock::time_pt fi::graphics::cpu_clock::get_delta()
+fi::gfx::cpu_clock::time_pt fi::gfx::cpu_clock::get_delta()
 {
     return {std::chrono::duration_cast<std::chrono::milliseconds>(end_ - begin_)};
 };
 
-void fi::graphics::cpu_clock::start()
+void fi::gfx::cpu_clock::start()
 {
     begin_ = std::chrono::high_resolution_clock::now();
 };
 
-void fi::graphics::cpu_clock::reset()
+void fi::gfx::cpu_clock::reset()
 {
     end_ = std::chrono::high_resolution_clock::now();
 };
 
-fi::graphics::cpu_clock::time_pt::time_pt(
+fi::gfx::cpu_clock::time_pt::time_pt(
     const std::chrono::duration<size_t, std::chrono::milliseconds::period>& duration)
     : duration_{duration}
 {

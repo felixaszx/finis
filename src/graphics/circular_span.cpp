@@ -1,11 +1,11 @@
 #include "graphics/circular_span.hpp"
 
-fi::graphics::circular_span::circular_span(void* data, std::size_t size)
+fi::gfx::circular_span::circular_span(void* data, std::size_t size)
 {
     reference(data, size);
 }
 
-void fi::graphics::circular_span::reset()
+void fi::gfx::circular_span::reset()
 {
     front_ = 0;
     size_ = 0;
@@ -15,14 +15,14 @@ void fi::graphics::circular_span::reset()
     }
 }
 
-void fi::graphics::circular_span::reference(void* data, std::size_t size)
+void fi::gfx::circular_span::reference(void* data, std::size_t size)
 {
     begin_ = (std::byte*)data;
     end_ = (std::byte*)data + size;
     reset();
 }
 
-bool fi::graphics::circular_span::push_back(const std::byte* data, std::size_t new_size)
+bool fi::gfx::circular_span::push_back(const std::byte* data, std::size_t new_size)
 {
     if (remainning() >= new_size)
     {
@@ -42,7 +42,7 @@ bool fi::graphics::circular_span::push_back(const std::byte* data, std::size_t n
     return false;
 }
 
-void fi::graphics::circular_span::pop_front()
+void fi::gfx::circular_span::pop_front()
 {
     if (size_)
     {
@@ -53,7 +53,7 @@ void fi::graphics::circular_span::pop_front()
     }
 }
 
-void fi::graphics::circular_span::pop_front_cleared()
+void fi::gfx::circular_span::pop_front_cleared()
 {
     block& block = blocks_.front();
     std::size_t seek0_size = std::min(block.size_, capacity() - front_);
@@ -66,7 +66,7 @@ void fi::graphics::circular_span::pop_front_cleared()
     pop_front();
 }
 
-bool fi::graphics::circular_span::copy_front_block_to(std::byte* dst)
+bool fi::gfx::circular_span::copy_front_block_to(std::byte* dst)
 {
     if (size_)
     {
@@ -83,7 +83,7 @@ bool fi::graphics::circular_span::copy_front_block_to(std::byte* dst)
     return false;
 }
 
-std::array<fi::graphics::circular_span::block, 2> fi::graphics::circular_span::front_block_region()
+std::array<fi::gfx::circular_span::block, 2> fi::gfx::circular_span::front_block_region()
 {
     block& b = blocks_.front();
     std::array<block, 2> seeks;

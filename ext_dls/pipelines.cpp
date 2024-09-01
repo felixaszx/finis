@@ -1,13 +1,24 @@
-#include <iostream>
-
-#include "extensions/cpp_defines.hpp"
 #include "tools.hpp"
+#include "graphics/pipeline.hpp"
+#include "extensions/cpp_defines.hpp"
 
-class test_ext : public fi::ext::base
+static size_t count = 0;
+
+using namespace fi;
+class pipeline : public gfx::gfx_pipeline
 {
   private:
   public:
-    test_ext() { std::cout << 1; }
+    pipeline()
+    {
+        std::cout << count;
+        count++;
+    }
+    
+    ~pipeline() {}
+
+    vk::Pipeline get_pipeline() override {return {};}
+    void browse_shader(gfx::shader* shader) override {}
 };
 
-EXPORT_EXTENSION(test_ext);
+EXPORT_EXTENSION(pipeline);

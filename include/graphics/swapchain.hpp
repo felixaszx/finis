@@ -13,7 +13,7 @@
 
 #include "graphics.hpp"
 
-namespace fi::graphics
+namespace fi::gfx
 {
     struct swapchain : public vk::SwapchainKHR, //
                       private graphcis_obj
@@ -41,6 +41,6 @@ namespace fi::graphics
                                    uint64_t timeout = std::numeric_limits<uint64_t>::max());
         vk::Result present(const vk::ArrayProxyNoTemporaries<const vk::Semaphore>& wait_sems);
     };
-}; // namespace fi::graphics
+}; // namespace fi::gfx
 
 #endif // GRAPHICS_SWAPCHAIN_HPP

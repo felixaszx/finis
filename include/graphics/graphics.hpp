@@ -40,7 +40,7 @@
 #include "bs_th_pool/BS_thread_pool.hpp"
 #include "glms.hpp"
 
-namespace fi::graphics
+namespace fi::gfx
 {
     namespace bst = BS;
 
@@ -152,6 +152,6 @@ namespace fi::graphics
         void start();
         void reset();
     };
-}; // namespace fi::graphics
+}; // namespace fi::gfx
 
 #endif // GRAPHICS_GRAPHICS_HPP

@@ -6,7 +6,7 @@
 
 #include <vulkan/vulkan.hpp>
 
-namespace fi::graphics
+namespace fi::gfx
 {
     class circular_span
     {
@@ -49,6 +49,6 @@ namespace fi::graphics
         std::size_t remainning() { return capacity() - size(); }
     };
 
-}; // namespace fi::graphics
+}; // namespace fi::gfx
 
 #endif // GRAPHICS_CIRCULAR_SPAN_HPP

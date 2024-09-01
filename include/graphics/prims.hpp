@@ -6,7 +6,7 @@
 #include "prim_data.hpp"
 #include "circular_span.hpp"
 
-namespace fi::graphics
+namespace fi::gfx
 {
     struct primitives : private graphcis_obj
     {
@@ -124,6 +124,6 @@ namespace fi::graphics
             return *this;
         }
     };
-}; // namespace fi::graphics
+}; // namespace fi::gfx
 
 #endif // GRAPHICS_PRIMS_HPP

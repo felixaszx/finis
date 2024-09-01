@@ -10,7 +10,7 @@
  */
 #include "graphics/swapchain.hpp"
 
-void fi::graphics::swapchain::create()
+void fi::gfx::swapchain::create()
 {
     int w = 0;
     int h = 0;
@@ -18,7 +18,7 @@ void fi::graphics::swapchain::create()
     create(vk::Extent2D(w, h));
 }
 
-void fi::graphics::swapchain::create(const vk::Extent2D& extent)
+void fi::gfx::swapchain::create(const vk::Extent2D& extent)
 {
     std::vector<vk::SurfaceFormatKHR> surface_formats = physical().getSurfaceFormatsKHR(surface());
     std::vector<vk::PresentModeKHR> present_modes = physical().getSurfacePresentModesKHR(surface());
@@ -103,18 +103,18 @@ void fi::graphics::swapchain::create(const vk::Extent2D& extent)
     device().destroyCommandPool(cmd_pool);
 }
 
-void fi::graphics::swapchain::destory()
+void fi::gfx::swapchain::destory()
 {
     device().destroySwapchainKHR(*this);
 }
 
-uint32_t fi::graphics::swapchain::aquire_next_image(vk::Semaphore sem, vk::Fence fence, uint64_t timeout)
+uint32_t fi::gfx::swapchain::aquire_next_image(vk::Semaphore sem, vk::Fence fence, uint64_t timeout)
 {
     curr_idx_ = device().acquireNextImageKHR(*this, timeout, sem, fence).value;
     return curr_idx_;
 }
 
-vk::Result fi::graphics::swapchain::present(const vk::ArrayProxyNoTemporaries<const vk::Semaphore>& wait_sems)
+vk::Result fi::gfx::swapchain::present(const vk::ArrayProxyNoTemporaries<const vk::Semaphore>& wait_sems)
 {
     vk::PresentInfoKHR present_info{};
     present_info.setWaitSemaphores(wait_sems);

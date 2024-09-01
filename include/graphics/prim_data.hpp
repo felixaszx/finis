@@ -13,7 +13,7 @@
 
 #include "graphics.hpp"
 
-namespace fi::graphics
+namespace fi::gfx
 {
     // all pointers used as pointer to uint8
     inline static const uint32_t EMPTY = -1;
@@ -146,6 +146,6 @@ namespace fi::graphics
         uint32_t sheen_roughness_ = EMPTY;
     };
 
-}; // namespace fi::graphics
+}; // namespace fi::gfx
 
 #endif // GRAPHICS_PRIM_DATA_HPP
