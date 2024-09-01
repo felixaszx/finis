@@ -8,13 +8,13 @@ struct SlangGlobalSession
     ~SlangGlobalSession() = default;
 };
 
-slang::IGlobalSession& fi::graphics::Shader::get_global_session()
+slang::IGlobalSession& fi::graphics::shader::get_global_session()
 {
     static SlangGlobalSession session;
     return *session.session_;
 }
 
-fi::graphics::Shader::Shader(const std::filesystem::path& shader_file, const std::filesystem::path& include_path)
+fi::graphics::shader::shader(const std::filesystem::path& shader_file, const std::filesystem::path& include_path)
 {
     if (!std::filesystem::exists(shader_file))
     {
@@ -237,7 +237,7 @@ fi::graphics::Shader::Shader(const std::filesystem::path& shader_file, const std
     }
 }
 
-fi::graphics::Shader::~Shader()
+fi::graphics::shader::~shader()
 {
     device().destroyShaderModule(module_);
 }

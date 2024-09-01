@@ -18,11 +18,11 @@ int main(int argc, char** argv)
     const uint32_t WIN_WIDTH = 1920;
     const uint32_t WIN_HEIGHT = 1080;
 
-    Graphics g(WIN_WIDTH, WIN_HEIGHT, "finis");
-    Swapchain sc;
+    context g(WIN_WIDTH, WIN_HEIGHT, "finis");
+    swapchain sc;
     sc.create();
 
-    Shader pipeline_shader("res/shaders/test.slang");
+    shader pipeline_shader("res/shaders/test.slang");
 
     Semaphore next_img;
     Semaphore submit;
@@ -30,10 +30,10 @@ int main(int argc, char** argv)
 
     vk::CommandPoolCreateInfo pool_info{};
     pool_info.flags = vk::CommandPoolCreateFlagBits::eResetCommandBuffer;
-    pool_info.queueFamilyIndex = g.queue_indices(Graphics::GRAPHICS);
+    pool_info.queueFamilyIndex = g.queue_indices(context::GRAPHICS);
     vk::CommandPool cmd_pool = g.device().createCommandPool(pool_info);
 
-    Primitives prims(20_mb, 2000);
+    primitives prims(20_mb, 2000);
     prims.generate_staging_buffer(10_kb);
 
     vk::CommandBufferAllocateInfo cmd_alloc{};
@@ -42,14 +42,14 @@ int main(int argc, char** argv)
     cmd_alloc.level = vk::CommandBufferLevel::ePrimary;
     auto cmds = g.device().allocateCommandBuffers(cmd_alloc);
 
-    CpuClock clock;
+    cpu_clock clock;
     while (true)
     {
         auto r = g.device().waitForFences(frame_fence, true, std::numeric_limits<uint64_t>::max());
         uint32_t img_idx = sc.aquire_next_image(next_img);
         g.device().resetFences(frame_fence);
 
-        CpuClock::TimePoint curr_time = clock.get_elapsed();
+        cpu_clock::time_pt curr_time = clock.get_elapsed();
 
         while (glfwGetWindowAttrib(g.window(), GLFW_ICONIFIED))
         {
@@ -73,7 +73,7 @@ int main(int argc, char** argv)
         submit2.setCommandBufferInfos(cmd_submit);
         submit2.setSignalSemaphoreInfos(signal_submit);
         submit2.setWaitSemaphoreInfos(waite_submit);
-        g.queues(GraphicsObject::GRAPHICS).submit2(submit2, frame_fence);
+        g.queues(context::GRAPHICS).submit2(submit2, frame_fence);
         sc.present({submit});
     }
     g.device().waitIdle();

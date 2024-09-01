@@ -1,5 +1,5 @@
 /**
- * @file swapchain.hpp
+ * @file sw_chain.hpp
  * @author Felix Xing (felixaszx@outlook.com)
  * @brief
  * @version 0.1
@@ -15,18 +15,18 @@
 
 namespace fi::graphics
 {
-    struct Swapchain : public vk::SwapchainKHR, //
-                       private GraphicsObject
+    struct swapchain : public vk::SwapchainKHR, //
+                      private graphcis_obj
     {
       private:
         uint32_t curr_idx_ = 0;
 
       public:
-        Swapchain() = default;
-        Swapchain(const Swapchain&) = delete;
-        Swapchain(Swapchain&&) = delete;
-        Swapchain& operator=(const Swapchain&) = delete;
-        Swapchain& operator=(Swapchain&&) = delete;
+        swapchain() = default;
+        swapchain(const swapchain&) = delete;
+        swapchain(swapchain&&) = delete;
+        swapchain& operator=(const swapchain&) = delete;
+        swapchain& operator=(swapchain&&) = delete;
         std::vector<vk::Image> images_{};
         vk::Format image_format_{};
 

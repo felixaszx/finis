@@ -12,7 +12,7 @@
 namespace fi::graphics
 {
     namespace spvc = spirv_cross;
-    class Shader : private GraphicsObject
+    class shader : private graphcis_obj
     {
       private:
         vk::ShaderModule module_{};
@@ -27,8 +27,8 @@ namespace fi::graphics
       public:
         static slang::IGlobalSession& get_global_session();
 
-        Shader(const std::filesystem::path& shader_file, const std::filesystem::path& include_path = "");
-        ~Shader();
+        shader(const std::filesystem::path& shader_file, const std::filesystem::path& include_path = "");
+        ~shader();
     };
 }; // namespace fi::graphics
 

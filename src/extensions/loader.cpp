@@ -2,12 +2,12 @@
 
 using namespace fi;
 
-ExtensionLoader::ExtensionLoader(const std::filesystem::path& dl_name)
+ext_loader::ext_loader(const std::filesystem::path& dl_name)
     : dl_(dl_name.string())
 {
 }
 
-const bool ExtensionLoader::valid() const
+const bool ext_loader::valid() const
 {
     return dl_.is_loaded();
 }

@@ -27,11 +27,11 @@
 
 namespace fi
 {
-    struct Extension
+    struct ext
     {
         std::string id_ = "";
         std::string description_ = "";
-        virtual ~Extension() = default;
+        virtual ~ext() = default;
     };
 }; // namespace fi
 

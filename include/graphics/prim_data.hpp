@@ -19,9 +19,9 @@ namespace fi::graphics
     inline static const uint32_t EMPTY = -1;
     inline static const uint64_t EMPTY_L = -1;
 
-    struct PrimInfo
+    struct prim_info
     {
-        enum Attribute
+        enum attrib
         {
             POSITON,
             NORMAL,
@@ -45,9 +45,9 @@ namespace fi::graphics
         uint64_t idx_ = EMPTY_L;      // uint32_t[]
         uint64_t mesh_ = EMPTY_L;     // MeshInfo*
         uint64_t material_ = EMPTY_L; // MaterialInfo*
-        uint64_t morph_ = EMPTY_L;    // MorphInfo*
+        uint64_t morph_ = EMPTY_L;    // morph_info*
 
-        uint64_t& get_attrib(Attribute attrib)
+        uint64_t& get_attrib(attrib attrib)
         {
             switch (attrib)
             {
@@ -76,9 +76,9 @@ namespace fi::graphics
         }
     };
 
-    struct MorphInfo
+    struct morph_info
     {
-        enum Attribute
+        enum attrib
         {
             POSITON,
             NORMAL,
@@ -93,7 +93,7 @@ namespace fi::graphics
         uint64_t normal_count_ = 0;   // scalar
         uint64_t tangent_count_ = 0;  // scalar
 
-        uint64_t& set_attrib(Attribute attrib, uint64_t count)
+        uint64_t& set_attrib(attrib attrib, uint64_t count)
         {
             switch (attrib)
             {
@@ -111,14 +111,14 @@ namespace fi::graphics
         }
     };
 
-    struct MeshInfo
+    struct mesh_info
     {
         uint64_t node_ = EMPTY_L;          // mat4*
         uint64_t morph_weights_ = EMPTY_L; // float[]
         uint64_t joint_ = EMPTY_L;         // uint32_t[]
     };
 
-    struct MaterialInfo
+    struct mat_info
     {
         glm::vec4 color_factor_ = {1, 1, 1, 1};
         glm::vec4 emissive_factor_ = {0, 0, 0, 1};       // [3] = emissive strength

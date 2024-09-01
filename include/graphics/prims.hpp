@@ -8,7 +8,7 @@
 
 namespace fi::graphics
 {
-    struct Primitives : private GraphicsObject
+    struct primitives : private graphcis_obj
     {
       private:
         // min alignment in buffer is 16 byte
@@ -31,7 +31,7 @@ namespace fi::graphics
             vk::DeviceSize draw_call_offset_ = EMPTY_L;
         } prims_;
         uint32_t curr_prim_ = EMPTY;
-        std::vector<PrimInfo> prim_infos_{};
+        std::vector<prim_info> prim_infos_{};
         std::vector<vk::DrawIndirectCommand> draw_calls_{};
 
         struct
@@ -46,8 +46,8 @@ namespace fi::graphics
         std::queue<vk::DeviceSize> staging_queue_{};
 
       public:
-        Primitives(vk::DeviceSize data_size_limit, uint32_t prim_limit);
-        ~Primitives();
+        primitives(vk::DeviceSize data_size_limit, uint32_t prim_limit);
+        ~primitives();
 
         void generate_staging_buffer(vk::DeviceSize limit);
         void flush_staging_memory(vk::CommandPool pool);
@@ -73,8 +73,8 @@ namespace fi::graphics
 
         // below loaders do not include range for better performance
         template <typename T>
-        Primitives& add_attribute_data(vk::CommandPool pool,
-                                       PrimInfo::Attribute attrib,
+        primitives& add_attribute_data(vk::CommandPool pool,
+                                       prim_info::attrib attrib,
                                        const T& data,
                                        const std::vector<size_t>& offset_per_prim = {})
         {
@@ -98,10 +98,10 @@ namespace fi::graphics
         }
 
         template <typename T>
-        Primitives& load_morph_data(vk::CommandPool pool,
-                                    MorphInfo::Attribute attrib,
+        primitives& load_morph_data(vk::CommandPool pool,
+                                    morph_info::attrib attrib,
                                     const T& data,
-                                    std::vector<MorphInfo>& infos,
+                                    std::vector<morph_info>& infos,
                                     const std::vector<int64_t>& morph_count,
                                     const std::vector<size_t>& offset_per_info = {})
         {

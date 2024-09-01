@@ -44,13 +44,13 @@ namespace fi::graphics
 {
     namespace bst = BS;
 
-    struct Graphics;
-    class GraphicsObject
+    struct context;
+    class graphcis_obj
     {
-        friend Graphics;
+        friend context;
 
       public:
-        enum QueueType
+        enum queue_type
         {
             GRAPHICS = 0,
             COMPUTE = 1,
@@ -78,16 +78,16 @@ namespace fi::graphics
         static vk::Device device();
         static vk::PhysicalDevice physical();
         static vk::PipelineCache pipeline_cache();
-        static vk::Queue queues(QueueType type = GRAPHICS);
-        static uint32_t queue_indices(QueueType type = GRAPHICS);
+        static vk::Queue queues(queue_type type = GRAPHICS);
+        static uint32_t queue_indices(queue_type type = GRAPHICS);
         static vma::Allocator allocator();
         static GLFWwindow* window();
     };
 
-    struct Graphics : public GraphicsObject
+    struct context : public graphcis_obj
     {
-        Graphics(int width, int height, const std::string& title = "");
-        ~Graphics();
+        context(int width, int height, const std::string& title = "");
+        ~context();
 
         static bool update();
     };
@@ -97,14 +97,14 @@ namespace fi::graphics
     vk::Event create_vk_event(vk::Device device, bool host_event = false);
 
     struct Fence : public vk::Fence, //
-                   private GraphicsObject
+                   private graphcis_obj
     {
         Fence(bool signal = true);
         ~Fence();
     };
 
     struct Semaphore : public vk::Semaphore, //
-                       private GraphicsObject
+                       private graphcis_obj
     {
         Semaphore();
         ~Semaphore();
@@ -113,13 +113,13 @@ namespace fi::graphics
     };
 
     struct Event : public vk::Event, //
-                   private GraphicsObject
+                   private graphcis_obj
     {
         Event(bool host_event = false);
         ~Event();
     };
 
-    class CpuClock
+    class cpu_clock
     {
       public:
         using Second = float;
@@ -127,11 +127,11 @@ namespace fi::graphics
         using MilliSecond = size_t;
         using SmallMilliSecond = uint32_t;
 
-        struct TimePoint
+        struct time_pt
         {
             std::chrono::duration<size_t, std::chrono::milliseconds::period> duration_{};
 
-            TimePoint(const std::chrono::duration<size_t, std::chrono::milliseconds::period>& duration);
+            time_pt(const std::chrono::duration<size_t, std::chrono::milliseconds::period>& duration);
 
             inline operator Second() { return duration_.count() / (Second)1000; };
             inline operator DoubleSecond() { return duration_.count() / (DoubleSecond)1000; };
@@ -145,10 +145,10 @@ namespace fi::graphics
         std::chrono::system_clock::time_point end_;
 
       public:
-        CpuClock();
+        cpu_clock();
 
-        TimePoint get_elapsed();
-        TimePoint get_delta();
+        time_pt get_elapsed();
+        time_pt get_delta();
         void start();
         void reset();
     };

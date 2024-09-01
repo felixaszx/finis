@@ -1,6 +1,6 @@
 #include "graphics/prims.hpp"
 
-fi::graphics::Primitives::Primitives(vk::DeviceSize data_size_limit, uint32_t prim_limit)
+fi::graphics::primitives::primitives(vk::DeviceSize data_size_limit, uint32_t prim_limit)
     : data_(0, data_size_limit),
       prims_(0, prim_limit)
 {
@@ -16,7 +16,7 @@ fi::graphics::Primitives::Primitives(vk::DeviceSize data_size_limit, uint32_t pr
     addresses_.data_buffer_ = device().getBufferAddress(address_info);
 
     buffer_info = vk::BufferCreateInfo();
-    buffer_info = {.size = prims_.capacity_ * (sizeof(vk::DrawIndirectCommand) + sizeof(PrimInfo)), //
+    buffer_info = {.size = prims_.capacity_ * (sizeof(vk::DrawIndirectCommand) + sizeof(prim_info)), //
                    .usage = vk::BufferUsageFlagBits::eTransferDst |                                 //
                             vk::BufferUsageFlagBits::eStorageBuffer |                               //
                             vk::BufferUsageFlagBits::eShaderDeviceAddress |                         //
@@ -30,14 +30,14 @@ fi::graphics::Primitives::Primitives(vk::DeviceSize data_size_limit, uint32_t pr
     prim_infos_.reserve(prim_limit);
 }
 
-fi::graphics::Primitives::~Primitives()
+fi::graphics::primitives::~primitives()
 {
     free_staging_buffer();
     allocator().destroyBuffer(data_.buffer_, data_.alloc_);
     allocator().destroyBuffer(prims_.buffer_, prims_.alloc_);
 }
 
-void fi::graphics::Primitives::generate_staging_buffer(vk::DeviceSize limit)
+void fi::graphics::primitives::generate_staging_buffer(vk::DeviceSize limit)
 {
     free_staging_buffer();
     vk::BufferCreateInfo buffer_info{.size = limit, //
@@ -54,7 +54,7 @@ void fi::graphics::Primitives::generate_staging_buffer(vk::DeviceSize limit)
     staging_span_.reference(alloc.pMappedData, limit);
 }
 
-void fi::graphics::Primitives::flush_staging_memory(vk::CommandPool pool)
+void fi::graphics::primitives::flush_staging_memory(vk::CommandPool pool)
 {
     if (staging_span_.empty())
     {
@@ -101,7 +101,7 @@ void fi::graphics::Primitives::flush_staging_memory(vk::CommandPool pool)
     device().freeCommandBuffers(pool, cmd);
 }
 
-void fi::graphics::Primitives::free_staging_buffer()
+void fi::graphics::primitives::free_staging_buffer()
 {
     if (staging_buffer_)
     {
@@ -112,7 +112,7 @@ void fi::graphics::Primitives::free_staging_buffer()
     }
 }
 
-uint32_t fi::graphics::Primitives::add_primitives(const std::vector<vk::DrawIndirectCommand>& draw_calls)
+uint32_t fi::graphics::primitives::add_primitives(const std::vector<vk::DrawIndirectCommand>& draw_calls)
 {
     curr_prim_ = prims_.count_;
     if (prims_.capacity_ - prims_.count_ < draw_calls.size())
@@ -125,7 +125,7 @@ uint32_t fi::graphics::Primitives::add_primitives(const std::vector<vk::DrawIndi
     return EMPTY;
 }
 
-void fi::graphics::Primitives::reload_draw_calls(vk::CommandPool pool)
+void fi::graphics::primitives::reload_draw_calls(vk::CommandPool pool)
 {
     flush_staging_memory(pool);
     staging_span_.push_back(castr(const std::byte*, prim_infos_.data()), sizeof_arr(prim_infos_));
@@ -171,7 +171,7 @@ void fi::graphics::Primitives::reload_draw_calls(vk::CommandPool pool)
     device().freeCommandBuffers(pool, cmd);
 }
 
-vk::DeviceSize fi::graphics::Primitives::load_staging_memory(const std::byte* data, vk::DeviceSize size)
+vk::DeviceSize fi::graphics::primitives::load_staging_memory(const std::byte* data, vk::DeviceSize size)
 {
     data_.curr_size_ += size;
     if (data_.curr_size_ > data_.capacity_ || size > staging_span_.capacity())
