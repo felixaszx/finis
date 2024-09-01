@@ -21,7 +21,6 @@ namespace fi::graphics
 
         std::vector<std::vector<vk::DescriptorSetLayoutBinding>> desc_sets_{};
         std::vector<std::vector<std::string>> desc_names_{};
-        std::vector<vk::PipelineColorBlendAttachmentState> atchm_blends_{};
 
         std::vector<std::string> push_const_names_{};
 

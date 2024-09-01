@@ -30,7 +30,7 @@ struct Pointers
     byte* prims_;
 }
 
-uniform Pointers POINTERS;
+ConstantBuffer<Pointers> POINTERS;
 
 [shader("vertex")]
 VertStage vertex_main(uint idx_id: SV_VertexID, //
@@ -82,7 +82,7 @@ VertStage vertex_main(uint idx_id: SV_VertexID, //
     }
 
     VertStage vs;
-    vs.POSITION = { 1, 1, 1, 1 };
+    vs.POSITION.xyz = position;
     return vs;
 }
 

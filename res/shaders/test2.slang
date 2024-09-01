@@ -24,7 +24,7 @@ struct FragStage
     float4 specular : SV_Target3;
 };
 
-uniform vec4 aaaaaa;
+uniform float4 aaaaaa;
 
 [shader("vertex")]
 VertStage vertex_main(uint32_t idx: SV_VertexID, //

@@ -235,7 +235,6 @@ fi::graphics::Shader::Shader(const std::filesystem::path& shader_file, const std
     {
         get_binding_info(res, vk::DescriptorType::eStorageBuffer);
     }
-    atchm_blends_.resize(reses.stage_outputs.size());
 }
 
 fi::graphics::Shader::~Shader()
