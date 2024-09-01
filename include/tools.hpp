@@ -19,6 +19,8 @@
 #define VULKAN_HPP_NO_CONSTRUCTORS
 #include <vulkan/vulkan.hpp>
 #include "glms.hpp"
+#include "task_thread_pool.hpp"
+namespace thp = task_thread_pool;
 
 #define casts(type, value)  (static_cast<type>(value))
 #define castr(type, value)  (reinterpret_cast<type>(value))

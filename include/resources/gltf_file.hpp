@@ -6,12 +6,12 @@
 #include <stb/stb_image.h>
 
 #include "tools.hpp"
+#include "extensions/cpp_defines.hpp"
 #include "graphics/prim_data.hpp"
 #include "fastgltf/core.hpp"
 #include "fastgltf/tools.hpp"
 #include "fastgltf/util.hpp"
 #include "fastgltf/glm_element_traits.hpp"
-#include "bs_th_pool/BS_thread_pool.hpp"
 
 namespace fi::res
 {
@@ -70,7 +70,9 @@ namespace fi::res
         std::vector<std::string> mat_names_{};
         std::vector<gltf_mat> materials_{};
 
-        gltf_file(const std::filesystem::path& path);
+        gltf_file(const std::filesystem::path& path,
+                  std::vector<std::future<void>>* futs,
+                  thp::task_thread_pool* th_pool = nullptr);
     };
 }; // namespace fi::res
 

@@ -36,14 +36,10 @@
     }                                    \
     while (false)
 #include "vma/vk_mem_alloc.hpp"
-
-#include "bs_th_pool/BS_thread_pool.hpp"
 #include "glms.hpp"
 
 namespace fi::gfx
 {
-    namespace bst = BS;
-
     struct context;
     class graphcis_obj
     {

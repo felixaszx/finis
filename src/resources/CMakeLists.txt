@@ -14,5 +14,6 @@ add_library(finis_resources SHARED ${SRC})
 target_include_directories(finis_resources PRIVATE "${CMAKE_SOURCE_DIR}/include")
 
 find_package(simdjson)
-target_link_libraries(finis_resources fastgltf)
-target_link_libraries(finis_resources simdjson)
+target_link_libraries(finis_resources PUBLIC fastgltf)
+target_link_libraries(finis_resources PUBLIC simdjson)
+target_link_libraries(finis_resources PUBLIC finis_extensions)

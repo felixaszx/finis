@@ -18,6 +18,6 @@ file(GLOB_RECURSE SRC "app/*.cpp")
 add_executable(finis ${SRC})
 target_include_directories(finis PUBLIC "${CMAKE_SOURCE_DIR}/include")
 
-target_link_libraries(finis PUBLIC finis_extension)
-target_link_libraries(finis PUBLIC finis_graphics)
+target_link_libraries(finis PUBLIC finis_extensions)
 target_link_libraries(finis PUBLIC finis_resources)
+target_link_libraries(finis PUBLIC finis_graphics)

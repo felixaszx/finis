@@ -9,4 +9,3 @@ const bool fi::ext::loader::valid() const
 {
     return dl_.is_loaded();
 }
-

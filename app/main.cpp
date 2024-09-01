@@ -8,7 +8,6 @@
 #include "graphics/shader.hpp"
 #include "graphics/swapchain.hpp"
 #include "resources/gltf_file.hpp"
-#include "bs_th_pool/BS_thread_pool.hpp"
 
 int main(int argc, char** argv)
 {
@@ -19,7 +18,13 @@ int main(int argc, char** argv)
     const uint32_t WIN_WIDTH = 1920;
     const uint32_t WIN_HEIGHT = 1080;
 
-    res::gltf_file gltf_file("res/models/sparta.glb");
+    thp::task_thread_pool thread_pool;
+
+    std::vector<std::future<void>> futs;
+    res::gltf_file sparta("res/models/sparta.glb", &futs, &thread_pool);
+    res::gltf_file sponza("res/models/sponza.glb", &futs, &thread_pool);
+    res::gltf_file morph_test("res/models/MorphStressTest.glb", &futs, &thread_pool);
+    std::for_each(futs.begin(), futs.end(), [](std::future<void>& fut) { fut.wait(); });
 
     gfx::context g(WIN_WIDTH, WIN_HEIGHT, "finis");
     gfx::swapchain sc;
