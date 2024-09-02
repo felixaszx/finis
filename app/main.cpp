@@ -39,16 +39,6 @@ int main(int argc, char** argv)
 
     gfx::primitives prims(20_mb, 2000);
     prims.generate_staging_buffer(10_kb);
-    prims.add_primitives({sparta.meshes_[1].draw_calls_[0]});
-    prims.add_attribute_data(cmd_pool, gfx::prim_info::INDEX, sparta.meshes_[1].prims_[0].idxs_);
-    prims.add_attribute_data(cmd_pool, gfx::prim_info::POSITON, sparta.meshes_[1].prims_[0].positions_);
-    prims.add_attribute_data(cmd_pool, gfx::prim_info::NORMAL, sparta.meshes_[1].prims_[0].normals_);
-    prims.add_attribute_data(cmd_pool, gfx::prim_info::TANGENT, sparta.meshes_[1].prims_[0].tangents_);
-    prims.add_attribute_data(cmd_pool, gfx::prim_info::TEXCOORD, sparta.meshes_[1].prims_[0].texcoords_);
-    prims.add_attribute_data(cmd_pool, gfx::prim_info::COLOR, sparta.meshes_[1].prims_[0].colors_);
-    prims.add_attribute_data(cmd_pool, gfx::prim_info::JOINTS, sparta.meshes_[1].prims_[0].joints_);
-    prims.add_attribute_data(cmd_pool, gfx::prim_info::WEIGHTS, sparta.meshes_[1].prims_[0].weights_);
-    prims.reload_draw_calls(cmd_pool);
 
     vk::CommandBufferAllocateInfo cmd_alloc{};
     cmd_alloc.commandBufferCount = 1;

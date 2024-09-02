@@ -13,7 +13,7 @@ struct VertOutput
 struct VertStage
 {
     float4 position_ : SV_Position;
-    VertOutput output : VSOutput;
+    VertOutput output : VertOutput;
 };
 
 struct FragStage
@@ -24,14 +24,11 @@ struct FragStage
     float4 specular : SV_Target3;
 };
 
-uniform float4 aaaaaa;
-
 [shader("vertex")]
 VertStage vertex_main(uint32_t idx: SV_VertexID, //
                       uint32_t instance_id: SV_InstanceID)
 {
-    VertStage vs;
-    vs.output.tangent_ = aaaaaa;
+    VertStage vs =  {};
     return vs;
 }
 
