@@ -14,7 +14,6 @@ class pipeline : public gfx::gfx_pipeline
     ~pipeline() {}
 
     vk::Pipeline get_pipeline() override { return {}; }
-    void browse_shader(gfx::shader* shader) override {}
 };
 
 EXPORT_EXTENSION(pipeline);

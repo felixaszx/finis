@@ -34,7 +34,7 @@ int main(int argc, char** argv)
     vk::CommandPool cmd_pool = g.device().createCommandPool(pool_info);
 
     gfx::shader pipeline_shader("res/shaders/test.slang");
-    ext::loader pl_loader("exe/pipelines.dll");
+    ext::loader pl_loader("ext_dls/pipelines.dll");
     auto pl0 = pl_loader.load_unique<gfx::gfx_pipeline>();
 
     gfx::primitives prims(20_mb, 2000);

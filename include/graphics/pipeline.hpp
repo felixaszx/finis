@@ -27,13 +27,11 @@ namespace fi::gfx
         vk::PipelineDynamicStateCreateInfo dynamic_state_{};
 
         virtual vk::Pipeline get_pipeline() = 0;
-        virtual void browse_shader(shader* shader) = 0;
     };
 
     struct com_pipeline : public ext::base
     {
         virtual vk::Pipeline get_pipeline() = 0;
-        virtual void browse_shader(shader* shader) = 0;
     };
 }; // namespace fi::gfx
 
