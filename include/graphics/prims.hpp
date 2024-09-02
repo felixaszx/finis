@@ -54,6 +54,7 @@ namespace fi::gfx
         vk::DeviceSize load_staging_memory(const std::byte* data, vk::DeviceSize size);
         void free_staging_buffer();
         uint32_t add_primitives(const std::vector<vk::DrawIndirectCommand>& draw_calls);
+        void end_primitives();
         void reload_draw_calls(vk::CommandPool pool);
         [[nodiscard]] vk::DeviceSize addresses_size() const { return sizeof(addresses_); }
         [[nodiscard]] const std::byte* addresses() const { return castr(const std::byte*, &addresses_); }
@@ -73,11 +74,15 @@ namespace fi::gfx
 
         // below loaders do not include range for better performance
         template <typename T>
-        primitives& add_attribute_data(vk::CommandPool pool,
+        void add_attribute_data(vk::CommandPool pool,
                                        prim_info::attrib attrib,
                                        const T& data,
                                        const std::vector<size_t>& offset_per_prim = {})
         {
+            if (sizeof_arr(data) == 0)
+            {
+                return;
+            }
             size_t offset = load_staging_memory(castr(const std::byte*, data.data()), sizeof_arr(data));
             if (offset == -1)
             {
@@ -94,17 +99,20 @@ namespace fi::gfx
             {
                 prim_infos_[i].get_attrib(attrib) = offset;
             }
-            return *this;
         }
 
         template <typename T>
-        primitives& load_morph_data(vk::CommandPool pool,
+        void load_morph_data(vk::CommandPool pool,
                                     morph_info::attrib attrib,
                                     const T& data,
                                     std::vector<morph_info>& infos,
                                     const std::vector<int64_t>& morph_count,
                                     const std::vector<size_t>& offset_per_info = {})
         {
+            if (sizeof_arr(data) == 0)
+            {
+                return;
+            }
             size_t offset = load_staging_memory(castr(const std::byte*, data.data()), sizeof_arr(data));
             if (offset == -1)
             {
@@ -121,7 +129,6 @@ namespace fi::gfx
             {
                 infos[i].set_attrib(attrib, morph_count[i]) = offset;
             }
-            return *this;
         }
     };
 }; // namespace fi::gfx

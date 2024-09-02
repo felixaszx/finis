@@ -17,9 +17,9 @@ fi::gfx::primitives::primitives(vk::DeviceSize data_size_limit, uint32_t prim_li
 
     buffer_info = vk::BufferCreateInfo();
     buffer_info = {.size = prims_.capacity_ * (sizeof(vk::DrawIndirectCommand) + sizeof(prim_info)), //
-                   .usage = vk::BufferUsageFlagBits::eTransferDst |                                 //
-                            vk::BufferUsageFlagBits::eStorageBuffer |                               //
-                            vk::BufferUsageFlagBits::eShaderDeviceAddress |                         //
+                   .usage = vk::BufferUsageFlagBits::eTransferDst |                                  //
+                            vk::BufferUsageFlagBits::eStorageBuffer |                                //
+                            vk::BufferUsageFlagBits::eShaderDeviceAddress |                          //
                             vk::BufferUsageFlagBits::eIndirectBuffer};
     allocated = allocator().createBuffer(buffer_info, alloc_info);
     prims_.buffer_ = allocated.first;
@@ -123,6 +123,11 @@ uint32_t fi::gfx::primitives::add_primitives(const std::vector<vk::DrawIndirectC
     prim_infos_.resize(prims_.count_);
     draw_calls_.insert(draw_calls_.end(), draw_calls.begin(), draw_calls.end());
     return -1;
+}
+
+void fi::gfx::primitives::end_primitives()
+{
+    curr_prim_ = prims_.count_;
 }
 
 void fi::gfx::primitives::reload_draw_calls(vk::CommandPool pool)

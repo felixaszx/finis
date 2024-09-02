@@ -19,10 +19,13 @@ namespace fi::res
 
     struct gltf_morph
     {
-        std::string name_;
         std::vector<glm::vec3> positions_{};
         std::vector<glm::vec3> normals_{};
-        std::vector<glm::vec4> tangents_{};
+        std::vector<glm::vec3> tangents_{};
+
+        uint32_t position_count_ = 0;
+        uint32_t normal_count_ = 0;
+        uint32_t tangent_count_ = 0;
     };
 
     using gltf_mat = gfx::mat_info;
@@ -43,19 +46,21 @@ namespace fi::res
         std::vector<glm::vec3> normals_{};
         std::vector<glm::vec4> tangents_{};
         std::vector<glm::vec2> texcoords_{};
+        std::vector<glm::vec4> colors_{};
         std::vector<glm::uvec4> joints_{};
         std::vector<glm::vec4> weights_{};
         std::vector<uint32_t> idxs_{};
 
         uint32_t mesh_ = -1;
         uint32_t material_ = -1;
-        uint32_t morph_ = -1;
+        gltf_morph morph_;
     };
 
     struct gltf_mesh
     {
         std::string name_;
         std::vector<gltf_prim> prims_;
+        std::vector<vk::DrawIndirectCommand> draw_calls_{};
     };
 
     struct gltf_file
@@ -65,7 +70,6 @@ namespace fi::res
 
         std::vector<gltf_mesh> meshes_{};
         std::vector<gltf_tex> textures_{};
-        std::vector<gltf_morph> morphs_{};
 
         std::vector<std::string> mat_names_{};
         std::vector<gltf_mat> materials_{};
@@ -73,6 +77,7 @@ namespace fi::res
         gltf_file(const std::filesystem::path& path,
                   std::vector<std::future<void>>* futs,
                   thp::task_thread_pool* th_pool = nullptr);
+        ~gltf_file() = default;
     };
 }; // namespace fi::res
 

@@ -1,6 +1,22 @@
 #define STB_IMAGE_IMPLEMENTATION
 #include "resources/gltf_file.hpp"
 
+template <typename T>
+void check_attribute(const std::string& name,
+                     const fi::res::fgltf::Primitive& prim,
+                     const fi::res::fgltf::Asset& asset,
+                     std::vector<T>& target)
+{
+    const fi::res::fgltf::Attribute* attrib = prim.findAttribute(name);
+    if (attrib != prim.attributes.end())
+    {
+        const fi::res::fgltf::Accessor& acc = asset.accessors[attrib->accessorIndex];
+        target.resize(acc.count);
+        fi::res::fgltf::iterateAccessorWithIndex<T>(asset, acc, //
+                                                    [&](const T& elm, size_t index) { target[index] = elm; });
+    }
+};
+
 fi::res::gltf_file::gltf_file(const std::filesystem::path& path,
                               std::vector<std::future<void>>* futs,
                               thp::task_thread_pool* th_pool)
@@ -38,7 +54,7 @@ fi::res::gltf_file::gltf_file(const std::filesystem::path& path,
             const fgltf::Buffer& buffer = asset_->buffers[view.bufferIndex];
 
             gltf_tex& g_tex = textures_.emplace_back();
-            g_tex.name_ = std::format("{}_image({})", tex.name, img.name);
+            g_tex.name_ = std::format("{}__image({})", tex.name, img.name);
             stbi_uc* pixels =
                 stbi_load_from_memory(castf(const stbi_uc*, std::get<3>(buffer.data).bytes.data() + view.byteOffset),
                                       view.byteLength, //
@@ -119,37 +135,116 @@ fi::res::gltf_file::gltf_file(const std::filesystem::path& path,
     };
 
     meshes_.resize(asset_->meshes.size());
-    std::vector<std::function<void()>> load_mesh_funcs;
-    load_mesh_funcs.reserve(meshes_.size());
+    std::vector<std::function<void()>> load_prim_funcs;
 
     size_t m = 0;
     for (const auto& mesh : asset_->meshes)
     {
-        load_mesh_funcs.emplace_back(
-            [&, mesh, m]()
-            {
-                gltf_mesh& g_mesh = meshes_[m];
-                g_mesh.name_ = mesh.name;
-                g_mesh.prims_.reserve(mesh.primitives.size());
+        gltf_mesh& g_mesh = meshes_[m];
+        g_mesh.name_ = mesh.name;
+        g_mesh.prims_.reserve(mesh.primitives.size());
+        g_mesh.draw_calls_.reserve(mesh.primitives.size());
 
-                size_t p = 0;
-                for (const auto& prim : mesh.primitives)
+        size_t p = 0;
+        for (const auto& prim : mesh.primitives)
+        {
+            gltf_prim* g_prim = &g_mesh.prims_.emplace_back();
+            g_prim->mesh_ = m;
+            g_prim->name_ = std::format("{}__prim({})", mesh.name, p);
+            g_prim->material_ = prim.materialIndex.value_or(0);
+            vk::DrawIndirectCommand* draw_call = &g_mesh.draw_calls_.emplace_back();
+
+            load_prim_funcs.emplace_back(
+                [&, mesh, m, p, g_prim, draw_call]()
                 {
-                    gltf_prim& g_prim = g_mesh.prims_.emplace_back();
-                    g_prim.mesh_ = m;
-                    g_prim.name_ = std::format("{}_prim({})", mesh.name, p);
-                    p++;
-                }
-            });
+                    const fgltf::Accessor& idx_acc = asset_->accessors[prim.indicesAccessor.value()];
+                    g_prim->idxs_.resize(idx_acc.count);
+                    fgltf::iterateAccessorWithIndex<uint32_t>(*asset_.get(), idx_acc, //
+                                                              [&](uint32_t idx, size_t index)
+                                                              { g_prim->idxs_[index] = idx; });
+
+                    check_attribute<glm::vec3>("POSITION", prim, *asset_, g_prim->positions_);
+                    check_attribute<glm::vec3>("NORMAL", prim, *asset_, g_prim->normals_);
+                    check_attribute<glm::vec4>("TANGENT", prim, *asset_, g_prim->tangents_);
+                    check_attribute<glm::vec2>("TEXCOORD_0", prim, *asset_, g_prim->texcoords_);
+                    check_attribute<glm::vec4>("COLOR_0", prim, *asset_, g_prim->colors_);
+                    check_attribute<glm::uvec4>("JOINTS_0", prim, *asset_, g_prim->joints_);
+                    check_attribute<glm::vec4>("WEIGHTS_0", prim, *asset_, g_prim->weights_);
+
+                    for (auto& target : prim.targets)
+                    {
+                        for (auto& attrib : target)
+                        {
+                            if (attrib.name == "POSITION")
+                            {
+                                g_prim->morph_.position_count_++;
+                            }
+                            else if (attrib.name == "NORMAL")
+                            {
+                                g_prim->morph_.normal_count_++;
+                            }
+                            else if (attrib.name == "TANGENT")
+                            {
+                                g_prim->morph_.tangent_count_++;
+                            }
+                        }
+                    }
+
+                    for (size_t t = 0; t < prim.targets.size(); t++)
+                    {
+                        for (auto& attrib : prim.targets[t])
+                        {
+                            const fi::res::fgltf::Accessor& acc = asset_->accessors[attrib.accessorIndex];
+                            if (attrib.name == "POSITION")
+                            {
+                                if (g_prim->morph_.positions_.size() < acc.count * g_prim->morph_.position_count_)
+                                {
+                                    g_prim->morph_.positions_.resize(acc.count * g_prim->morph_.position_count_);
+                                }
+                                fi::res::fgltf::iterateAccessorWithIndex<glm::vec3>(
+                                    *asset_, acc, //
+                                    [&](const glm::vec3& elm, size_t index)
+                                    { g_prim->morph_.positions_[index * g_prim->morph_.position_count_ + t] = elm; });
+                            }
+                            else if (attrib.name == "NORMAL")
+                            {
+                                if (g_prim->morph_.normals_.size() < acc.count * g_prim->morph_.normal_count_)
+                                {
+                                    g_prim->morph_.normals_.resize(acc.count * g_prim->morph_.normal_count_);
+                                }
+                                fi::res::fgltf::iterateAccessorWithIndex<glm::vec3>(
+                                    *asset_, acc, //
+                                    [&](const glm::vec3& elm, size_t index)
+                                    { g_prim->morph_.normals_[index * g_prim->morph_.normal_count_ + t] = elm; });
+                            }
+                            else if (attrib.name == "TANGENT")
+                            {
+                                if (g_prim->morph_.tangents_.size() < acc.count * g_prim->morph_.tangent_count_)
+                                {
+                                    g_prim->morph_.tangents_.resize(acc.count * g_prim->morph_.tangent_count_);
+                                }
+                                fi::res::fgltf::iterateAccessorWithIndex<glm::vec3>(
+                                    *asset_, acc, //
+                                    [&](const glm::vec3& elm, size_t index)
+                                    { g_prim->morph_.tangents_[index * g_prim->morph_.tangent_count_ + t] = elm; });
+                            }
+                        }
+                    }
+
+                    draw_call->instanceCount = 1;
+                    draw_call->vertexCount = idx_acc.count;
+                });
+            p++;
+        }
         m++;
     }
 
     if (th_pool)
     {
-        futs->reserve(futs->size() + 2 + load_mesh_funcs.size());
+        futs->reserve(futs->size() + 2 + load_prim_funcs.size());
         futs->emplace_back(th_pool->submit(load_tex_func));
         futs->emplace_back(th_pool->submit(load_mat_func));
-        for (const auto& func : load_mesh_funcs)
+        for (const auto& func : load_prim_funcs)
         {
             futs->emplace_back(th_pool->submit(func));
         }
@@ -158,6 +253,6 @@ fi::res::gltf_file::gltf_file(const std::filesystem::path& path,
     {
         load_tex_func();
         load_mat_func();
-        std::for_each(load_mesh_funcs.begin(), load_mesh_funcs.end(), [](std::function<void()>& func) { func(); });
+        std::for_each(load_prim_funcs.begin(), load_prim_funcs.end(), [](std::function<void()>& func) { func(); });
     }
 }

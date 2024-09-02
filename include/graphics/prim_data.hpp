@@ -26,6 +26,7 @@ namespace fi::gfx
             NORMAL,
             TANGENT,
             TEXCOORD,
+            COLOR,
             JOINTS,
             WEIGHTS,
             INDEX,
@@ -38,6 +39,7 @@ namespace fi::gfx
         uint64_t normal_ = -1;   // vec3[]
         uint64_t tangent_ = -1;  // vec4[]
         uint64_t texcoord_ = -1; // vec2[]
+        uint64_t color_ = -1;    // vec4[]
         uint64_t joints_ = -1;   // uvec4[]
         uint64_t weights_ = -1;  // vec4[]
 
@@ -58,6 +60,8 @@ namespace fi::gfx
                     return tangent_;
                 case TEXCOORD:
                     return texcoord_;
+                case COLOR:
+                    return color_;
                 case JOINTS:
                     return joints_;
                 case WEIGHTS:
