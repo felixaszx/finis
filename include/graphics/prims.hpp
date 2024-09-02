@@ -75,9 +75,9 @@ namespace fi::gfx
         // below loaders do not include range for better performance
         template <typename T>
         void add_attribute_data(vk::CommandPool pool,
-                                       prim_info::attrib attrib,
-                                       const T& data,
-                                       const std::vector<size_t>& offset_per_prim = {})
+                                prim_info::attrib attrib,
+                                const T& data,
+                                const std::vector<size_t>& offset_per_prim = {})
         {
             if (sizeof_arr(data) == 0)
             {
@@ -103,11 +103,11 @@ namespace fi::gfx
 
         template <typename T>
         void load_morph_data(vk::CommandPool pool,
-                                    morph_info::attrib attrib,
-                                    const T& data,
-                                    std::vector<morph_info>& infos,
-                                    const std::vector<int64_t>& morph_count,
-                                    const std::vector<size_t>& offset_per_info = {})
+                             morph_info::attrib attrib,
+                             const T& data,
+                             std::vector<morph_info>& infos,
+                             const std::vector<int64_t>& morph_count,
+                             const std::vector<size_t>& offset_per_info = {})
         {
             if (sizeof_arr(data) == 0)
             {
@@ -130,6 +130,10 @@ namespace fi::gfx
                 infos[i].set_attrib(attrib, morph_count[i]) = offset;
             }
         }
+    };
+
+    struct prim_structures : private graphcis_obj
+    {
     };
 }; // namespace fi::gfx
 
