@@ -48,7 +48,6 @@ int main(int argc, char** argv)
     prims.add_attribute_data(cmd_pool, gfx::prim_info::COLOR, sparta.meshes_[1].prims_[0].colors_);
     prims.add_attribute_data(cmd_pool, gfx::prim_info::JOINTS, sparta.meshes_[1].prims_[0].joints_);
     prims.add_attribute_data(cmd_pool, gfx::prim_info::WEIGHTS, sparta.meshes_[1].prims_[0].weights_);
-    prims.end_primitives();
     prims.reload_draw_calls(cmd_pool);
 
     vk::CommandBufferAllocateInfo cmd_alloc{};
