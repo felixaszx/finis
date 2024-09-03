@@ -1,7 +1,7 @@
 import tools;
 import defines;
 
-struct VertOutput
+struct vert_output
 {
     float4 position_;
     float3 normal_;
@@ -10,13 +10,13 @@ struct VertOutput
     uint32_t prim_idx_;
 };
 
-struct VertStage
+struct vert_stage
 {
     float4 POSITION : SV_Position;
-    VertOutput OUT : VertOutput;
+    vert_output OUT : vert_output;
 };
 
-struct FragStage
+struct frag_stage
 {
     float4 POSITION : SV_Target0;
     float4 NORMAL : SV_Target1;
@@ -24,22 +24,35 @@ struct FragStage
     float4 SPECULAR : SV_Target3;
 };
 
-struct Pointers
+struct prim_info_ptrs
 {
     byte* data_;
     byte* prims_;
 }
 
-ConstantBuffer<Pointers> POINTERS;
+struct prim_struc_ptrs
+{
+    byte* address_;
+    uint64_t mesh_idx_offset_;
+    uint64_t meshes_offset_;
+    uint64_t morph_weights_offset_;
+    uint64_t tranforms_offset_;
+    uint64_t joint_idxs_offset_;
+}
+
+ConstantBuffer<prim_info_ptrs> PRIMS;
+ConstantBuffer<prim_struc_ptrs> PRIM_STRUCTS;
 
 [shader("vertex")]
-VertStage vertex_main(uint idx_id: SV_VertexID, //
+vert_stage vertex_main(uint idx_id: SV_VertexID, //
                       uint instance_id: SV_InstanceID)
 {
-    PrimInfo prim_infos = ((PrimInfo*)POINTERS.prims_)[get_draw_idx()];
-    uint idx = ((uint*)(POINTERS.data_ + prim_infos.idx_))[idx_id];
+    prim_info prim_info = ((prim_info*)PRIMS.prims_)[get_draw_idx()];
+    uint mesh_idx = ((uint*)(PRIM_STRUCTS.address_ + PRIM_STRUCTS.mesh_idx_offset_))[get_draw_idx()];
+    mesh_info mesh_info = ((mesh_info*)(PRIM_STRUCTS.address_ + PRIM_STRUCTS.meshes_offset_))[mesh_idx];
+    uint idx = ((uint*)(PRIMS.data_ + prim_info.idx_))[idx_id];
 
-    float3 position = ((float3*)(POINTERS.data_ + prim_infos.position_))[idx];
+    float3 position = ((float3*)(PRIMS.data_ + prim_info.position_))[idx];
     float3 normal = { 0, 0, 0 };
     float4 tangent = { 0, 0, 0, 1 };
     float2 texcoord = { 0, 0 };
@@ -48,47 +61,47 @@ VertStage vertex_main(uint idx_id: SV_VertexID, //
 
     // fetch vertex data_
     {
-        if (prim_infos.normal_ != -1)
+        if (prim_info.normal_ != -1)
         {
-            normal = ((float3*)(POINTERS.data_ + prim_infos.normal_))[idx];
+            normal = ((float3*)(PRIMS.data_ + prim_info.normal_))[idx];
         }
 
-        if (prim_infos.tangent_ != -1)
+        if (prim_info.tangent_ != -1)
         {
-            tangent = ((float4*)(POINTERS.data_ + prim_infos.tangent_))[idx];
+            tangent = ((float4*)(PRIMS.data_ + prim_info.tangent_))[idx];
         };
 
-        if (prim_infos.tangent_ != -1)
+        if (prim_info.tangent_ != -1)
         {
-            texcoord = ((float2*)(POINTERS.data_ + prim_infos.texcoord_))[idx];
+            texcoord = ((float2*)(PRIMS.data_ + prim_info.texcoord_))[idx];
         };
 
-        if (prim_infos.joints_ != -1)
+        if (prim_info.joints_ != -1)
         {
-            joint_idxs = ((uint4*)(POINTERS.data_ + prim_infos.joints_))[idx];
+            joint_idxs = ((uint4*)(PRIMS.data_ + prim_info.joints_))[idx];
         };
 
-        if (prim_infos.weights_ != -1)
+        if (prim_info.weights_ != -1)
         {
-            weights = ((float4*)(POINTERS.data_ + prim_infos.weights_))[idx];
+            weights = ((float4*)(PRIMS.data_ + prim_info.weights_))[idx];
         };
     }
 
     // calculate morph data_
-    if (prim_infos.morph_ != -1)
+    if (prim_info.morph_ != -1)
     {
-        MorphInfo morph = *((MorphInfo*)(POINTERS.data_ + prim_infos.morph_));
+        morph_info morph = *((morph_info*)(PRIMS.data_ + prim_info.morph_));
     }
 
-    VertStage vs;
+    vert_stage vs;
     vs.POSITION.xyz = position;
     return vs;
 }
 
 [shader("fragment")]
-FragStage fragment_main(VertOutput vs: VertOutput)
+frag_stage fragment_main(vert_output vs: vert_output)
 {
-    FragStage fs;
+    frag_stage fs;
     fs.POSITION = vs.position_;
     return fs;
 }

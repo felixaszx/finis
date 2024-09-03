@@ -2,7 +2,7 @@ module defines;
 
 public typedef uint8_t byte;
 
-public struct PrimInfo
+public struct prim_info
 {
     public uint64_t position_; // vec3[]
     public uint64_t normal_;   // vec3[]
@@ -16,7 +16,7 @@ public struct PrimInfo
     public uint64_t morph_;    // MorphInfo*
 };
 
-public struct MorphInfo
+public struct morph_info
 {
     public uint64_t position_; // vec3[]
     public uint64_t normal_;   // vec3[]
@@ -27,14 +27,14 @@ public struct MorphInfo
     public uint64_t tangent_count_ = 0;  // scalar
 };
 
-public struct MeshInfo
+public struct mesh_info
 {
     public uint64_t node_;          // mat4*
     public uint64_t morph_weights_; // float[]
     public uint64_t joint_;         // uint32_t[]
 };
 
-public struct MaterialInfo
+public struct mat_info
 {
     public float4 color_factor_;
     public float4 emissive_factor_;       // [3] = emissive strength
