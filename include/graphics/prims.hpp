@@ -168,7 +168,7 @@ namespace fi::gfx
         std::vector<node_trs> nodes_{}; // update sequentially
 
         std::vector<uint32_t> mesh_idxs_{}; // the size of primitive
-        std::vector<mesh_info> meshes_{};
+        std::vector<mesh_info> meshes_{}; 
         std::vector<float> morph_weights_{};
         std::vector<glm::mat4> tranforms_{};
         std::vector<uint32_t> joint_idxs_{};

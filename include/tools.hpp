@@ -24,44 +24,43 @@ namespace thp = task_thread_pool;
 
 namespace fi::util
 {
-    template <typename T, typename Q>
-    inline constexpr T casts(Q&& value)
+    template <typename T>
+    inline constexpr T casts(auto&& value)
     {
-        return static_cast<T>(std::forward<Q>(value));
-    }
-
-    template <typename T, typename Q>
-    inline constexpr T castr(Q&& value)
-    {
-        return reinterpret_cast<T>(std::forward<Q>(value));
-    }
-
-    template <typename T, typename Q>
-    inline constexpr T castc(Q&& value)
-    {
-        return const_cast<T>(std::forward<Q>(value));
-    }
-
-    template <typename T, typename Q>
-    inline constexpr T castd(Q&& value)
-    {
-        return dynamic_cast<T>(std::forward<Q>(value));
-    }
-
-    template <typename T, typename Q>
-    inline constexpr T castf(Q&& value)
-    {
-        return (T)(std::forward<Q>(value));
+        return static_cast<T>(std::forward<decltype(value)>(value));
     }
 
     template <typename T>
-    inline std::size_t sizeof_arr(T& arr)
+    inline constexpr T castr(auto&& value)
+    {
+        return reinterpret_cast<T>(std::forward<decltype(value)>(value));
+    }
+
+    template <typename T>
+    inline constexpr T castc(auto&& value)
+    {
+        return const_cast<T>(std::forward<decltype(value)>(value));
+    }
+
+    template <typename T>
+    inline constexpr T castd(auto&& value)
+    {
+        return dynamic_cast<T>(std::forward<decltype(value)>(value));
+    }
+
+    template <typename T>
+    inline constexpr T castf(auto&& value)
+    {
+        return (T)(std::forward<decltype(value)>(value));
+    }
+
+    inline std::size_t sizeof_arr(auto& arr)
     {
         return (arr.size() * sizeof(arr[0]));
     }
 
     template <typename C>
-    void free_stl_container(C& container)
+    void free_stl_container(auto& container)
     {
         C().swap(container);
     }
