@@ -133,8 +133,8 @@ void fi::gfx::primitives::end_primitives()
 void fi::gfx::primitives::reload_draw_calls(vk::CommandPool pool)
 {
     flush_staging_memory(pool);
-    staging_span_.push_back(castr(const std::byte*, prim_infos_.data()), sizeof_arr(prim_infos_));
-    staging_span_.push_back(castr(const std::byte*, draw_calls_.data()), sizeof_arr(draw_calls_));
+    staging_span_.push_back(util::castr<const std::byte*>(prim_infos_.data()), util::sizeof_arr(prim_infos_));
+    staging_span_.push_back(util::castr<const std::byte*>(draw_calls_.data()), util::sizeof_arr(draw_calls_));
 
     gfx::fence fence;
     device().resetFences(fence);
@@ -159,7 +159,7 @@ void fi::gfx::primitives::reload_draw_calls(vk::CommandPool pool)
             region.size = blocks[1].size_;
             cmd.copyBuffer(staging_buffer_, prims_.buffer_, region);
         }
-        dst_offset += sizeof_arr(prim_infos_);
+        dst_offset += util::sizeof_arr(prim_infos_);
         staging_span_.pop_front();
     }
     cmd.end();
@@ -191,4 +191,122 @@ vk::DeviceSize fi::gfx::primitives::load_staging_memory(const std::byte* data, v
     staging_span_.push_back(data, size);
     staging_queue_.push(data_.curr_size_ - size);
     return data_.curr_size_ - size;
+}
+
+fi::gfx::prim_structure::prim_structure(uint32_t prim_count)
+{
+    mesh_idxs_.resize(prim_count, -1);
+}
+
+fi::gfx::prim_structure::~prim_structure()
+{
+    allocator().destroyBuffer(data_.buffer_, data_.alloc_);
+}
+
+void fi::gfx::prim_structure::load_data()
+{
+    if (!data_.buffer_)
+    {
+        vk::BufferCreateInfo buffer_info{.size = util::sizeof_arr(mesh_idxs_),
+                                         .usage = vk::BufferUsageFlagBits::eStorageBuffer |
+                                                  vk::BufferUsageFlagBits::eShaderDeviceAddress};
+        buffer_info.size += util::sizeof_arr(meshes_);
+        buffer_info.size += util::sizeof_arr(morph_weights_);
+        buffer_info.size += util::sizeof_arr(tranforms_);
+        buffer_info.size += util::sizeof_arr(joint_idxs_);
+        vma::AllocationCreateInfo alloc_info{.flags = vma::AllocationCreateFlagBits::eHostAccessSequentialWrite |
+                                                      vma::AllocationCreateFlagBits::eMapped,
+                                             .usage = vma::MemoryUsage::eAutoPreferDevice,
+                                             .requiredFlags = vk::MemoryPropertyFlagBits::eHostCoherent};
+        vma::AllocationInfo alloc{};
+        auto allocated = allocator().createBuffer(buffer_info, alloc_info, alloc);
+        vk::BufferDeviceAddressInfo address_info{.buffer = data_.buffer_};
+        data_.address_ = device().getBufferAddress(address_info);
+        data_.mapping_ = util::castr<std::byte*>(alloc.pMappedData);
+        data_.buffer_ = allocated.first;
+        data_.alloc_ = allocated.second;
+
+        data_.meshes_offset_ = util::sizeof_arr(mesh_idxs_);
+        data_.morph_weights_offset_ = data_.meshes_offset_ + util::sizeof_arr(meshes_);
+        data_.tranforms_offset_ = data_.morph_weights_offset_ + util::sizeof_arr(morph_weights_);
+        data_.joint_idxs_offset_ = data_.tranforms_offset_ + util::sizeof_arr(tranforms_);
+    }
+
+    reload_data();
+}
+
+void fi::gfx::prim_structure::reload_data()
+{
+    memcpy(data_.mapping_ + data_.mesh_idx_offset_, mesh_idxs_.data(), util::sizeof_arr(mesh_idxs_));
+    memcpy(data_.mapping_ + data_.meshes_offset_, meshes_.data(), util::sizeof_arr(meshes_));
+    memcpy(data_.mapping_ + data_.morph_weights_offset_, morph_weights_.data(), util::sizeof_arr(morph_weights_));
+    memcpy(data_.mapping_ + data_.tranforms_offset_, tranforms_.data(), util::sizeof_arr(tranforms_));
+    memcpy(data_.mapping_ + data_.joint_idxs_offset_, joint_idxs_.data(), util::sizeof_arr(joint_idxs_));
+}
+
+void fi::gfx::prim_structure::process_nodes(const glm::mat4& transform)
+{
+    auto node_iter = nodes_.begin();
+    while (node_iter != nodes_.end() && !(node_iter->parent_tr_ == -1))
+    {
+        tranforms_[node_iter->transform_idx_] = transform                                       //
+                                                * node_iter->t_ * node_iter->r_ * node_iter->s_ //
+                                                * node_iter->preset_;
+    }
+    while (node_iter != nodes_.end())
+    {
+        tranforms_[node_iter->transform_idx_] = tranforms_[node_iter->parent_tr_]  //
+                                                * node_iter->t_ * node_iter->r_ * node_iter->s_ //
+                                                * node_iter->preset_;
+    }
+}
+
+void fi::gfx::prim_structure::add_mesh(const std::vector<uint32_t>& prim_idx, uint32_t node_idx, uint32_t transform_idx)
+{
+    if (node_idx >= nodes_.size())
+    {
+        nodes_.resize(node_idx + 1);
+    }
+
+    if (transform_idx >= tranforms_.size())
+    {
+        tranforms_.resize(transform_idx + 1, glm::identity<glm::mat4>());
+    }
+
+    nodes_[node_idx].transform_idx_ = transform_idx;
+
+    for (uint32_t p : prim_idx)
+    {
+        mesh_idxs_[p] = meshes_.size();
+    }
+    meshes_.emplace_back().node_ = node_idx;
+}
+
+void fi::gfx::prim_structure::set_mesh_joints(uint32_t mesh_idx, const std::vector<uint32_t>& node_idxs)
+{
+    meshes_[mesh_idx].joint_ = joint_idxs_.size();
+    joint_idxs_.insert(joint_idxs_.end(), node_idxs.begin(), node_idxs.end());
+}
+
+void fi::gfx::prim_structure::set_mesh_morph_weights(uint32_t mesh_idx, const std::vector<float>& weights)
+{
+    meshes_[mesh_idx].morph_weights_ = morph_weights_.size();
+    nodes_[meshes_[mesh_idx].node_].weight_count_ = weights.size();
+    nodes_[meshes_[mesh_idx].node_].morph_weights_ = morph_weights_.size();
+    morph_weights_.insert(morph_weights_.end(), weights.begin(), weights.end());
+}
+
+void fi::gfx::prim_structure::node_trs::set_translation(const glm::vec3& translation)
+{
+    t_ = glm::translate(translation);
+}
+
+void fi::gfx::prim_structure::node_trs::set_rotation(const glm::quat& rotation)
+{
+    r_ = glm::mat4(rotation);
+}
+
+void fi::gfx::prim_structure::node_trs::set_scale(const glm::vec3& scale)
+{
+    s_ = glm::scale(scale);
 }

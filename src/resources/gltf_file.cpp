@@ -41,11 +41,11 @@ fi::res::gltf_file::gltf_file(const std::filesystem::path& path,
     {
         throw std::runtime_error(std::format("gltf {} is not valid", path.string()));
     }
-    make_unique2(asset_, std::move(asset_in.get()));
+    util::make_unique2(asset_, std::move(asset_in.get()));
     name_ = path.filename().generic_string();
 
     std::unique_ptr<gltf_mat> matt;
-    make_unique2(matt, new gltf_mat);
+    util::make_unique2(matt, new gltf_mat);
 
     auto load_tex_func = [&]()
     {
@@ -59,7 +59,7 @@ fi::res::gltf_file::gltf_file(const std::filesystem::path& path,
             gltf_tex& g_tex = textures_.emplace_back();
             g_tex.name_ = std::format("{}__image({})", tex.name, img.name);
             stbi_uc* pixels =
-                stbi_load_from_memory(castf(const stbi_uc*, std::get<3>(buffer.data).bytes.data() + view.byteOffset),
+                stbi_load_from_memory(util::castf<const stbi_uc*>(std::get<3>(buffer.data).bytes.data() + view.byteOffset),
                                       view.byteLength, //
                                       &g_tex.x_, &g_tex.y_, &g_tex.comp_, STBI_rgb_alpha);
             g_tex.comp_ = 4;

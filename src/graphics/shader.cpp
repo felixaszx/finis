@@ -51,7 +51,7 @@ fi::gfx::shader::shader(const std::filesystem::path& shader_file, const std::fil
         .searchPaths = &path_c,
         .searchPathCount = 1,
         .compilerOptionEntries = options.data(),
-        .compilerOptionEntryCount = casts(uint32_t, options.size()),
+        .compilerOptionEntryCount = util::casts<uint32_t>(options.size()),
     };
 
     Slang::ComPtr<slang::ISession> session;
@@ -65,7 +65,7 @@ fi::gfx::shader::shader(const std::filesystem::path& shader_file, const std::fil
                                                              diagnostics.writeRef()));
     if (diagnostics)
     {
-        std::cerr << castf(const char*, diagnostics->getBufferPointer());
+        std::cerr << util::castf<const char*>(diagnostics->getBufferPointer());
         throw std::runtime_error("Fail to compile shader");
     }
 
@@ -88,12 +88,12 @@ fi::gfx::shader::shader(const std::filesystem::path& shader_file, const std::fil
     linked_program->getTargetCode(0, kernel_blob.writeRef(), diagnostics.writeRef());
     if (diagnostics)
     {
-        std::cerr << castf(const char*, diagnostics->getBufferPointer());
+        std::cerr << util::castr<const uint32_t*>(diagnostics->getBufferPointer());
     }
 
     vk::ShaderModuleCreateInfo shader_info{};
     shader_info.codeSize = kernel_blob->getBufferSize();
-    shader_info.pCode = castr(const uint32_t*, kernel_blob->getBufferPointer());
+    shader_info.pCode = util::castr<const uint32_t*>(kernel_blob->getBufferPointer());
     module_ = device().createShaderModule(shader_info);
 
     spvc::Compiler reflection(shader_info.pCode, shader_info.codeSize / sizeof(uint32_t));

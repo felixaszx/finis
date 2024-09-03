@@ -1,12 +1,12 @@
 /**
  * @file glms.hpp
  * @author Felix Xing (felixaszx@outlook.com)
- * @brief 
+ * @brief
  * @version 0.1
  * @date 2024-08-15
- * 
+ *
  * @copyright MIT License Copyright (c) 2024 Felixaszx (Felix Xing)
- * 
+ *
  */
 #ifndef INCLUDE_GLMS_HPP
 #define INCLUDE_GLMS_HPP
@@ -44,7 +44,7 @@ namespace glms
         }
     }
 
-    namespace literal
+    namespace literals
     {
         inline float operator""_dg(long double degree)
         {
@@ -54,7 +54,7 @@ namespace glms
         {
             return glm::radians(static_cast<float>(degree));
         }
-    }; // namespace literal
+    }; // namespace literals
 } // namespace glms
 
 #endif // INCLUDE_GLMS_HPP

@@ -1,6 +1,8 @@
 #ifndef GRAPHICS_PRIMS_HPP
 #define GRAPHICS_PRIMS_HPP
 
+#include <ranges>
+
 #include "graphics.hpp"
 #include "tools.hpp"
 #include "prim_data.hpp"
@@ -54,7 +56,7 @@ namespace fi::gfx
         void end_primitives();
         void reload_draw_calls(vk::CommandPool pool);
         [[nodiscard]] vk::DeviceSize addresses_size() const { return sizeof(addresses_); }
-        [[nodiscard]] const std::byte* addresses() const { return castr(const std::byte*, &addresses_); }
+        [[nodiscard]] const std::byte* addresses() const { return util::castr<const std::byte*>(&addresses_); }
 
         template <typename T>
         static std::vector<size_t> get_elm_offset_per_prim(const T& data)
@@ -80,11 +82,11 @@ namespace fi::gfx
             {
                 return;
             }
-            size_t offset = load_staging_memory(castr(const std::byte*, data.data()), sizeof_arr(data));
+            size_t offset = load_staging_memory(util::castr<const std::byte*>(data.data()), util::sizeof_arr(data));
             if (offset == -1)
             {
                 flush_staging_memory(pool);
-                offset = load_staging_memory(castr(const std::byte*, data.data()), sizeof_arr(data));
+                offset = load_staging_memory(util::castr<const std::byte*>(data.data()), util::sizeof_arr(data));
             }
 
             size_t i = 0;
@@ -110,11 +112,11 @@ namespace fi::gfx
             {
                 return;
             }
-            size_t offset = load_staging_memory(castr(const std::byte*, data.data()), sizeof_arr(data));
+            size_t offset = load_staging_memory(util::castr<const std::byte*>(data.data()), util::sizeof_arr(data));
             if (offset == -1)
             {
                 flush_staging_memory(pool);
-                offset = load_staging_memory(castr(const std::byte*, data.data()), sizeof_arr(data));
+                offset = load_staging_memory(util::castr<const std::byte*>(data.data()), util::sizeof_arr(data));
             }
 
             size_t i = 0;
@@ -129,40 +131,58 @@ namespace fi::gfx
         }
     };
 
-    struct prim_structures : private graphcis_obj
+    struct prim_structure : private graphcis_obj
     {
         struct node_trs
         {
-            std::string name_;
-            glm::mat4* transform_ = nullptr;
+            std::string name_ = "";
+            uint32_t transform_idx_ = -1;
             uint32_t weight_count_ = 0;
-            float* wieghts_ = nullptr;
-            node_trs* parent_ = nullptr;
+            uint32_t morph_weights_ = -1;
+            uint32_t parent_tr_ = -1;
 
-            glm::vec3 t_ = {0, 0, 0};
-            glm::quat r_ = {0, 0, 0, 1};
-            glm::vec3 s_ = {1, 1, 1};
+            glm::mat4 t_ = glm::identity<glm::mat4>();
+            glm::mat4 r_ = glm::identity<glm::mat4>();
+            glm::mat4 s_ = glm::identity<glm::mat4>();
             glm::mat4 preset_ = glm::identity<glm::mat4>();
+
+            void set_translation(const glm::vec3& translation);
+            void set_rotation(const glm::quat& rotation);
+            void set_scale(const glm::vec3& scale);
         };
 
         struct
         {
-            vk::DeviceSize curr_size_ = 0;
-            const vk::DeviceSize capacity_ = 0;
-
             vk::Buffer buffer_{};
             vma::Allocation alloc_{};
+            std::byte* mapping_ = nullptr;
+
+            vk::DeviceAddress address_ = 0;
+            vk::DeviceSize mesh_idx_offset_ = 0;
+            vk::DeviceSize meshes_offset_ = 0;
+            vk::DeviceSize morph_weights_offset_ = 0;
+            vk::DeviceSize tranforms_offset_ = 0;
+            vk::DeviceSize joint_idxs_offset_ = 0;
         } data_; // buffer 0
 
-        std::vector<node_trs> nodes_{};
+        std::vector<node_trs> nodes_{}; // update sequentially
 
-        std::vector<uint32_t> meshe_idxs_{}; // the size of primitive
+        std::vector<uint32_t> mesh_idxs_{}; // the size of primitive
         std::vector<mesh_info> meshes_{};
         std::vector<float> morph_weights_{};
         std::vector<glm::mat4> tranforms_{};
+        std::vector<uint32_t> joint_idxs_{};
 
-        prim_structures(uint32_t prim_count);
-        ~prim_structures();
+        prim_structure(uint32_t prim_count);
+        ~prim_structure();
+
+        void load_data();
+        void reload_data();
+        // transform will not be applied to nodes with parent
+        void process_nodes(const glm::mat4& transform = glm::identity<glm::mat4>());
+        void add_mesh(const std::vector<uint32_t>& prim_idx, uint32_t node_idx, uint32_t transform_idx);
+        void set_mesh_joints(uint32_t mesh_idx, const std::vector<uint32_t>& node_idxs);
+        void set_mesh_morph_weights(uint32_t mesh_idx, const std::vector<float>& weights);
     };
 }; // namespace fi::gfx
 

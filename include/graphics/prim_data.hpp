@@ -112,9 +112,9 @@ namespace fi::gfx
 
     struct mesh_info
     {
-        uint64_t node_ = -1;          // mat4*
-        uint64_t morph_weights_ = -1; // float[]
-        uint64_t joint_ = -1;         // uint32_t[]
+        uint32_t node_ = -1;          // idx
+        uint32_t morph_weights_ = -1; // idx
+        uint32_t joint_ = -1;         // idx
     };
 
     struct mat_info

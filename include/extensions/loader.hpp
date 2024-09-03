@@ -25,7 +25,7 @@ namespace fi::ext
             if (valid())
             {
                 base* ext_ptr = dl_.get<base*()>(std::format("load_extension_{}", idx))();
-                return std::unique_ptr<T>(dynamic_cast<T*>(ext_ptr));
+                return std::unique_ptr<T>(util::castd<T*>(ext_ptr));
             }
             throw std::runtime_error(std::format("DLL {} is not loaded", dl_.location().generic_string()));
         }
@@ -37,7 +37,7 @@ namespace fi::ext
             if (valid())
             {
                 base* ext_ptr = dl_.get<base*()>(std::format("load_extension_{}", idx))();
-                return std::shared_ptr<T>(dynamic_cast<T*>(ext_ptr));
+                return std::shared_ptr<T>(util::castd<T*>(ext_ptr));
             }
             throw std::runtime_error(std::format("DLL {} is not loaded", dl_.location().generic_string()));
         }

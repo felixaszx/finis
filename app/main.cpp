@@ -12,7 +12,8 @@
 int main(int argc, char** argv)
 {
     using namespace fi;
-    using namespace glms::literal;
+    using namespace glms::literals;
+    using namespace util::literals;
     using namespace std::chrono_literals;
 
     const uint32_t WIN_WIDTH = 1920;
@@ -39,6 +40,9 @@ int main(int argc, char** argv)
 
     gfx::primitives prims(20_mb, 2000);
     prims.generate_staging_buffer(10_kb);
+
+    gfx::prim_structure prim_stuct(10);
+    prim_stuct.add_mesh({0, 1, 2, 3}, 0, 1);
 
     vk::CommandBufferAllocateInfo cmd_alloc{};
     cmd_alloc.commandBufferCount = 1;
