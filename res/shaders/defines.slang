@@ -10,9 +10,8 @@ public struct PrimInfo
     public uint64_t texcoord_; // vec2[]
     public uint64_t joints_;   // uvec4[]
     public uint64_t weights_;  // vec4[]
-
     public uint64_t idx_;      // uint32_t[]
-    public uint64_t mesh_;     // MeshInfo*
+
     public uint64_t material_; // MaterialInfo*
     public uint64_t morph_;    // MorphInfo*
 };

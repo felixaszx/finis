@@ -14,6 +14,7 @@ class pipeline : public gfx::gfx_pipeline
     ~pipeline() {}
 
     vk::Pipeline get_pipeline() override { return {}; }
+    vk::PipelineLayout get_layout() override { return {}; }
 };
 
 EXPORT_EXTENSION(pipeline);

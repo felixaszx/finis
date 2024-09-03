@@ -10,16 +10,14 @@ namespace fi::gfx
 {
     struct primitives : private graphcis_obj
     {
-      private:
-        // min alignment in buffer is 16 byte
         struct
         {
             vk::DeviceSize curr_size_ = 0;
             const vk::DeviceSize capacity_ = 0;
 
-            vk::Buffer buffer_{};
+            vk::Buffer buffer_{}; // buffer 0
             vma::Allocation alloc_{};
-        } data_; // buffer 0
+        } data_;
 
         struct
         {
@@ -45,7 +43,6 @@ namespace fi::gfx
         circular_span staging_span_{};
         std::queue<vk::DeviceSize> staging_queue_{};
 
-      public:
         primitives(vk::DeviceSize data_size_limit, uint32_t prim_limit);
         ~primitives();
 
@@ -134,6 +131,38 @@ namespace fi::gfx
 
     struct prim_structures : private graphcis_obj
     {
+        struct node_trs
+        {
+            std::string name_;
+            glm::mat4* transform_ = nullptr;
+            uint32_t weight_count_ = 0;
+            float* wieghts_ = nullptr;
+            node_trs* parent_ = nullptr;
+
+            glm::vec3 t_ = {0, 0, 0};
+            glm::quat r_ = {0, 0, 0, 1};
+            glm::vec3 s_ = {1, 1, 1};
+            glm::mat4 preset_ = glm::identity<glm::mat4>();
+        };
+
+        struct
+        {
+            vk::DeviceSize curr_size_ = 0;
+            const vk::DeviceSize capacity_ = 0;
+
+            vk::Buffer buffer_{};
+            vma::Allocation alloc_{};
+        } data_; // buffer 0
+
+        std::vector<node_trs> nodes_{};
+
+        std::vector<uint32_t> meshe_idxs_{}; // the size of primitive
+        std::vector<mesh_info> meshes_{};
+        std::vector<float> morph_weights_{};
+        std::vector<glm::mat4> tranforms_{};
+
+        prim_structures(uint32_t prim_count);
+        ~prim_structures();
     };
 }; // namespace fi::gfx
 

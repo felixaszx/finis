@@ -44,6 +44,9 @@ fi::res::gltf_file::gltf_file(const std::filesystem::path& path,
     make_unique2(asset_, std::move(asset_in.get()));
     name_ = path.filename().generic_string();
 
+    std::unique_ptr<gltf_mat> matt;
+    make_unique2(matt, new gltf_mat);
+
     auto load_tex_func = [&]()
     {
         textures_.reserve(asset_->textures.size());

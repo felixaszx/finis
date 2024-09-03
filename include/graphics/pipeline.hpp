@@ -10,6 +10,7 @@ namespace fi::gfx
     struct proxy_pipeline : public ext::base
     {
         virtual vk::Pipeline get_pipeline() = 0;
+        virtual vk::PipelineLayout get_layout() = 0;
     };
 
     struct gfx_pipeline : public ext::base
@@ -27,11 +28,13 @@ namespace fi::gfx
         vk::PipelineDynamicStateCreateInfo dynamic_state_{};
 
         virtual vk::Pipeline get_pipeline() = 0;
+        virtual vk::PipelineLayout get_layout() = 0;
     };
 
     struct com_pipeline : public ext::base
     {
         virtual vk::Pipeline get_pipeline() = 0;
+        virtual vk::PipelineLayout get_layout() = 0;
     };
 }; // namespace fi::gfx
 

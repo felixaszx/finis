@@ -56,10 +56,22 @@ inline constexpr void make_unique2(std::unique_ptr<Ptr>& unique_ptr, Param&&... 
     unique_ptr.reset(new Ptr(std::forward<Param>(param)...));
 }
 
+template <typename T>
+inline constexpr void make_unique2(std::unique_ptr<T>& unique_ptr, T* new_obj)
+{
+    unique_ptr.reset(new_obj);
+}
+
 template <typename Ptr, typename... Param>
 inline constexpr void make_shared2(std::shared_ptr<Ptr>& shared_ptr, Param&&... param)
 {
     shared_ptr.reset(new Ptr(std::forward<Param>(param)...));
+}
+
+template <typename T>
+inline constexpr void make_shared2(std::shared_ptr<T>& shared_ptr, T* new_obj)
+{
+    shared_ptr.reset(new_obj);
 }
 
 inline consteval size_t operator""_b(unsigned long long b)

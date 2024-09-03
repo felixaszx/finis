@@ -30,7 +30,6 @@ namespace fi::gfx
             JOINTS,
             WEIGHTS,
             INDEX,
-            MESH,
             MATERIAL,
             MORPH
         };
@@ -42,9 +41,8 @@ namespace fi::gfx
         uint64_t color_ = -1;    // vec4[]
         uint64_t joints_ = -1;   // uvec4[]
         uint64_t weights_ = -1;  // vec4[]
-
         uint64_t idx_ = -1;      // uint32_t[]
-        uint64_t mesh_ = -1;     // MeshInfo*
+
         uint64_t material_ = -1; // MaterialInfo*
         uint64_t morph_ = -1;    // morph_info*
 
@@ -68,8 +66,6 @@ namespace fi::gfx
                     return weights_;
                 case INDEX:
                     return idx_;
-                case MESH:
-                    return mesh_;
                 case MATERIAL:
                     return material_;
                 case MORPH:

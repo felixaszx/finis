@@ -37,7 +37,6 @@ VertStage vertex_main(uint idx_id: SV_VertexID, //
                       uint instance_id: SV_InstanceID)
 {
     PrimInfo prim_infos = ((PrimInfo*)POINTERS.prims_)[get_draw_idx()];
-    MeshInfo mesh = *((MeshInfo*)(POINTERS.data_ + prim_infos.mesh_));
     uint idx = ((uint*)(POINTERS.data_ + prim_infos.idx_))[idx_id];
 
     float3 position = ((float3*)(POINTERS.data_ + prim_infos.position_))[idx];
