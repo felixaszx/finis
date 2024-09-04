@@ -60,6 +60,7 @@ void fi::gfx::primitives::flush_staging_memory(vk::CommandPool pool)
     {
         return;
     }
+    allocator().flushAllocation(staging_alloc_, 0, VK_WHOLE_SIZE);
 
     gfx::fence fence;
     device().resetFences(fence);
@@ -72,7 +73,7 @@ void fi::gfx::primitives::flush_staging_memory(vk::CommandPool pool)
     while (!staging_span_.empty())
     {
         vk::DeviceSize dst_offset = staging_queue_.front();
-        auto blocks = staging_span_.front_block_region();
+        std::array<circular_span::block, 2> blocks = staging_span_.front_block_region();
         vk::BufferCopy region{.srcOffset = staging_span_.offset(blocks[0]), //
                               .dstOffset = dst_offset,
                               .size = blocks[0].size_};
@@ -135,6 +136,7 @@ void fi::gfx::primitives::reload_draw_calls(vk::CommandPool pool)
     flush_staging_memory(pool);
     staging_span_.push_back(util::castr<const std::byte*>(prim_infos_.data()), util::sizeof_arr(prim_infos_));
     staging_span_.push_back(util::castr<const std::byte*>(draw_calls_.data()), util::sizeof_arr(draw_calls_));
+    allocator().flushAllocation(staging_alloc_, 0, VK_WHOLE_SIZE);
 
     gfx::fence fence;
     device().resetFences(fence);
@@ -147,7 +149,7 @@ void fi::gfx::primitives::reload_draw_calls(vk::CommandPool pool)
     vk::DeviceSize dst_offset = 0;
     while (!staging_span_.empty())
     {
-        auto blocks = staging_span_.front_block_region();
+        std::array<circular_span::block, 2> blocks = staging_span_.front_block_region();
         vk::BufferCopy region{.srcOffset = staging_span_.offset(blocks[0]), //
                               .dstOffset = dst_offset,
                               .size = blocks[0].size_};
@@ -176,7 +178,7 @@ void fi::gfx::primitives::reload_draw_calls(vk::CommandPool pool)
     device().freeCommandBuffers(pool, cmd);
 }
 
-vk::DeviceSize fi::gfx::primitives::load_staging_memory(const std::byte* data, vk::DeviceSize size)
+vk::DeviceSize fi::gfx::primitives::write_staging_memory(const std::byte* data, vk::DeviceSize size)
 {
     data_.curr_size_ += size;
     if (data_.curr_size_ > data_.capacity_ || size > staging_span_.capacity())
@@ -311,4 +313,76 @@ void fi::gfx::node_trs::set_rotation(const glm::quat& rotation)
 void fi::gfx::node_trs::set_scale(const glm::vec3& scale)
 {
     s_ = glm::scale(scale);
+}
+
+fi::gfx::prim_joints::prim_joints(uint32_t prim_count)
+    : joint_idxs_(prim_count, -1)
+{
+}
+
+fi::gfx::prim_joints::~prim_joints()
+{
+    if (data_.buffer_)
+    {
+    }
+}
+
+void fi::gfx::prim_joints::load_data(vk::CommandPool pool)
+{
+    if (!data_.buffer_)
+    {
+        vk::BufferCreateInfo buffer_info{.size = util::sizeof_arr(joint_idxs_) + util::sizeof_arr(joints_),
+                                         .usage = vk::BufferUsageFlagBits::eStorageBuffer |
+                                                  vk::BufferUsageFlagBits::eShaderDeviceAddress |
+                                                  vk::BufferUsageFlagBits::eTransferDst};
+        vma::AllocationCreateInfo alloc_info{.usage = vma::MemoryUsage::eAutoPreferDevice};
+        vma::AllocationInfo alloc{};
+        auto allocated = allocator().createBuffer(buffer_info, alloc_info, alloc);
+        vk::BufferDeviceAddressInfo address_info{.buffer = data_.buffer_};
+        data_.address_ = device().getBufferAddress(address_info);
+        data_.buffer_ = allocated.first;
+        data_.alloc_ = allocated.second;
+        data_.joints_offset_ = util::sizeof_arr(joint_idxs_);
+
+        vk::BufferCreateInfo staging_info{.size = buffer_info.size,
+                                          .usage = vk::BufferUsageFlagBits::eVertexBuffer |
+                                                   vk::BufferUsageFlagBits::eTransferDst};
+        vma::AllocationCreateInfo staging_allo_info{.flags = vma::AllocationCreateFlagBits::eHostAccessSequentialWrite |
+                                                             vma::AllocationCreateFlagBits::eMapped,
+                                                    .usage = vma::MemoryUsage::eAutoPreferHost,
+                                                    .requiredFlags = vk::MemoryPropertyFlagBits::eHostCached};
+        vma::AllocationInfo staging_alloc{};
+        auto staging_allocated = allocator().createBuffer(staging_info, staging_allo_info, staging_alloc);
+
+        memcpy(staging_alloc.pMappedData, joint_idxs_.data(), util::sizeof_arr(joint_idxs_));
+        memcpy(util::castf<std::byte*>(staging_alloc.pMappedData) + data_.joints_offset_, //
+               joints_.data(), util::sizeof_arr(joint_idxs_));
+        allocator().flushAllocation(staging_allocated.second, 0, VK_WHOLE_SIZE);
+
+        gfx::fence fence;
+        device().resetFences(fence);
+        vk::CommandBufferAllocateInfo cmd_alloc{.commandPool = pool, //
+                                                .commandBufferCount = 1};
+        vk::CommandBuffer cmd = device().allocateCommandBuffers(cmd_alloc)[0];
+        vk::CommandBufferBeginInfo begin{.flags = vk::CommandBufferUsageFlagBits::eOneTimeSubmit};
+
+        cmd.begin(begin);
+        cmd.copyBuffer(staging_allocated.first, data_.buffer_, vk::BufferCopy{0, 0, buffer_info.size});
+        cmd.end();
+
+        vk::CommandBufferSubmitInfo cmd_submit{.commandBuffer = cmd};
+        vk::SubmitInfo2 submit2{};
+        submit2.setCommandBufferInfos(cmd_submit);
+        queues(GRAPHICS).submit2(submit2, fence);
+        if (device().waitForFences(fence, true, std::numeric_limits<uint64_t>::max()) != vk::Result::eSuccess)
+        {
+            throw std::runtime_error("Memory copy over time.");
+        }
+        device().freeCommandBuffers(pool, cmd);
+        allocator().destroyBuffer(staging_allocated.first, staging_allocated.second);
+    }
+}
+
+void fi::gfx::prim_joints::set_joints(uint32_t prim_idx, const std::vector<uint32_t>& joints)
+{
 }

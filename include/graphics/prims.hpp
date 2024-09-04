@@ -50,7 +50,7 @@ namespace fi::gfx
 
         void generate_staging_buffer(vk::DeviceSize limit);
         void flush_staging_memory(vk::CommandPool pool);
-        vk::DeviceSize load_staging_memory(const std::byte* data, vk::DeviceSize size);
+        vk::DeviceSize write_staging_memory(const std::byte* data, vk::DeviceSize size);
         void free_staging_buffer();
         uint32_t add_primitives(const std::vector<vk::DrawIndirectCommand>& draw_calls);
         void end_primitives();
@@ -82,11 +82,11 @@ namespace fi::gfx
             {
                 return;
             }
-            size_t offset = load_staging_memory(util::castr<const std::byte*>(data.data()), util::sizeof_arr(data));
+            size_t offset = write_staging_memory(util::castr<const std::byte*>(data.data()), util::sizeof_arr(data));
             if (offset == -1)
             {
                 flush_staging_memory(pool);
-                offset = load_staging_memory(util::castr<const std::byte*>(data.data()), util::sizeof_arr(data));
+                offset = write_staging_memory(util::castr<const std::byte*>(data.data()), util::sizeof_arr(data));
             }
 
             size_t i = 0;
@@ -112,11 +112,11 @@ namespace fi::gfx
             {
                 return;
             }
-            size_t offset = load_staging_memory(util::castr<const std::byte*>(data.data()), util::sizeof_arr(data));
+            size_t offset = write_staging_memory(util::castr<const std::byte*>(data.data()), util::sizeof_arr(data));
             if (offset == -1)
             {
                 flush_staging_memory(pool);
-                offset = load_staging_memory(util::castr<const std::byte*>(data.data()), util::sizeof_arr(data));
+                offset = write_staging_memory(util::castr<const std::byte*>(data.data()), util::sizeof_arr(data));
             }
 
             size_t i = 0;
@@ -165,8 +165,31 @@ namespace fi::gfx
         void reload_data();
         // transform will not be applied to nodes that has parent
         void process_nodes(const glm::mat4& transform = glm::identity<glm::mat4>());
-        void add_mesh(const std::vector<uint32_t>& prim_idx, uint32_t node_idx, uint32_t transform_idx, const node_trs& trs = {});
+        void add_mesh(const std::vector<uint32_t>& prim_idx,
+                      uint32_t node_idx,
+                      uint32_t transform_idx,
+                      const node_trs& trs = {});
         void set_mesh_morph_weights(uint32_t mesh_idx, const std::vector<float>& weights);
+    };
+
+    struct prim_joints : private graphcis_obj
+    {
+        struct data
+        {
+            vk::Buffer buffer_{};
+            vma::Allocation alloc_{};
+            vk::DeviceAddress address_ = 0;
+            uint64_t joints_offset_ = -1;
+        } data_; // buffer 0
+
+        std::vector<uint32_t> joint_idxs_{}; // the size of primitive, idx in prim_structure transforms
+        std::vector<uint32_t> joints_{};     // joints
+
+        prim_joints(uint32_t prim_count);
+        ~prim_joints();
+
+        void load_data(vk::CommandPool pool);
+        void set_joints(uint32_t prim_idx, const std::vector<uint32_t>& joints);
     };
 }; // namespace fi::gfx
 
