@@ -12,6 +12,7 @@
 #define GRAPHICS_PRIM_DATA_HPP
 
 #include <cstdint>
+#include <string>
 
 #include "glms.hpp"
 
@@ -143,6 +144,24 @@ namespace fi::gfx
 
         uint32_t sheen_color_ = -1;
         uint32_t sheen_roughness_ = -1;
+    };
+
+    struct node_trs
+    {
+        std::string name_ = "";
+        uint32_t transform_idx_ = -1;
+        uint32_t weight_count_ = 0;
+        uint32_t morph_weights_ = -1;
+        uint32_t parent_idx_ = -1;
+
+        glm::mat4 t_ = glm::identity<glm::mat4>();
+        glm::mat4 r_ = glm::identity<glm::mat4>();
+        glm::mat4 s_ = glm::identity<glm::mat4>();
+        glm::mat4 preset_ = glm::identity<glm::mat4>();
+
+        void set_translation(const glm::vec3& translation);
+        void set_rotation(const glm::quat& rotation);
+        void set_scale(const glm::vec3& scale);
     };
 
 }; // namespace fi::gfx

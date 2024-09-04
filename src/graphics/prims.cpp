@@ -213,7 +213,6 @@ void fi::gfx::prim_structure::load_data()
         buffer_info.size += util::sizeof_arr(meshes_);
         buffer_info.size += util::sizeof_arr(morph_weights_);
         buffer_info.size += util::sizeof_arr(tranforms_);
-        buffer_info.size += util::sizeof_arr(joint_idxs_);
         vma::AllocationCreateInfo alloc_info{.flags = vma::AllocationCreateFlagBits::eHostAccessSequentialWrite |
                                                       vma::AllocationCreateFlagBits::eMapped,
                                              .usage = vma::MemoryUsage::eAutoPreferDevice,
@@ -221,15 +220,14 @@ void fi::gfx::prim_structure::load_data()
         vma::AllocationInfo alloc{};
         auto allocated = allocator().createBuffer(buffer_info, alloc_info, alloc);
         vk::BufferDeviceAddressInfo address_info{.buffer = data_.buffer_};
-        data_.address_ = device().getBufferAddress(address_info);
+        data_.uniforms_.address_ = device().getBufferAddress(address_info);
         data_.mapping_ = util::castr<std::byte*>(alloc.pMappedData);
         data_.buffer_ = allocated.first;
         data_.alloc_ = allocated.second;
 
-        data_.meshes_offset_ = util::sizeof_arr(mesh_idxs_);
-        data_.morph_weights_offset_ = data_.meshes_offset_ + util::sizeof_arr(meshes_);
-        data_.tranforms_offset_ = data_.morph_weights_offset_ + util::sizeof_arr(morph_weights_);
-        data_.joint_idxs_offset_ = data_.tranforms_offset_ + util::sizeof_arr(tranforms_);
+        data_.uniforms_.meshes_offset_ = util::sizeof_arr(mesh_idxs_);
+        data_.uniforms_.morph_weights_offset_ = data_.uniforms_.meshes_offset_ + util::sizeof_arr(meshes_);
+        data_.uniforms_.tranforms_offset_ = data_.uniforms_.morph_weights_offset_ + util::sizeof_arr(morph_weights_);
     }
 
     reload_data();
@@ -237,31 +235,35 @@ void fi::gfx::prim_structure::load_data()
 
 void fi::gfx::prim_structure::reload_data()
 {
-    memcpy(data_.mapping_ + data_.mesh_idx_offset_, mesh_idxs_.data(), util::sizeof_arr(mesh_idxs_));
-    memcpy(data_.mapping_ + data_.meshes_offset_, meshes_.data(), util::sizeof_arr(meshes_));
-    memcpy(data_.mapping_ + data_.morph_weights_offset_, morph_weights_.data(), util::sizeof_arr(morph_weights_));
-    memcpy(data_.mapping_ + data_.tranforms_offset_, tranforms_.data(), util::sizeof_arr(tranforms_));
-    memcpy(data_.mapping_ + data_.joint_idxs_offset_, joint_idxs_.data(), util::sizeof_arr(joint_idxs_));
+    memcpy(data_.mapping_ + data_.uniforms_.mesh_idx_offset_, mesh_idxs_.data(), util::sizeof_arr(mesh_idxs_));
+    memcpy(data_.mapping_ + data_.uniforms_.meshes_offset_, meshes_.data(), util::sizeof_arr(meshes_));
+    memcpy(data_.mapping_ + data_.uniforms_.morph_weights_offset_, morph_weights_.data(),
+           util::sizeof_arr(morph_weights_));
+    memcpy(data_.mapping_ + data_.uniforms_.tranforms_offset_, tranforms_.data(), util::sizeof_arr(tranforms_));
 }
 
 void fi::gfx::prim_structure::process_nodes(const glm::mat4& transform)
 {
     auto node_iter = nodes_.begin();
-    while (node_iter != nodes_.end() && !(node_iter->parent_tr_ == -1))
+    while (node_iter != nodes_.end() && !(node_iter->parent_idx_ == -1))
     {
         tranforms_[node_iter->transform_idx_] = transform                                       //
                                                 * node_iter->t_ * node_iter->r_ * node_iter->s_ //
                                                 * node_iter->preset_;
     }
+
     while (node_iter != nodes_.end())
     {
-        tranforms_[node_iter->transform_idx_] = tranforms_[node_iter->parent_tr_]               //
+        tranforms_[node_iter->transform_idx_] = tranforms_[node_iter->parent_idx_]              //
                                                 * node_iter->t_ * node_iter->r_ * node_iter->s_ //
                                                 * node_iter->preset_;
     }
 }
 
-void fi::gfx::prim_structure::add_mesh(const std::vector<uint32_t>& prim_idx, uint32_t node_idx, uint32_t transform_idx)
+void fi::gfx::prim_structure::add_mesh(const std::vector<uint32_t>& prim_idx,
+                                       uint32_t node_idx,
+                                       uint32_t transform_idx,
+                                       const node_trs& trs)
 {
     if (data_.buffer_)
     {
@@ -278,6 +280,7 @@ void fi::gfx::prim_structure::add_mesh(const std::vector<uint32_t>& prim_idx, ui
         tranforms_.resize(transform_idx + 1, glm::identity<glm::mat4>());
     }
 
+    nodes_[node_idx] = trs;
     nodes_[node_idx].transform_idx_ = transform_idx;
 
     for (uint32_t p : prim_idx)
@@ -285,12 +288,6 @@ void fi::gfx::prim_structure::add_mesh(const std::vector<uint32_t>& prim_idx, ui
         mesh_idxs_[p] = meshes_.size();
     }
     meshes_.emplace_back().node_ = node_idx;
-}
-
-void fi::gfx::prim_structure::set_mesh_joints(uint32_t mesh_idx, const std::vector<uint32_t>& node_idxs)
-{
-    meshes_[mesh_idx].joint_ = joint_idxs_.size();
-    joint_idxs_.insert(joint_idxs_.end(), node_idxs.begin(), node_idxs.end());
 }
 
 void fi::gfx::prim_structure::set_mesh_morph_weights(uint32_t mesh_idx, const std::vector<float>& weights)
@@ -301,17 +298,17 @@ void fi::gfx::prim_structure::set_mesh_morph_weights(uint32_t mesh_idx, const st
     morph_weights_.insert(morph_weights_.end(), weights.begin(), weights.end());
 }
 
-void fi::gfx::prim_structure::node_trs::set_translation(const glm::vec3& translation)
+void fi::gfx::node_trs::set_translation(const glm::vec3& translation)
 {
     t_ = glm::translate(translation);
 }
 
-void fi::gfx::prim_structure::node_trs::set_rotation(const glm::quat& rotation)
+void fi::gfx::node_trs::set_rotation(const glm::quat& rotation)
 {
     r_ = glm::mat4(rotation);
 }
 
-void fi::gfx::prim_structure::node_trs::set_scale(const glm::vec3& scale)
+void fi::gfx::node_trs::set_scale(const glm::vec3& scale)
 {
     s_ = glm::scale(scale);
 }

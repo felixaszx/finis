@@ -8,6 +8,7 @@
 #include "graphics/shader.hpp"
 #include "graphics/swapchain.hpp"
 #include "resources/gltf_file.hpp"
+#include "resources/gltf_structure.hpp"
 
 int main(int argc, char** argv)
 {
@@ -24,10 +25,17 @@ int main(int argc, char** argv)
     std::vector<std::future<void>> futs;
     res::gltf_file sparta("res/models/sparta.glb", &futs, &thread_pool);
     std::for_each(futs.begin(), futs.end(), [](std::future<void>& fut) { fut.wait(); });
+    res::gltf_structure sparta_struct(sparta);
 
     gfx::context g(WIN_WIDTH, WIN_HEIGHT, "finis");
     gfx::swapchain sc;
     sc.create();
+
+    gfx::primitives prims(20_mb, 2000);
+    prims.generate_staging_buffer(10_kb);
+
+    gfx::prim_structure prim_stuct(10);
+    prim_stuct.add_mesh({0, 1, 2, 3}, 0, 1);
 
     vk::CommandPoolCreateInfo pool_info{};
     pool_info.flags = vk::CommandPoolCreateFlagBits::eResetCommandBuffer;
@@ -37,12 +45,6 @@ int main(int argc, char** argv)
     gfx::shader pipeline_shader("res/shaders/test.slang");
     ext::loader pl_loader("ext_dls/pipelines.dll");
     auto pl0 = pl_loader.load_unique<gfx::gfx_pipeline>();
-
-    gfx::primitives prims(20_mb, 2000);
-    prims.generate_staging_buffer(10_kb);
-
-    gfx::prim_structure prim_stuct(10);
-    prim_stuct.add_mesh({0, 1, 2, 3}, 0, 1);
 
     vk::CommandBufferAllocateInfo cmd_alloc{};
     cmd_alloc.commandBufferCount = 1;

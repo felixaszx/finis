@@ -133,45 +133,30 @@ namespace fi::gfx
 
     struct prim_structure : private graphcis_obj
     {
-        struct node_trs
-        {
-            std::string name_ = "";
-            uint32_t transform_idx_ = -1;
-            uint32_t weight_count_ = 0;
-            uint32_t morph_weights_ = -1;
-            uint32_t parent_tr_ = -1;
-
-            glm::mat4 t_ = glm::identity<glm::mat4>();
-            glm::mat4 r_ = glm::identity<glm::mat4>();
-            glm::mat4 s_ = glm::identity<glm::mat4>();
-            glm::mat4 preset_ = glm::identity<glm::mat4>();
-
-            void set_translation(const glm::vec3& translation);
-            void set_rotation(const glm::quat& rotation);
-            void set_scale(const glm::vec3& scale);
-        };
-
-        struct
+        struct data
         {
             vk::Buffer buffer_{};
             vma::Allocation alloc_{};
             std::byte* mapping_ = nullptr;
 
-            vk::DeviceAddress address_ = 0;
-            vk::DeviceSize mesh_idx_offset_ = 0;
-            vk::DeviceSize meshes_offset_ = 0;
-            vk::DeviceSize morph_weights_offset_ = 0;
-            vk::DeviceSize tranforms_offset_ = 0;
-            vk::DeviceSize joint_idxs_offset_ = 0;
+            struct uniforms
+            {
+                vk::DeviceAddress address_ = 0;
+                vk::DeviceSize mesh_idx_offset_ = 0;
+                vk::DeviceSize meshes_offset_ = 0;
+                vk::DeviceSize morph_weights_offset_ = 0;
+                vk::DeviceSize tranforms_offset_ = 0;
+            } uniforms_;
+
+            void copy_to(std::byte* dst) { memcpy(dst, &uniforms_, sizeof(uniforms_)); }
         } data_; // buffer 0
 
         std::vector<node_trs> nodes_{}; // update sequentially
 
         std::vector<uint32_t> mesh_idxs_{}; // the size of primitive
-        std::vector<mesh_info> meshes_{}; 
+        std::vector<mesh_info> meshes_{};
         std::vector<float> morph_weights_{};
         std::vector<glm::mat4> tranforms_{};
-        std::vector<uint32_t> joint_idxs_{};
 
         prim_structure(uint32_t prim_count);
         ~prim_structure();
@@ -180,8 +165,7 @@ namespace fi::gfx
         void reload_data();
         // transform will not be applied to nodes that has parent
         void process_nodes(const glm::mat4& transform = glm::identity<glm::mat4>());
-        void add_mesh(const std::vector<uint32_t>& prim_idx, uint32_t node_idx, uint32_t transform_idx);
-        void set_mesh_joints(uint32_t mesh_idx, const std::vector<uint32_t>& node_idxs);
+        void add_mesh(const std::vector<uint32_t>& prim_idx, uint32_t node_idx, uint32_t transform_idx, const node_trs& trs = {});
         void set_mesh_morph_weights(uint32_t mesh_idx, const std::vector<float>& weights);
     };
 }; // namespace fi::gfx

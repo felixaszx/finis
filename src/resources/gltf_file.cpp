@@ -22,22 +22,22 @@ fi::res::gltf_file::gltf_file(const std::filesystem::path& path,
                               thp::task_thread_pool* th_pool)
 {
     fgltf::Parser parser;
-    auto data = fastgltf::GltfDataBuffer::FromPath(path);
-    if (data.error() != fastgltf::Error::None)
+    auto data = fgltf::GltfDataBuffer::FromPath(path);
+    if (data.error() != fgltf::Error::None)
     {
         throw std::runtime_error(std::format("Fail to load gltf {}", path.string()));
     }
 
     auto asset_in = parser.loadGltf(data.get(), path.parent_path(),
-                                    fastgltf::Options::LoadExternalBuffers |    //
-                                        fastgltf::Options::LoadExternalImages | //
-                                        fastgltf::Options::GenerateMeshIndices);
-    if (auto error = asset_in.error(); error != fastgltf::Error::None)
+                                    fgltf::Options::LoadExternalBuffers |    //
+                                        fgltf::Options::LoadExternalImages | //
+                                        fgltf::Options::GenerateMeshIndices);
+    if (auto error = asset_in.error(); error != fgltf::Error::None)
     {
         throw std::runtime_error(std::format("Fail to parse gltf {}", path.string()));
     }
 
-    if (auto error = fgltf::validate(asset_in.get()); error != fastgltf::Error::None)
+    if (auto error = fgltf::validate(asset_in.get()); error != fgltf::Error::None)
     {
         throw std::runtime_error(std::format("gltf {} is not valid", path.string()));
     }
@@ -58,10 +58,10 @@ fi::res::gltf_file::gltf_file(const std::filesystem::path& path,
 
             gltf_tex& g_tex = textures_.emplace_back();
             g_tex.name_ = std::format("{}__image({})", tex.name, img.name);
-            stbi_uc* pixels =
-                stbi_load_from_memory(util::castf<const stbi_uc*>(std::get<3>(buffer.data).bytes.data() + view.byteOffset),
-                                      view.byteLength, //
-                                      &g_tex.x_, &g_tex.y_, &g_tex.comp_, STBI_rgb_alpha);
+            stbi_uc* pixels = stbi_load_from_memory(
+                util::castf<const stbi_uc*>(std::get<3>(buffer.data).bytes.data() + view.byteOffset),
+                view.byteLength, //
+                &g_tex.x_, &g_tex.y_, &g_tex.comp_, STBI_rgb_alpha);
             g_tex.comp_ = 4;
             if (pixels)
             {
