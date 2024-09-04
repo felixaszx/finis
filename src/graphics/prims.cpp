@@ -255,7 +255,7 @@ void fi::gfx::prim_structure::process_nodes(const glm::mat4& transform)
     }
     while (node_iter != nodes_.end())
     {
-        tranforms_[node_iter->transform_idx_] = tranforms_[node_iter->parent_tr_]  //
+        tranforms_[node_iter->transform_idx_] = tranforms_[node_iter->parent_tr_]               //
                                                 * node_iter->t_ * node_iter->r_ * node_iter->s_ //
                                                 * node_iter->preset_;
     }
@@ -263,6 +263,11 @@ void fi::gfx::prim_structure::process_nodes(const glm::mat4& transform)
 
 void fi::gfx::prim_structure::add_mesh(const std::vector<uint32_t>& prim_idx, uint32_t node_idx, uint32_t transform_idx)
 {
+    if (data_.buffer_)
+    {
+        return;
+    }
+
     if (node_idx >= nodes_.size())
     {
         nodes_.resize(node_idx + 1);

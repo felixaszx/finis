@@ -178,7 +178,7 @@ namespace fi::gfx
 
         void load_data();
         void reload_data();
-        // transform will not be applied to nodes with parent
+        // transform will not be applied to nodes that has parent
         void process_nodes(const glm::mat4& transform = glm::identity<glm::mat4>());
         void add_mesh(const std::vector<uint32_t>& prim_idx, uint32_t node_idx, uint32_t transform_idx);
         void set_mesh_joints(uint32_t mesh_idx, const std::vector<uint32_t>& node_idxs);
