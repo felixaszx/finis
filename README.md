@@ -1,4 +1,4 @@
-# `Finis`
+# `finis`
 
 A renderer/game engine for personal study and testing of new graphics technology.
 Use MSYS2 and CMake for building.
@@ -31,9 +31,8 @@ The `finis_graphic` sublibrary is a vulkan wrapper completely independent from `
     - [mingw-w64-stb](https://packages.msys2.org/base/mingw-w64-stb)
     - [mingw-w64-simdjson](https://packages.msys2.org/base/mingw-w64-simdjson)
     - [mingw-w64-glfw](https://packages.msys2.org/base/mingw-w64-glfw)
-    - [mingw-w64-shaderc](https://packages.msys2.org/base/mingw-w64-shaderc)
-    - [mingw-w64-fltk](https://packages.msys2.org/base/mingw-w64-fltk)
-3. `fastgltf` and `BS::thread_pool` are included already
+    - [mingw-w64-spirv-cross](https://packages.msys2.org/base/mingw-w64-spirv-cross)
+3. [`fastgltf`](https://github.com/spnda/fastgltf), [`slang`](https://github.com/shader-slang/slang) and [`task-thread-pool'](https://github.com/alugowski/task-thread-pool) are included already
 4. Install CMake and Ninja in your MSYS2 enviroment
 5. Good to go (should be)
 
@@ -41,7 +40,7 @@ The `finis_graphic` sublibrary is a vulkan wrapper completely independent from `
 - `stb_image` Public Domain
 - `fastgltf` MIT
 - `GLFW` Zlib
-- `BS::thread_pool` MIT
-- `fltk`  [FLTK License](https://github.com/fltk/fltk?tab=License-1-ov-file#readme)
+- `task-thread-pool` MIT or other 2
 - `simdjson` Apache-2.0
-- `shaderc` Apache-2.0
+- `spirv-cross` Apache-2.0
+- `slang` MIT
