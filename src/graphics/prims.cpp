@@ -247,7 +247,7 @@ void fi::gfx::prim_structure::reload_data()
 void fi::gfx::prim_structure::process_nodes(const glm::mat4& transform)
 {
     auto node_iter = nodes_.begin();
-    while (node_iter != nodes_.end() && !(node_iter->parent_idx_ == -1))
+    while (node_iter != nodes_.end() && node_iter->parent_idx_ == -1)
     {
         tranforms_[node_iter->transform_idx_] = transform                                       //
                                                 * node_iter->t_ * node_iter->r_ * node_iter->s_ //
