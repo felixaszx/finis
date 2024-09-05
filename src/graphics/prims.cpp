@@ -115,7 +115,7 @@ void fi::gfx::primitives::free_staging_buffer()
 
 uint32_t fi::gfx::primitives::add_primitives(const std::vector<vk::DrawIndirectCommand>& draw_calls)
 {
-    curr_prim_ = prims_.count_;
+    end_primitives();
     if (prims_.capacity_ - prims_.count_ < draw_calls.size())
     {
         return prims_.capacity_ - prims_.count_;
