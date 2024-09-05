@@ -24,7 +24,6 @@ fi::gfx::context::context(int width, int height, const std::string& title)
 
     uint32_t glfw_ext_count = 0;
     const char** glfw_exts = glfwGetRequiredInstanceExtensions(&glfw_ext_count);
-    std::array<const char*, 1> VALIDATION_LAYERS{"VK_LAYER_KHRONOS_validation"};
     std::vector<const char*> instance_exts{glfw_exts, glfw_exts + glfw_ext_count};
 
     vk::ApplicationInfo app_info{};

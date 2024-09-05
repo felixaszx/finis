@@ -172,24 +172,30 @@ namespace fi::gfx
         void set_mesh_morph_weights(uint32_t mesh_idx, const std::vector<float>& weights);
     };
 
-    struct prim_joints : private graphcis_obj
+    struct prim_skins : private graphcis_obj
     {
         struct data
         {
             vk::Buffer buffer_{};
             vma::Allocation alloc_{};
+
             vk::DeviceAddress address_ = 0;
             uint64_t joints_offset_ = -1;
+            uint64_t inv_binds_offset_ = -1;
         } data_; // buffer 0
 
-        std::vector<uint32_t> joint_idxs_{}; // the size of primitive, idx in prim_structure transforms
-        std::vector<uint32_t> joints_{};     // joints
+        std::vector<uint32_t> skin_offsets_;
 
-        prim_joints(uint32_t prim_count);
-        ~prim_joints();
+        std::vector<uint32_t> mesh_skin_idxs_{}; // the size of mesh, access from prim_structure
+        std::vector<uint32_t> joints_{};         // index to node from prim_structure
+        std::vector<glm::mat4> inv_binds_{};     // for each joint
 
+        prim_skins(uint32_t mesh_count);
+        ~prim_skins();
+
+        void add_skin(const std::vector<uint32_t>& new_joints, const std::vector<glm::mat4>& new_inv_binds);
         void load_data(vk::CommandPool pool);
-        void set_joints(uint32_t prim_idx, const std::vector<uint32_t>& joints);
+        void set_skin(uint32_t mesh_idx, uint32_t skin_idx);
     };
 }; // namespace fi::gfx
 

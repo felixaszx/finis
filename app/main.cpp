@@ -26,10 +26,16 @@ int main(int argc, char** argv)
     res::gltf_file sparta("res/models/sparta.glb", &futs, &thread_pool);
     std::for_each(futs.begin(), futs.end(), [](std::future<void>& fut) { fut.wait(); });
     res::gltf_structure sparta_struct(sparta);
+    res::gltf_skins sparta_skin(sparta);
 
     gfx::context g(WIN_WIDTH, WIN_HEIGHT, "finis");
     gfx::swapchain sc;
     sc.create();
+
+    vk::CommandPoolCreateInfo pool_info{};
+    pool_info.flags = vk::CommandPoolCreateFlagBits::eResetCommandBuffer;
+    pool_info.queueFamilyIndex = g.queue_indices(gfx::context::GRAPHICS);
+    vk::CommandPool cmd_pool = g.device().createCommandPool(pool_info);
 
     gfx::primitives prims(20_mb, 2000);
     prims.generate_staging_buffer(10_kb);
@@ -37,10 +43,10 @@ int main(int argc, char** argv)
     gfx::prim_structure prim_stuct(10);
     prim_stuct.add_mesh({0, 1, 2, 3}, 0, 1);
 
-    vk::CommandPoolCreateInfo pool_info{};
-    pool_info.flags = vk::CommandPoolCreateFlagBits::eResetCommandBuffer;
-    pool_info.queueFamilyIndex = g.queue_indices(gfx::context::GRAPHICS);
-    vk::CommandPool cmd_pool = g.device().createCommandPool(pool_info);
+    gfx::prim_skins prim_skins(10);
+    prim_skins.add_skin(sparta_skin.skins_[0], sparta_skin.inv_binds_[0]);
+    prim_skins.set_skin(0, 0);
+    prim_skins.load_data(cmd_pool);
 
     gfx::shader pipeline_shader("res/shaders/test.slang");
     ext::loader pl_loader("ext_dls/pipelines.dll");

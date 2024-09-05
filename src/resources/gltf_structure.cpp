@@ -4,7 +4,7 @@ fi::res::gltf_structure::gltf_structure(const gltf_file& file)
 {
     nodes_.reserve(file.asset_->nodes.size());
     seq_mapping_.reserve(file.asset_->nodes.size());
-    mesh_nodes_.resize(file.asset_->meshes.size());
+    mesh_nodes_.resize(file.meshes_.size());
     weights_.resize(mesh_nodes_.size());
 
     for (const auto& node : file.asset_->nodes)
@@ -73,5 +73,38 @@ fi::res::gltf_structure::gltf_structure(const gltf_file& file)
     for (const auto& layer : node_layers)
     {
         seq_mapping_.insert(seq_mapping_.end(), layer.begin(), layer.end());
+    }
+}
+
+fi::res::gltf_skins::gltf_skins(const gltf_file& file)
+{
+    mesh_skin_idxs_.resize(file.meshes_.size(), -1);
+
+    for (const auto& node : file.asset_->nodes)
+    {
+        if (node.skinIndex && node.meshIndex)
+        {
+            mesh_skin_idxs_[*node.meshIndex] = *node.skinIndex;
+
+            if (skins_.size() <= *node.skinIndex)
+            {
+                const auto& skin = file.asset_->skins[*node.skinIndex];
+                skins_.resize(*node.skinIndex + 1);
+                skins_.back().insert(skins_.back().end(), skin.joints.begin(), skin.joints.end());
+                inv_binds_.resize(*node.skinIndex + 1);
+                inv_binds_.back().reserve(skin.joints.size());
+
+                if (skin.inverseBindMatrices)
+                {
+                    fgltf::iterateAccessor<glm::mat4>(*file.asset_.get(),
+                                                      file.asset_->accessors[*skin.inverseBindMatrices], //
+                                                      [&](const glm::mat4& mat) { inv_binds_.back().push_back(mat); });
+                }
+                else
+                {
+                    inv_binds_[*node.skinIndex].resize(skin.joints.size(), glm::identity<glm::mat4>());
+                }
+            }
+        }
     }
 }

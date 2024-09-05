@@ -221,11 +221,11 @@ void fi::gfx::prim_structure::load_data()
                                              .requiredFlags = vk::MemoryPropertyFlagBits::eHostCoherent};
         vma::AllocationInfo alloc{};
         auto allocated = allocator().createBuffer(buffer_info, alloc_info, alloc);
-        vk::BufferDeviceAddressInfo address_info{.buffer = data_.buffer_};
-        data_.uniforms_.address_ = device().getBufferAddress(address_info);
         data_.mapping_ = util::castr<std::byte*>(alloc.pMappedData);
         data_.buffer_ = allocated.first;
         data_.alloc_ = allocated.second;
+        vk::BufferDeviceAddressInfo address_info{.buffer = data_.buffer_};
+        data_.uniforms_.address_ = device().getBufferAddress(address_info);
 
         data_.uniforms_.meshes_offset_ = util::sizeof_arr(mesh_idxs_);
         data_.uniforms_.morph_weights_offset_ = data_.uniforms_.meshes_offset_ + util::sizeof_arr(meshes_);
@@ -315,38 +315,49 @@ void fi::gfx::node_trs::set_scale(const glm::vec3& scale)
     s_ = glm::scale(scale);
 }
 
-fi::gfx::prim_joints::prim_joints(uint32_t prim_count)
-    : joint_idxs_(prim_count, -1)
+fi::gfx::prim_skins::prim_skins(uint32_t mesh_count)
+    : mesh_skin_idxs_(mesh_count, -1)
 {
 }
 
-fi::gfx::prim_joints::~prim_joints()
+fi::gfx::prim_skins::~prim_skins()
 {
     if (data_.buffer_)
     {
+        allocator().destroyBuffer(data_.buffer_, data_.alloc_);
     }
 }
 
-void fi::gfx::prim_joints::load_data(vk::CommandPool pool)
+void fi::gfx::prim_skins::add_skin(const std::vector<uint32_t>& new_joints, const std::vector<glm::mat4>& new_inv_binds)
+{
+    skin_offsets_.emplace_back(joints_.size());
+    joints_.insert(joints_.end(), new_joints.begin(), new_joints.end());
+    inv_binds_.insert(inv_binds_.end(), new_inv_binds.begin(), new_inv_binds.end());
+}
+
+void fi::gfx::prim_skins::load_data(vk::CommandPool pool)
 {
     if (!data_.buffer_)
     {
-        vk::BufferCreateInfo buffer_info{.size = util::sizeof_arr(joint_idxs_) + util::sizeof_arr(joints_),
+        vk::BufferCreateInfo buffer_info{.size = util::sizeof_arr(mesh_skin_idxs_) //
+                                                 + util::sizeof_arr(joints_)       //
+                                                 + util::sizeof_arr(inv_binds_),
                                          .usage = vk::BufferUsageFlagBits::eStorageBuffer |
                                                   vk::BufferUsageFlagBits::eShaderDeviceAddress |
                                                   vk::BufferUsageFlagBits::eTransferDst};
         vma::AllocationCreateInfo alloc_info{.usage = vma::MemoryUsage::eAutoPreferDevice};
         vma::AllocationInfo alloc{};
         auto allocated = allocator().createBuffer(buffer_info, alloc_info, alloc);
-        vk::BufferDeviceAddressInfo address_info{.buffer = data_.buffer_};
-        data_.address_ = device().getBufferAddress(address_info);
         data_.buffer_ = allocated.first;
         data_.alloc_ = allocated.second;
-        data_.joints_offset_ = util::sizeof_arr(joint_idxs_);
+        data_.joints_offset_ = util::sizeof_arr(mesh_skin_idxs_);
+        data_.inv_binds_offset_ = data_.joints_offset_ + util::sizeof_arr(joints_);
+        vk::BufferDeviceAddressInfo address_info{.buffer = data_.buffer_};
+        data_.address_ = device().getBufferAddress(address_info);
 
         vk::BufferCreateInfo staging_info{.size = buffer_info.size,
                                           .usage = vk::BufferUsageFlagBits::eVertexBuffer |
-                                                   vk::BufferUsageFlagBits::eTransferDst};
+                                                   vk::BufferUsageFlagBits::eTransferSrc};
         vma::AllocationCreateInfo staging_allo_info{.flags = vma::AllocationCreateFlagBits::eHostAccessSequentialWrite |
                                                              vma::AllocationCreateFlagBits::eMapped,
                                                     .usage = vma::MemoryUsage::eAutoPreferHost,
@@ -354,9 +365,11 @@ void fi::gfx::prim_joints::load_data(vk::CommandPool pool)
         vma::AllocationInfo staging_alloc{};
         auto staging_allocated = allocator().createBuffer(staging_info, staging_allo_info, staging_alloc);
 
-        memcpy(staging_alloc.pMappedData, joint_idxs_.data(), util::sizeof_arr(joint_idxs_));
-        memcpy(util::castf<std::byte*>(staging_alloc.pMappedData) + data_.joints_offset_, //
-               joints_.data(), util::sizeof_arr(joint_idxs_));
+        memcpy(staging_alloc.pMappedData, mesh_skin_idxs_.data(), util::sizeof_arr(mesh_skin_idxs_));
+        memcpy(util::castf<std::byte*>(staging_alloc.pMappedData) + data_.joints_offset_, joints_.data(),
+               util::sizeof_arr(joints_));
+        memcpy(util::castf<std::byte*>(staging_alloc.pMappedData) + data_.inv_binds_offset_, inv_binds_.data(),
+               util::sizeof_arr(inv_binds_));
         allocator().flushAllocation(staging_allocated.second, 0, VK_WHOLE_SIZE);
 
         gfx::fence fence;
@@ -383,6 +396,10 @@ void fi::gfx::prim_joints::load_data(vk::CommandPool pool)
     }
 }
 
-void fi::gfx::prim_joints::set_joints(uint32_t prim_idx, const std::vector<uint32_t>& joints)
+void fi::gfx::prim_skins::set_skin(uint32_t mesh_idx, uint32_t skin_idx)
 {
+    if (!data_.buffer_)
+    {
+        mesh_skin_idxs_[mesh_idx] = skin_offsets_[skin_idx];
+    }
 }

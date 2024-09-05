@@ -19,8 +19,10 @@ namespace fi::res
 
     struct gltf_skins
     {
-        std::vector<std::vector<uint32_t>> joints_;
-        std::vector<uint32_t> mesh_joints_{}; // size of meshes
+        std::vector<uint32_t> mesh_skin_idxs_{}; // size of meshes, index by mesh idx
+        std::vector<std::vector<uint32_t>> skins_; // idx from mesh_joint_idx_
+        std::vector<std::vector<glm::mat4>> inv_binds_; // idx from mesh_joint_idx_
+
         gltf_skins(const gltf_file& file);
     };
 }; // namespace fi::res
