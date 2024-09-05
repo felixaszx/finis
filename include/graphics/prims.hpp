@@ -78,7 +78,7 @@ namespace fi::gfx
                                 const T& data,
                                 const std::vector<size_t>& offset_per_prim = {})
         {
-            if (sizeof_arr(data) == 0)
+            if (util::sizeof_arr(data) == 0)
             {
                 return;
             }
@@ -108,7 +108,7 @@ namespace fi::gfx
                              const std::vector<int64_t>& morph_count,
                              const std::vector<size_t>& offset_per_info = {})
         {
-            if (sizeof_arr(data) == 0)
+            if (util::sizeof_arr(data) == 0)
             {
                 return;
             }

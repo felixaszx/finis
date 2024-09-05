@@ -39,9 +39,13 @@ int main(int argc, char** argv)
 
     gfx::primitives prims(20_mb, 2000);
     prims.generate_staging_buffer(10_kb);
+    prims.add_primitives({{}});
+    prims.add_attribute_data(cmd_pool, gfx::prim_info::POSITON, std::vector<uint32_t>{1, 2, 3, 4});
+    prims.flush_staging_memory(cmd_pool);
 
     gfx::prim_structure prim_stuct(10);
     prim_stuct.add_mesh({0, 1, 2, 3}, 0, 1);
+    prim_stuct.load_data();
 
     gfx::prim_skins prim_skins(10);
     prim_skins.add_skin(sparta_skin.skins_[0], sparta_skin.inv_binds_[0]);
