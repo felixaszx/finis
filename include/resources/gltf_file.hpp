@@ -71,6 +71,10 @@ namespace fi::res
 
     struct gltf_file
     {
+      private:
+        size_t prim_count_ = 0;
+
+      public:
         std::string name_;
         std::unique_ptr<fgltf::Asset> asset_;
 
@@ -85,6 +89,8 @@ namespace fi::res
                   std::vector<std::future<void>>* futs,
                   thp::task_thread_pool* th_pool = nullptr);
         ~gltf_file() = default;
+
+        [[nodiscard]] size_t prim_count() const { return prim_count_; }
     };
 }; // namespace fi::res
 

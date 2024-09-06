@@ -1,13 +1,14 @@
 #include <cmath>
 #include <iostream>
 
-#include "extensions/loader.hpp"
+#include "extensions/dll.hpp"
 #include "graphics/graphics.hpp"
 #include "graphics/prims.hpp"
 #include "graphics/pipeline.hpp"
 #include "graphics/shader.hpp"
 #include "graphics/swapchain.hpp"
 #include "graphics/textures.hpp"
+#include "graphics/prim_res.hpp"
 #include "resources/gltf_file.hpp"
 #include "resources/gltf_structure.hpp"
 
@@ -21,46 +22,17 @@ int main(int argc, char** argv)
     const uint32_t WIN_WIDTH = 1920;
     const uint32_t WIN_HEIGHT = 1080;
 
-    thp::task_thread_pool thread_pool;
-
-    std::vector<std::future<void>> futs;
-    res::gltf_file sparta("res/models/sparta.glb", &futs, &thread_pool);
-    std::for_each(futs.begin(), futs.end(), [](std::future<void>& fut) { fut.wait(); });
-    res::gltf_structure sparta_struct(sparta);
-    res::gltf_skins sparta_skin(sparta);
-
     gfx::context g(WIN_WIDTH, WIN_HEIGHT, "finis");
     gfx::swapchain sc;
     sc.create();
+
+    ext::dll res0_dll("ext_dls/res0.dll");
+    auto res0 = res0_dll.load_unique<gfx::prim_res>();
 
     vk::CommandPoolCreateInfo pool_info{};
     pool_info.flags = vk::CommandPoolCreateFlagBits::eResetCommandBuffer;
     pool_info.queueFamilyIndex = g.queue_indices(gfx::context::GRAPHICS);
     vk::CommandPool cmd_pool = g.device().createCommandPool(pool_info);
-
-    gfx::primitives prims(20_mb, 2000);
-    prims.generate_staging_buffer(10_kb);
-    prims.add_primitives({{}});
-    prims.add_attribute_data(cmd_pool, gfx::prim_info::POSITON, std::vector<uint32_t>{1, 2, 3, 4});
-    prims.flush_staging_memory(cmd_pool);
-
-    gfx::prim_structure prim_stuct(10);
-    prim_stuct.add_mesh({0, 1, 2, 3}, 0, 1);
-    prim_stuct.load_data();
-
-    gfx::prim_skins prim_skins(10);
-    prim_skins.add_skin(sparta_skin.skins_[0], sparta_skin.inv_binds_[0]);
-    prim_skins.set_skin(0, 0);
-    prim_skins.load_data(cmd_pool);
-
-    gfx::tex_arr tex_arr;
-    tex_arr.add_sampler(sparta.samplers_[0]);
-    tex_arr.add_tex(cmd_pool, sparta.textures_[0].sampler_idx_, sparta.textures_[0].data_,
-                    sparta.textures_[0].get_extent(), sparta.textures_[0].get_levels());
-
-    gfx::shader pipeline_shader("res/shaders/test.slang");
-    ext::loader pl_loader("ext_dls/pipelines.dll");
-    auto pl0 = pl_loader.load_unique<gfx::gfx_pipeline>();
 
     vk::CommandBufferAllocateInfo cmd_alloc{};
     cmd_alloc.commandBufferCount = 1;

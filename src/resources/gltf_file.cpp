@@ -234,6 +234,7 @@ fi::res::gltf_file::gltf_file(const std::filesystem::path& path,
         size_t p = 0;
         for (const auto& prim : mesh.primitives)
         {
+            prim_count_++;
             gltf_prim* g_prim = &g_mesh.prims_.emplace_back();
             g_prim->mesh_ = m;
             g_prim->name_ = std::format("{}__prim({})", mesh.name, p);

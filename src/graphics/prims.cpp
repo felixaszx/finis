@@ -24,7 +24,7 @@ fi::gfx::primitives::primitives(vk::DeviceSize data_size_limit, uint32_t prim_li
     allocated = allocator().createBuffer(buffer_info, alloc_info);
     prims_.buffer_ = allocated.first;
     prims_.alloc_ = allocated.second;
-    address_info.buffer = data_.buffer_;
+    address_info.buffer = prims_.buffer_;
     addresses_.prim_buffer_ = device().getBufferAddress(address_info);
     draw_calls_.reserve(prim_limit);
     prim_infos_.reserve(prim_limit);
@@ -133,6 +133,7 @@ void fi::gfx::primitives::end_primitives()
 
 void fi::gfx::primitives::reload_draw_calls(vk::CommandPool pool)
 {
+    prims_.draw_calls_offset_ = util::sizeof_arr(prim_infos_);
     flush_staging_memory(pool);
     staging_span_.push_back(util::castr<const std::byte*>(prim_infos_.data()), util::sizeof_arr(prim_infos_));
     staging_span_.push_back(util::castr<const std::byte*>(draw_calls_.data()), util::sizeof_arr(draw_calls_));
@@ -180,7 +181,6 @@ void fi::gfx::primitives::reload_draw_calls(vk::CommandPool pool)
 
 vk::DeviceSize fi::gfx::primitives::write_staging_memory(const std::byte* data, vk::DeviceSize size)
 {
-    data_.curr_size_ += size;
     if (data_.curr_size_ > data_.capacity_ || size > staging_span_.capacity())
     {
         throw std::runtime_error("Not enought reserved memory");
@@ -190,6 +190,7 @@ vk::DeviceSize fi::gfx::primitives::write_staging_memory(const std::byte* data, 
     {
         return -1;
     }
+    data_.curr_size_ += size;
     staging_span_.push_back(data, size);
     staging_queue_.push(data_.curr_size_ - size);
     return data_.curr_size_ - size;
@@ -289,7 +290,7 @@ void fi::gfx::prim_structure::add_mesh(const std::vector<uint32_t>& prim_idx,
     {
         mesh_idxs_[p] = meshes_.size();
     }
-    meshes_.emplace_back().node_ = node_idx;
+    meshes_.emplace_back().node_ = transform_idx;
 }
 
 void fi::gfx::prim_structure::set_mesh_morph_weights(uint32_t mesh_idx, const std::vector<float>& weights)

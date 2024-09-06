@@ -89,6 +89,30 @@ namespace fi::util
         shared_ptr.reset(new_obj);
     }
 
+    template <typename T>
+    inline constexpr size_t to_b(T size)
+    {
+        return size;
+    }
+
+    template <typename T>
+    inline constexpr size_t to_kb(T size)
+    {
+        return 1024 * to_b(size);
+    }
+
+    template <typename T>
+    inline constexpr size_t to_mb(T size)
+    {
+        return 1024 * to_kb(size);
+    }
+
+    template <typename T>
+    inline constexpr size_t to_gb(T size)
+    {
+        return 1024 * to_mb(size);
+    }
+
     namespace literals
     {
         inline consteval size_t operator""_b(unsigned long long b)

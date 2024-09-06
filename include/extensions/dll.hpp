@@ -1,5 +1,5 @@
-#ifndef INCLUDE_EXT_LOADER_HPP
-#define INCLUDE_EXT_LOADER_HPP
+#ifndef EXTENSIONS_DLL_HPP
+#define EXTENSIONS_DLL_HPP
 
 #include <string>
 #include <filesystem>
@@ -9,13 +9,13 @@
 
 namespace fi::ext
 { // the loading extension must be wirtten as a function
-    class loader
+    class dll
     {
       private:
         boost::dll::shared_library dl_;
 
       public:
-        loader(const std::filesystem::path& dl_name);
+        dll(const std::filesystem::path& dl_name);
         [[nodiscard]] const bool valid() const;
 
         template <typename T>
@@ -44,4 +44,5 @@ namespace fi::ext
     };
 }; // namespace fi
 
-#endif // INCLUDE_EXT_LOADER_HPP
+
+#endif // EXTENSIONS_DLL_HPP

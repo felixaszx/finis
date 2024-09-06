@@ -28,7 +28,7 @@ namespace fi::gfx
 
             vk::Buffer buffer_{}; // buffer 1
             vma::Allocation alloc_{};
-            vk::DeviceSize draw_call_offset_ = -1;
+            vk::DeviceSize draw_calls_offset_ = -1;
         } prims_;
         uint32_t curr_prim_ = -1;
         std::vector<prim_info> prim_infos_{};
