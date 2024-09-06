@@ -1,6 +1,7 @@
 #include "graphics/prim_res.hpp"
 #include "resources/gltf_file.hpp"
 #include "resources/gltf_structure.hpp"
+#include "resources/gltf_anim.hpp"
 
 using namespace fi;
 using namespace fi::util::literals;
@@ -14,6 +15,7 @@ class loaded_res : public gfx::prim_res
 
     std::unique_ptr<res::gltf_structure> sparta_struct_;
     std::unique_ptr<res::gltf_skins> sparta_skin_;
+    std::unique_ptr<res::gltf_anim> sparta_anim0_;
 
   public:
     loaded_res()
@@ -29,6 +31,7 @@ class loaded_res : public gfx::prim_res
         std::for_each(futs.begin(), futs.end(), [](std::future<void>& fut) { fut.wait(); });
         util::make_unique2(sparta_struct_, sparta);
         util::make_unique2(sparta_skin_, sparta);
+        util::make_unique2(sparta_anim0_, sparta);
 
         util::make_unique2(prim_skins_, sparta.meshes_.size());
         for (uint32_t s = 0; s < sparta_skin_->skins_.size(); s++)
@@ -87,6 +90,22 @@ class loaded_res : public gfx::prim_res
         prim_skins_->load_data(cmd_pool);
         primitives_->reload_draw_calls(cmd_pool);
         primitives_->free_staging_buffer();
+
+        for (uint32_t n = 0; n < sparta_anim0_->frames_.size(); n++)
+        {
+            if (sparta_anim0_->frames_[n].empty())
+            {
+                continue;
+            }
+            gfx::node_trs& node = prim_struct_->nodes_[sparta_struct_->seq_mapping_[n]];
+            sparta_anim0_->frames_[n].t_out_ = &node.t_;
+            sparta_anim0_->frames_[n].r_out_ = &node.r_;
+            sparta_anim0_->frames_[n].s_out_ = &node.s_;
+            if (!sparta_anim0_->frames_[n].w_.empty())
+            {
+                sparta_anim0_->frames_[n].w_out_ = &prim_struct_->morph_weights_[node.morph_weights_];
+            }
+        }
 
         thread_pool.wait_for_tasks();
         device().destroyCommandPool(cmd_pool);

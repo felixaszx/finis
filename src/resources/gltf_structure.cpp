@@ -20,7 +20,7 @@ fi::res::gltf_structure::gltf_structure(const gltf_file& file)
         {
             const auto& trs = std::get<fgltf::TRS>(node.transform);
             g_node.t_ = glm::translate(glm::vec3(trs.translation.x(), trs.translation.y(), trs.translation.z()));
-            g_node.r_ = glm::mat4(glm::quat(trs.rotation.w(), trs.scale.x(), trs.scale.y(), trs.scale.z()));
+            g_node.r_ = glm::mat4(glm::quat(trs.scale.x(), trs.scale.y(), trs.scale.z(), trs.rotation.w()));
             g_node.s_ = glm::scale(glm::vec3(trs.scale.x(), trs.scale.y(), trs.scale.z()));
         }
         g_node.name_ = node.name;
