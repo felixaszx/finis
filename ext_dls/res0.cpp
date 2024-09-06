@@ -12,6 +12,9 @@ class loaded_res : public gfx::prim_res
     std::unique_ptr<gfx::prim_skins> prim_skins_{};
     std::unique_ptr<gfx::tex_arr> tex_arr_{};
 
+    std::unique_ptr<res::gltf_structure> sparta_struct_;
+    std::unique_ptr<res::gltf_skins> sparta_skin_;
+
   public:
     loaded_res()
     {
@@ -24,13 +27,13 @@ class loaded_res : public gfx::prim_res
         std::vector<std::future<void>> futs;
         res::gltf_file sparta("res/models/sparta.glb", &futs, &thread_pool);
         std::for_each(futs.begin(), futs.end(), [](std::future<void>& fut) { fut.wait(); });
-        res::gltf_structure sparta_struct(sparta);
-        res::gltf_skins sparta_skin(sparta);
+        util::make_unique2(sparta_struct_, sparta);
+        util::make_unique2(sparta_skin_, sparta);
 
         util::make_unique2(prim_skins_, sparta.meshes_.size());
-        for (uint32_t s = 0; s < sparta_skin.skins_.size(); s++)
+        for (uint32_t s = 0; s < sparta_skin_->skins_.size(); s++)
         {
-            prim_skins_->add_skin(sparta_skin.skins_[s], sparta_skin.inv_binds_[s]);
+            prim_skins_->add_skin(sparta_skin_->skins_[s], sparta_skin_->inv_binds_[s]);
         }
 
         util::make_unique2(tex_arr_);
@@ -45,8 +48,8 @@ class loaded_res : public gfx::prim_res
 
         util::make_unique2(prim_struct_, sparta.prim_count());
 
-        util::make_unique2(primitives_, 20_mb, 2000);
-        primitives_->generate_staging_buffer(1_mb);
+        util::make_unique2(primitives_, 2869976_b, 10);
+        primitives_->generate_staging_buffer(2869976_b);
         for (uint32_t m = 0; m < sparta.meshes_.size(); m++)
         {
             std::vector<uint32_t> prim_idxs(sparta.meshes_[m].prims_.size());
@@ -65,13 +68,13 @@ class loaded_res : public gfx::prim_res
                 primitives_->add_attribute_data(cmd_pool, gfx::prim_info::INDEX, prim.idxs_);
             }
 
-            uint32_t node_idx = sparta_struct.mesh_nodes_[m];
-            prim_struct_->add_mesh(prim_idxs,                            //
-                                   sparta_struct.seq_mapping_[node_idx], //
-                                   node_idx,                             //
-                                   sparta_struct.nodes_[node_idx]);
+            uint32_t node_idx = sparta_struct_->mesh_nodes_[m];
+            prim_struct_->add_mesh(prim_idxs,                              //
+                                   sparta_struct_->seq_mapping_[node_idx], //
+                                   node_idx,                               //
+                                   sparta_struct_->nodes_[node_idx]);
 
-            uint32_t skin_idx = sparta_skin.mesh_skin_idxs_[m];
+            uint32_t skin_idx = sparta_skin_->mesh_skin_idxs_[m];
             if (skin_idx != -1)
             {
                 prim_skins_->set_skin(m, skin_idx);
