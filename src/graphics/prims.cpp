@@ -97,7 +97,7 @@ void fi::gfx::primitives::flush_staging_memory(vk::CommandPool pool)
     staging_span_.reset();
     if (device().waitForFences(fence, true, std::numeric_limits<uint64_t>::max()) != vk::Result::eSuccess)
     {
-        throw std::runtime_error("Memory copy over time.");
+        throw std::runtime_error("Memory copy fail");
     }
     device().freeCommandBuffers(pool, cmd);
 }
@@ -173,7 +173,7 @@ void fi::gfx::primitives::reload_draw_calls(vk::CommandPool pool)
     staging_span_.reset();
     if (device().waitForFences(fence, true, std::numeric_limits<uint64_t>::max()) != vk::Result::eSuccess)
     {
-        throw std::runtime_error("Memory copy over time.");
+        throw std::runtime_error("Memory copy fail");
     }
     device().freeCommandBuffers(pool, cmd);
 }
@@ -358,10 +358,10 @@ void fi::gfx::prim_skins::load_data(vk::CommandPool pool)
         vk::BufferCreateInfo staging_info{.size = buffer_info.size,
                                           .usage = vk::BufferUsageFlagBits::eVertexBuffer |
                                                    vk::BufferUsageFlagBits::eTransferSrc};
-        vma::AllocationCreateInfo staging_allo_info{.flags = vma::AllocationCreateFlagBits::eHostAccessSequentialWrite |
-                                                             vma::AllocationCreateFlagBits::eMapped,
-                                                    .usage = vma::MemoryUsage::eAutoPreferHost,
-                                                    .requiredFlags = vk::MemoryPropertyFlagBits::eHostCached};
+        vma::AllocationCreateInfo staging_allo_info = {
+            .flags = vma::AllocationCreateFlagBits::eHostAccessSequentialWrite | vma::AllocationCreateFlagBits::eMapped,
+            .usage = vma::MemoryUsage::eAutoPreferHost,
+            .requiredFlags = vk::MemoryPropertyFlagBits::eHostCached};
         vma::AllocationInfo staging_alloc{};
         auto staging_allocated = allocator().createBuffer(staging_info, staging_allo_info, staging_alloc);
 
@@ -389,7 +389,7 @@ void fi::gfx::prim_skins::load_data(vk::CommandPool pool)
         queues(GRAPHICS).submit2(submit2, fence);
         if (device().waitForFences(fence, true, std::numeric_limits<uint64_t>::max()) != vk::Result::eSuccess)
         {
-            throw std::runtime_error("Memory copy over time.");
+            throw std::runtime_error("Memory copy fail");
         }
         device().freeCommandBuffers(pool, cmd);
         allocator().destroyBuffer(staging_allocated.first, staging_allocated.second);

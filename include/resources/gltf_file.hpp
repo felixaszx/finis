@@ -4,6 +4,7 @@
 #include <format>
 
 #include <stb/stb_image.h>
+#include <vulkan/vulkan.hpp>
 
 #include "tools.hpp"
 #include "extensions/cpp_defines.hpp"
@@ -36,7 +37,12 @@ namespace fi::res
         int x_;
         int y_;
         int comp_;
+        bool mipmapped_ = false;
+        uint32_t sampler_idx_;
         std::vector<std::byte> data_{}; // decoded
+
+        vk::Extent3D get_extent() { return {util::casts<uint32_t>(x_), util::casts<uint32_t>(y_), 1}; };
+        uint32_t get_levels() { return mipmapped_ ? std::floor(std::log2(std::max(x_, y_))) + 1 : 1; }
     };
 
     struct gltf_prim
@@ -70,6 +76,7 @@ namespace fi::res
 
         std::vector<gltf_mesh> meshes_{};
         std::vector<gltf_tex> textures_{};
+        std::vector<vk::SamplerCreateInfo> samplers_{};
 
         std::vector<std::string> mat_names_{};
         std::vector<gltf_mat> materials_{};

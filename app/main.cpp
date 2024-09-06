@@ -7,6 +7,7 @@
 #include "graphics/pipeline.hpp"
 #include "graphics/shader.hpp"
 #include "graphics/swapchain.hpp"
+#include "graphics/textures.hpp"
 #include "resources/gltf_file.hpp"
 #include "resources/gltf_structure.hpp"
 
@@ -51,6 +52,11 @@ int main(int argc, char** argv)
     prim_skins.add_skin(sparta_skin.skins_[0], sparta_skin.inv_binds_[0]);
     prim_skins.set_skin(0, 0);
     prim_skins.load_data(cmd_pool);
+
+    gfx::tex_arr tex_arr;
+    tex_arr.add_sampler(sparta.samplers_[0]);
+    tex_arr.add_tex(cmd_pool, sparta.textures_[0].sampler_idx_, sparta.textures_[0].data_,
+                    sparta.textures_[0].get_extent(), sparta.textures_[0].get_levels());
 
     gfx::shader pipeline_shader("res/shaders/test.slang");
     ext::loader pl_loader("ext_dls/pipelines.dll");

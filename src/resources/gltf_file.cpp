@@ -17,6 +17,22 @@ void check_attribute(const std::string& name,
     }
 };
 
+static auto check_mipmapped = [](fastgltf::Filter filter)
+{
+    switch (filter)
+    {
+        case fastgltf::Filter::NearestMipMapLinear:
+        case fastgltf::Filter::LinearMipMapLinear:
+        case fastgltf::Filter::NearestMipMapNearest:
+        case fastgltf::Filter::LinearMipMapNearest:
+            return 1000.0f;
+        case fastgltf::Filter::Nearest:
+        case fastgltf::Filter::Linear:
+            return 0.0f;
+    }
+    return 0.0f;
+};
+
 fi::res::gltf_file::gltf_file(const std::filesystem::path& path,
                               std::vector<std::future<void>>* futs,
                               thp::task_thread_pool* th_pool)
@@ -44,8 +60,70 @@ fi::res::gltf_file::gltf_file(const std::filesystem::path& path,
     util::make_unique2(asset_, std::move(asset_in.get()));
     name_ = path.filename().generic_string();
 
-    std::unique_ptr<gltf_mat> matt;
-    util::make_unique2(matt, new gltf_mat);
+    samplers_.reserve(asset_->samplers.size());
+    for (const fgltf::Sampler& sampler : asset_->samplers)
+    {
+        vk::SamplerCreateInfo& info = samplers_.emplace_back();
+
+        auto extract_filter = [](fgltf::Filter filter)
+        {
+            switch (filter)
+            {
+                case fastgltf::Filter::NearestMipMapNearest:
+                case fastgltf::Filter::LinearMipMapNearest:
+                case fastgltf::Filter::Nearest:
+                    return vk::Filter::eNearest;
+                case fastgltf::Filter::NearestMipMapLinear:
+                case fastgltf::Filter::LinearMipMapLinear:
+                case fastgltf::Filter::Linear:
+                    return vk::Filter::eLinear;
+            }
+            return vk::Filter::eLinear;
+        };
+
+        auto extract_mipmap_mode = [](fgltf::Filter filter)
+        {
+            switch (filter)
+            {
+                case fastgltf::Filter::NearestMipMapLinear:
+                case fastgltf::Filter::NearestMipMapNearest:
+                    return vk::SamplerMipmapMode::eNearest;
+                case fastgltf::Filter::Nearest:
+                case fastgltf::Filter::Linear:
+                case fastgltf::Filter::LinearMipMapLinear:
+                case fastgltf::Filter::LinearMipMapNearest:
+                    return vk::SamplerMipmapMode::eLinear;
+            }
+            return vk::SamplerMipmapMode::eLinear;
+        };
+
+        auto extract_wrap = [](fgltf::Wrap wrap)
+        {
+            switch (wrap)
+            {
+                case fastgltf::Wrap::ClampToEdge:
+                    return vk::SamplerAddressMode::eClampToEdge;
+                case fastgltf::Wrap::MirroredRepeat:
+                    return vk::SamplerAddressMode::eMirroredRepeat;
+                case fastgltf::Wrap::Repeat:
+                    return vk::SamplerAddressMode::eRepeat;
+            }
+            return vk::SamplerAddressMode::eRepeat;
+        };
+
+        const fgltf::Filter filter = fgltf::Filter::Linear;
+        info.addressModeU = extract_wrap(sampler.wrapS);
+        info.addressModeV = extract_wrap(sampler.wrapT);
+        info.addressModeW = vk::SamplerAddressMode::eRepeat;
+        info.mipmapMode = extract_mipmap_mode(sampler.minFilter.value_or(filter));
+        info.minFilter = extract_filter(sampler.minFilter.value_or(filter));
+        info.magFilter = extract_filter(sampler.magFilter.value_or(filter));
+        info.borderColor = vk::BorderColor::eIntOpaqueBlack;
+        info.anisotropyEnable = true;
+        info.maxAnisotropy = 4.0f;
+        info.minLod = 0.0f;
+        info.maxLod = check_mipmapped(sampler.minFilter.value_or(filter));
+    }
 
     auto load_tex_func = [&]()
     {
@@ -63,6 +141,11 @@ fi::res::gltf_file::gltf_file(const std::filesystem::path& path,
                 view.byteLength, //
                 &g_tex.x_, &g_tex.y_, &g_tex.comp_, STBI_rgb_alpha);
             g_tex.comp_ = 4;
+            g_tex.sampler_idx_ = *tex.samplerIndex;
+            g_tex.mipmapped_ = check_mipmapped(asset_
+                                                   ->samplers[g_tex.sampler_idx_]              //
+                                                   .minFilter.value_or(fgltf::Filter::Linear)) //
+                               == 1000.0f;
             if (pixels)
             {
                 g_tex.data_.resize(g_tex.x_ * g_tex.y_ * g_tex.comp_);
