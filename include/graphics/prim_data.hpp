@@ -144,6 +144,20 @@ namespace fi::gfx
 
         uint32_t sheen_color_ = -1;
         uint32_t sheen_roughness_ = -1;
+
+        void add_offset_to_tex(uint32_t offset)
+        {
+            color_ += offset;
+            metallic_roughness_ += offset;
+            normal_ += offset;
+            emissive_ += offset;
+            occlusion_ += offset;
+            anisotropy_ += offset;
+            specular_ += offset;
+            spec_color_ += offset;
+            sheen_color_ += offset;
+            sheen_roughness_ += offset;
+        }
     };
 
     struct node_trs
@@ -163,7 +177,6 @@ namespace fi::gfx
         void set_rotation(const glm::quat& rotation);
         void set_scale(const glm::vec3& scale);
     };
-
 }; // namespace fi::gfx
 
 #endif // GRAPHICS_PRIM_DATA_HPP
