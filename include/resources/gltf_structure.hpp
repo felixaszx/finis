@@ -11,8 +11,8 @@ namespace fi::res
         std::vector<gfx::node_trs> nodes_{};            // not update sequentially
         std::vector<std::vector<uint32_t>> children_{}; // not update sequentially
         std::vector<uint32_t> seq_mapping_{};           // update sequentially
-        std::vector<std::vector<float>> weights_{};
         std::vector<uint32_t> mesh_nodes_{}; // size of meshes
+        std::vector<std::vector<float>> weights_{};
 
         gltf_structure(const gltf_file& file);
     };

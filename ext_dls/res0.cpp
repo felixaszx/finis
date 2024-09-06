@@ -79,6 +79,7 @@ class loaded_res : public gfx::prim_res
                                    sparta_struct_->seq_mapping_[node_idx], //
                                    node_idx,                               //
                                    sparta_struct_->nodes_[node_idx]);
+            prim_struct_->set_mesh_morph_weights(m, sparta_struct_->weights_[m]);
 
             uint32_t skin_idx = sparta_skin_->mesh_skin_idxs_[m];
             if (skin_idx != -1)

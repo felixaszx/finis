@@ -5,16 +5,17 @@
 
 namespace fi::res
 {
+    // all time expressed in ms
     struct gltf_frame // linear interporlation only
     {
-        std::vector<float> time_t_{};
+        std::vector<size_t> time_t_{};
         std::vector<glm::vec3> t_{};
-        std::vector<float> time_r_{};
+        std::vector<size_t> time_r_{};
         std::vector<glm::quat> r_{};
-        std::vector<float> time_s_{};
+        std::vector<size_t> time_s_{};
         std::vector<glm::vec3> s_{};
 
-        std::vector<float> time_w_{};
+        std::vector<size_t> time_w_{};
         uint32_t w_count_ = 0;
         std::vector<float> w_{};
 
@@ -23,7 +24,7 @@ namespace fi::res
         glm::mat4* s_out_ = nullptr;
         float* w_out_ = nullptr;
 
-        void sample_kframe(float time_p);
+        void sample_kframe(size_t time_p);
         bool empty() { return time_t_.empty() && time_r_.empty() && time_s_.empty() && time_w_.empty(); }
     };
 
