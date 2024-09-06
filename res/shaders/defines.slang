@@ -22,9 +22,9 @@ public struct morph_info
     public uint64_t normal_;   // vec3[]
     public uint64_t tangent_;  // vec4[]
 
-    public uint64_t position_count_ = 0; // scalar
-    public uint64_t normal_count_ = 0;   // scalar
-    public uint64_t tangent_count_ = 0;  // scalar
+    public uint32_t position_count_ = 0; // scalar
+    public uint32_t normal_count_ = 0;   // scalar
+    public uint32_t tangent_count_ = 0;  // scalar
 };
 
 public struct mesh_info

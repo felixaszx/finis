@@ -183,6 +183,7 @@ vk::DeviceSize fi::gfx::primitives::write_staging_memory(const std::byte* data, 
 {
     if (data_.curr_size_ > data_.capacity_ || size > staging_span_.capacity())
     {
+        std::cout << staging_span_.capacity();
         throw std::runtime_error("Not enought reserved memory");
     }
 

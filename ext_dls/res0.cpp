@@ -48,8 +48,8 @@ class loaded_res : public gfx::prim_res
 
         util::make_unique2(prim_struct_, sparta.prim_count());
 
-        util::make_unique2(primitives_, 2869976_b, 10);
-        primitives_->generate_staging_buffer(2869976_b);
+        util::make_unique2(primitives_, 2871216_b, 10);
+        primitives_->generate_staging_buffer(2871216_b);
         for (uint32_t m = 0; m < sparta.meshes_.size(); m++)
         {
             std::vector<uint32_t> prim_idxs(sparta.meshes_[m].prims_.size());
@@ -66,6 +66,9 @@ class loaded_res : public gfx::prim_res
                 primitives_->add_attribute_data(cmd_pool, gfx::prim_info::JOINTS, prim.joints_);
                 primitives_->add_attribute_data(cmd_pool, gfx::prim_info::WEIGHTS, prim.weights_);
                 primitives_->add_attribute_data(cmd_pool, gfx::prim_info::INDEX, prim.idxs_);
+
+                std::array<gfx::mat_info, 1> mats = {sparta.materials_[prim.material_]};
+                primitives_->add_attribute_data(cmd_pool, gfx::prim_info::MATERIAL, mats);
             }
 
             uint32_t node_idx = sparta_struct_->mesh_nodes_[m];

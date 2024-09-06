@@ -3,7 +3,6 @@
 fi::gfx::tex_arr::tex_arr()
 {
     vk::FenceCreateInfo fence_info{};
-    fence_info.flags = vk::FenceCreateFlagBits::eSignaled;
     fence_ = device().createFence(fence_info);
 }
 

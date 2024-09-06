@@ -89,9 +89,9 @@ namespace fi::gfx
         uint64_t normal_ = -1;   // vec3[]
         uint64_t tangent_ = -1;  // vec4[]
 
-        uint64_t position_count_ = 0; // scalar
-        uint64_t normal_count_ = 0;   // scalar
-        uint64_t tangent_count_ = 0;  // scalar
+        uint32_t position_count_ = 0; // scalar
+        uint32_t normal_count_ = 0;   // scalar
+        uint32_t tangent_count_ = 0;  // scalar
 
         uint64_t& set_attrib(attrib attrib, uint64_t count)
         {
