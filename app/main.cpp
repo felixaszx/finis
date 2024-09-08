@@ -19,6 +19,7 @@ int main(int argc, char** argv)
     using namespace util::literals;
     using namespace std::chrono_literals;
 
+    util::err("test");
     const uint32_t WIN_WIDTH = 1920;
     const uint32_t WIN_HEIGHT = 1080;
 
@@ -26,7 +27,7 @@ int main(int argc, char** argv)
     gfx::swapchain sc;
     sc.create();
 
-    ext::dll res0_dll("ext_dls/res0.dll");
+    ext::dll res0_dll("exe/res0.dll");
     auto res0 = res0_dll.load_unique<gfx::prim_res>();
 
     vk::CommandPoolCreateInfo pool_info{};

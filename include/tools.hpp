@@ -11,10 +11,12 @@
 #ifndef INCLUDE_TOOLS_HPP
 #define INCLUDE_TOOLS_HPP
 
+#include <iostream>
 #include <vector>
 #include <string>
 #include <memory>
 #include <chrono>
+#include <source_location>
 
 #define VULKAN_HPP_NO_CONSTRUCTORS
 #include <vulkan/vulkan.hpp>
@@ -144,6 +146,43 @@ namespace fi::util
             return 1024_mb * gb;
         }
     }; // namespace literals
+}; // namespace fi::util
+
+namespace fi::util
+{
+#ifdef NDEBUG
+    template <typename T>
+    inline void log(const T& msg)
+    {
+    }
+
+    template <typename T>
+    inline void err(const T& msg)
+    {
+    }
+#else
+    template <typename T>
+    inline void log(const T& msg, const std::source_location location = std::source_location::current())
+    {
+        std::clog << std::format("[{}] [{}] (ln {}, col {}):\n{}\n", //
+                                 location.file_name(),               //
+                                 location.function_name(),           //
+                                 location.line(),                    //
+                                 location.column(),                  //
+                                 msg);
+    }
+
+    template <typename T>
+    inline void err(const T& msg, const std::source_location location = std::source_location::current())
+    {
+        std::cerr << std::format("[{}] [{}] (ln {}, col {}):\n{}\n", //
+                                 location.file_name(),               //
+                                 location.function_name(),           //
+                                 location.line(),                    //
+                                 location.column(),                  //
+                                 msg);
+    }
+#endif
 }; // namespace fi::util
 
 #endif // INCLUDE_TOOLS_HPP
