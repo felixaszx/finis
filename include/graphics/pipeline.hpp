@@ -7,13 +7,15 @@
 
 namespace fi::gfx
 {
-    struct proxy_pipeline : public ext::base
+    struct proxy_pipeline : public ext::base, //
+                            protected graphcis_obj
     {
         virtual vk::Pipeline get_pipeline() = 0;
         virtual vk::PipelineLayout get_layout() = 0;
     };
 
-    struct gfx_pipeline : public ext::base
+    struct gfx_pipeline : public ext::base, //
+                          protected graphcis_obj
     {
         vk::PipelineLayout layout_{};
         vk::PipelineRenderingCreateInfo atchms_{};
@@ -31,7 +33,8 @@ namespace fi::gfx
         virtual vk::PipelineLayout get_layout() = 0;
     };
 
-    struct com_pipeline : public ext::base
+    struct cmp_pipeline : public ext::base, //
+                          protected graphcis_obj
     {
         virtual vk::Pipeline get_pipeline() = 0;
         virtual vk::PipelineLayout get_layout() = 0;

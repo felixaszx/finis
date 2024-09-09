@@ -7,7 +7,8 @@
 
 namespace fi::gfx
 {
-    struct prim_res : public ext::base, protected graphcis_obj
+    struct prim_res : public ext::base, //
+                      protected graphcis_obj
     {
         virtual gfx::primitives* get_primitives() = 0;
         virtual gfx::prim_structure* get_prim_structure() = 0;
