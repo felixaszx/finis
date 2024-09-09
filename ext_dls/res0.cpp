@@ -5,9 +5,8 @@
 
 using namespace fi;
 using namespace fi::util::literals;
-class loaded_res : public gfx::prim_res
+struct loaded_res : public gfx::prim_res
 {
-  private:
     std::unique_ptr<gfx::primitives> primitives_{};
     std::unique_ptr<gfx::prim_structure> prim_struct_{};
     std::unique_ptr<gfx::prim_skins> prim_skins_{};
@@ -17,7 +16,6 @@ class loaded_res : public gfx::prim_res
     std::unique_ptr<res::gltf_skins> sparta_skin_;
     std::unique_ptr<res::gltf_anim> sparta_anim0_;
 
-  public:
     loaded_res()
     {
         thp::task_thread_pool thread_pool;
@@ -112,7 +110,7 @@ class loaded_res : public gfx::prim_res
         device().destroyCommandPool(cmd_pool);
     }
 
-    ~loaded_res() {}
+    ~loaded_res() override = default;
 
     gfx::primitives* get_primitives() override { return primitives_.get(); }
     gfx::prim_structure* get_prim_structure() override { return prim_struct_.get(); }

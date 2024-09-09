@@ -25,8 +25,7 @@ namespace fi::mgr
         std::vector<size_t> pkg_idxs_{};
     };
 
-    struct render : public ext::base, //
-                    protected gfx::graphcis_obj
+    struct render : protected gfx::graphcis_obj
     {
       private:
         virtual void construct_derived() = 0;
@@ -36,6 +35,8 @@ namespace fi::mgr
 
         std::vector<render_pkg> pkgs_;
         std::vector<pipeline> pipelines_; // always excute in order
+
+        virtual ~render() = default;
 
         virtual std::function<bool()> get_frame_func() = 0;
 

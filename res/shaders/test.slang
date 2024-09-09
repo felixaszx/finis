@@ -36,16 +36,23 @@ struct prim_struc_ptrs
     uint64_t mesh_idx_offset_;
     uint64_t meshes_offset_;
     uint64_t morph_weights_offset_;
-    uint64_t tranforms_offset_;
-    uint64_t joint_idxs_offset_;
+    uint64_t tranforms_offset_ = 0;
+}
+
+struct prim_skin_ptrs
+{
+    byte* address_;
+    uint64_t joints_offset_;
+    uint64_t inv_binds_offset_;
 }
 
 ConstantBuffer<prim_info_ptrs> PRIMS;
 ConstantBuffer<prim_struc_ptrs> PRIM_STRUCTS;
+ConstantBuffer<prim_skin_ptrs> PRIM_SKINS;
 
 [shader("vertex")]
 vert_stage vertex_main(uint idx_id: SV_VertexID, //
-                      uint instance_id: SV_InstanceID)
+                       uint instance_id: SV_InstanceID)
 {
     prim_info prim_info = ((prim_info*)PRIMS.prims_)[get_draw_idx()];
     uint mesh_idx = ((uint*)(PRIM_STRUCTS.address_ + PRIM_STRUCTS.mesh_idx_offset_))[get_draw_idx()];
@@ -94,7 +101,7 @@ vert_stage vertex_main(uint idx_id: SV_VertexID, //
     }
 
     vert_stage vs;
-    vs.POSITION.xyz = position;
+    vs.POSITION.xyz = { mesh_info.node_, idx, PRIM_SKINS.joints_offset_ };
     return vs;
 }
 
@@ -102,6 +109,7 @@ vert_stage vertex_main(uint idx_id: SV_VertexID, //
 frag_stage fragment_main(vert_output vs: vert_output)
 {
     frag_stage fs;
-    fs.POSITION = vs.position_;
+    fs.POSITION = vs.position_ * vs.texcoord_.x * vs.prim_idx_;
+    fs.NORMAL.xyz = vs.normal_ * vs.tangent_.x;
     return fs;
 }

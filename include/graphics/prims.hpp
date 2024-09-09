@@ -180,8 +180,8 @@ namespace fi::gfx
             vma::Allocation alloc_{};
 
             vk::DeviceAddress address_ = 0;
-            uint64_t joints_offset_ = -1;
-            uint64_t inv_binds_offset_ = -1;
+            vk::DeviceSize joints_offset_ = -1;
+            vk::DeviceSize inv_binds_offset_ = -1;
         } data_; // buffer 0
 
         std::vector<uint32_t> skin_offsets_;
