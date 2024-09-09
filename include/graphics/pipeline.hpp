@@ -10,14 +10,12 @@ namespace fi::gfx
     struct proxy_pipeline : public ext::base, //
                             protected graphcis_obj
     {
-        virtual vk::Pipeline get_pipeline() = 0;
-        virtual vk::PipelineLayout get_layout() = 0;
+        vk::Pipeline pipeline_{};
+        vk::PipelineLayout layout_{};
     };
 
-    struct gfx_pipeline : public ext::base, //
-                          protected graphcis_obj
+    struct gfx_pipeline : public proxy_pipeline
     {
-        vk::PipelineLayout layout_{};
         vk::PipelineRenderingCreateInfo atchms_{};
         vk::PipelineVertexInputStateCreateInfo vtx_input_{};
         vk::PipelineInputAssemblyStateCreateInfo input_asm_{};
@@ -28,16 +26,10 @@ namespace fi::gfx
         vk::PipelineDepthStencilStateCreateInfo depth_stencil_{};
         vk::PipelineColorBlendStateCreateInfo color_blend_{};
         vk::PipelineDynamicStateCreateInfo dynamic_state_{};
-
-        virtual vk::Pipeline get_pipeline() = 0;
-        virtual vk::PipelineLayout get_layout() = 0;
     };
 
-    struct cmp_pipeline : public ext::base, //
-                          protected graphcis_obj
+    struct cmp_pipeline : public proxy_pipeline
     {
-        virtual vk::Pipeline get_pipeline() = 0;
-        virtual vk::PipelineLayout get_layout() = 0;
     };
 }; // namespace fi::gfx
 
