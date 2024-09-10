@@ -4,7 +4,7 @@
 #include <queue>
 #include <cstring>
 
-#include <vulkan/vulkan.hpp>
+#include "tools.hpp"
 
 namespace fi::gfx
 {

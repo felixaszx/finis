@@ -16,7 +16,7 @@
 namespace fi::gfx
 {
     struct swapchain : public vk::SwapchainKHR, //
-                      private graphcis_obj
+                       private graphcis_obj
     {
       private:
         uint32_t curr_idx_ = 0;
@@ -36,9 +36,10 @@ namespace fi::gfx
         void create(const vk::Extent2D& extent);
         void destory();
 
-        uint32_t aquire_next_image(vk::Semaphore sem = nullptr,
-                                   vk::Fence fence = nullptr,
-                                   uint64_t timeout = std::numeric_limits<uint64_t>::max());
+        vk::Result aquire_next_image(uint32_t& image_idx,
+                                     vk::Semaphore sem = nullptr,
+                                     vk::Fence fence = nullptr,
+                                     uint64_t timeout = std::numeric_limits<uint64_t>::max());
         vk::Result present(const vk::ArrayProxyNoTemporaries<const vk::Semaphore>& wait_sems);
     };
 }; // namespace fi::gfx

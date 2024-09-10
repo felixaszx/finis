@@ -108,10 +108,16 @@ void fi::gfx::swapchain::destory()
     device().destroySwapchainKHR(*this);
 }
 
-uint32_t fi::gfx::swapchain::aquire_next_image(vk::Semaphore sem, vk::Fence fence, uint64_t timeout)
+vk::Result fi::gfx::swapchain::aquire_next_image(uint32_t& image_idx,
+                                                 vk::Semaphore sem,
+                                                 vk::Fence fence,
+                                                 uint64_t timeout)
 {
-    curr_idx_ = device().acquireNextImageKHR(*this, timeout, sem, fence).value;
-    return curr_idx_;
+    vk::ResultValue<uint32_t> r{{}, {}};
+    r = device().acquireNextImageKHR(*this, timeout, sem, fence);
+    curr_idx_ = r.value;
+    image_idx = curr_idx_;
+    return r.result;
 }
 
 vk::Result fi::gfx::swapchain::present(const vk::ArrayProxyNoTemporaries<const vk::Semaphore>& wait_sems)
@@ -121,6 +127,5 @@ vk::Result fi::gfx::swapchain::present(const vk::ArrayProxyNoTemporaries<const v
     present_info.swapchainCount = 1;
     present_info.pSwapchains = this;
     present_info.pImageIndices = &curr_idx_;
-
     return queues(GRAPHICS).presentKHR(present_info);
 }

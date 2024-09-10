@@ -4,7 +4,6 @@
 #include <format>
 
 #include <stb/stb_image.h>
-#include <vulkan/vulkan.hpp>
 
 #include "tools.hpp"
 #include "extensions/cpp_defines.hpp"

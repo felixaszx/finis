@@ -29,8 +29,8 @@ int main(int argc, char** argv)
 
     ext::dll render_dll("exe/render_mgr.dll");
     auto render_mgr = render_dll.load_unique<mgr::render>();
-    render_mgr->construct(sc);
-    std::function<bool()> render_func = render_mgr->get_frame_func();
+    render_mgr->construct();
+    mgr::render::func render_func = render_mgr->get_frame_func();
 
     ext::dll res0_dll("exe/res0.dll");
     auto res0 = res0_dll.load_unique<gfx::prim_res>();
@@ -46,16 +46,38 @@ int main(int argc, char** argv)
     pl_pkg.pipeline_ = pipeline0->pipeline_;
     pl_pkg.layout_ = pipeline0->layout_;
     pl_pkg.pkg_idxs_.push_back(0);
-
     render_mgr->pkgs_.push_back(res0_pkg);
     render_mgr->pipelines_.push_back(pl_pkg);
 
-    while (render_func())
+    gfx::semaphore next_img;
+    gfx::semaphore submit;
+    vk::SemaphoreSubmitInfo wait_info{.semaphore = next_img, //
+                                      .stageMask = vk::PipelineStageFlagBits2::eBottomOfPipe};
+    vk::SemaphoreSubmitInfo signal_info{.semaphore = submit, //
+                                        .stageMask = vk::PipelineStageFlagBits2::eBottomOfPipe};
+
+    while (true)
     {
+        glfwPollEvents();
+        if (glfwGetWindowAttrib(g.window(), GLFW_ICONIFIED))
+        {
+            std::this_thread::sleep_for(1ms);
+            continue;
+        }
+
+        if (glfwWindowShouldClose(g.window()))
+        {
+            break;
+        }
+
+        uint32_t img_idx = 0;
+        render_func({wait_info},   //
+                    {signal_info}, //
+                    [&]() { sc.aquire_next_image(img_idx, next_img); });
+        sc.present({submit});
     }
 
     g.device().waitIdle();
-
     sc.destory();
 
     return EXIT_SUCCESS;

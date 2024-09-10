@@ -27,24 +27,16 @@ namespace fi::mgr
 
     struct render : protected gfx::graphcis_obj
     {
-      private:
-        virtual void construct_derived() = 0;
-
-      public:
-        gfx::swapchain* sc = nullptr;
-
+        using func = std::function<void(const std::vector<vk::SemaphoreSubmitInfo>& waits,
+                                        const std::vector<vk::SemaphoreSubmitInfo>& signals,
+                                        const std::function<void()>& deffered)>;
         std::vector<render_pkg> pkgs_;
         std::vector<pipeline> pipelines_; // always excute in order
 
         virtual ~render() = default;
 
-        virtual std::function<bool()> get_frame_func() = 0;
-
-        void construct(gfx::swapchain& swapchain)
-        {
-            sc = &swapchain;
-            construct_derived();
-        }
+        virtual void construct() = 0;
+        virtual func get_frame_func() = 0;
     };
 }; // namespace fi::mgr
 
