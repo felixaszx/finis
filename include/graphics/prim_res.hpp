@@ -7,6 +7,14 @@
 
 namespace fi::gfx
 {
+    struct pipeline_pkg
+    {
+        gfx::primitives* prims_ = nullptr;
+        gfx::prim_structure* structs_ = nullptr;
+        gfx::prim_skins* skins_ = nullptr;
+        gfx::tex_arr* tex_arr_ = nullptr;
+    };
+
     struct prim_res : protected graphcis_obj
     {
         virtual gfx::primitives* get_primitives() = 0;
@@ -15,6 +23,11 @@ namespace fi::gfx
         virtual gfx::tex_arr* get_tex_arr() = 0;
 
         virtual ~prim_res() = default;
+
+        gfx::pipeline_pkg get_pipeline_pkg()
+        {
+            return {get_primitives(), get_prim_structure(), get_prim_skin(), get_tex_arr()};
+        }
     };
 }; // namespace fi::gfx
 

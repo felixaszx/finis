@@ -15,7 +15,7 @@
                 "focus": false,
                 "panel": "shared",
                 "showReuseMessage": false,
-                "clear": true
+                "clear": false
             }
         },
         {
@@ -69,6 +69,24 @@
         },
         {
             "type": "shell",
+            "label": "compile shaders",
+            "detail": "compile slang shaders",
+            "options": {
+                "cwd": "${workspaceFolder}/res/shaders"
+            },
+            "command": "${workspaceFolder}/res/shaders/compile_to_spv.bat",
+            "problemMatcher": [],
+            "presentation": {
+                "echo": true,
+                "reveal": "silent",
+                "focus": false,
+                "panel": "shared",
+                "showReuseMessage": false,
+                "clear": false
+            }
+        },
+        {
+            "type": "shell",
             "label": "Build",
             "detail": "Build and copy",
             "command": "",
@@ -79,9 +97,10 @@
                 "focus": false,
                 "panel": "shared",
                 "showReuseMessage": true,
-                "clear": false
+                "clear": true
             },
             "dependsOn": [
+                "compile shaders",
                 "CMake: configure",
                 "CMake: build"
                 //,"add dlls info",

@@ -186,9 +186,8 @@ fi::gfx::context::~context()
 
 bool fi::gfx::context::update()
 {
-    bool running = !glfwWindowShouldClose(window_);
     glfwPollEvents();
-    return running;
+    return !glfwWindowShouldClose(window_);
 }
 
 vk::Instance fi::gfx::graphcis_obj::instance()
@@ -328,8 +327,7 @@ void fi::gfx::cpu_clock::reset()
     end_ = std::chrono::high_resolution_clock::now();
 };
 
-fi::gfx::cpu_clock::time_pt::time_pt(
-    const std::chrono::duration<size_t, std::chrono::milliseconds::period>& duration)
+fi::gfx::cpu_clock::time_pt::time_pt(const std::chrono::duration<size_t, std::chrono::milliseconds::period>& duration)
     : duration_{duration}
 {
 }

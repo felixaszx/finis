@@ -2,6 +2,7 @@
 #define GRAPHICS_PIPELINE_HPP
 
 #include "graphics.hpp"
+#include "prim_res.hpp"
 #include "shader.hpp"
 #include "extensions/cpp_defines.hpp"
 
@@ -16,6 +17,7 @@ namespace fi::gfx
     {
         vk::Pipeline pipeline_{};
         vk::PipelineLayout layout_{};
+        std::vector<pipeline_pkg> pkgs_;
         gfx::shader* shader_ref_ = nullptr;
         std::vector<vk::DescriptorSetLayout> set_layouts_;
 
@@ -31,16 +33,21 @@ namespace fi::gfx
         vk::PipelineDynamicStateCreateInfo dynamic_state_{};
 
         virtual ~gfx_pipeline() = default;
+
+        virtual void construct() = 0;
     };
 
     struct cmp_pipeline : protected graphcis_obj
     {
         vk::Pipeline pipeline_{};
         vk::PipelineLayout layout_{};
+        std::vector<pipeline_pkg> pkgs_;
         gfx::shader* shader_ref_ = nullptr;
         std::vector<vk::DescriptorSetLayout> set_layouts_;
 
         virtual ~cmp_pipeline() = default;
+
+        virtual void construct() = 0;
     };
 }; // namespace fi::gfx
 

@@ -22,6 +22,10 @@ fi::gfx::tex_arr::~tex_arr()
     device().destroyFence(fence_);
 }
 
+void fi::gfx::tex_arr::allocate_desc_set(vk::DescriptorPool pool)
+{
+}
+
 void fi::gfx::tex_arr::add_sampler(const vk::SamplerCreateInfo& sampler_info)
 {
     samplers_.push_back(device().createSampler(sampler_info));

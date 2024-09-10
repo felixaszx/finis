@@ -16,6 +16,20 @@ struct VertStage
     VertOutput output : VertOutput;
 };
 
+ConstantBuffer<float2[]> tex_coord;
+[shader("vertex")]
+VertStage vertex_main(uint32_t idx: SV_VertexID, //
+                      uint32_t instance_id: SV_InstanceID)
+{
+    VertStage vs = {};
+    vs.position_.xy = tex_coord[idx];
+    vs.output.position_.xy = tex_coord[idx];
+    vs.output.normal_.xy = tex_coord[idx];
+    vs.output.texcoord_.xy = tex_coord[idx];
+    vs.output.prim_idx_ = get_draw_idx();
+    return vs;
+}
+
 struct FragStage
 {
     float4 position : SV_Target0;
@@ -24,21 +38,14 @@ struct FragStage
     float4 specular : SV_Target3;
 };
 
-[shader("vertex")]
-VertStage vertex_main(uint32_t idx: SV_VertexID, //
-                      uint32_t instance_id: SV_InstanceID)
-{
-    VertStage vs =  {};
-    return vs;
-}
-
+Sampler2D tex_arr[];
 [shader("fragment")]
 FragStage fragment_main(VertOutput vs: VertOutput)
 {
-    FragStage fs;
-    fs.color = vs.position_;
+    FragStage fs = {};
+    fs.position = vs.position_;
     fs.normal.xyz = vs.normal_;
-    fs.color = vs.tangent_;
-    fs.specular.xy = vs.prim_idx_ * vs.texcoord_;
-    return { 0, 0, 0, 0 };
+    fs.color = tex_arr[vs.prim_idx_].Sample(vs.texcoord_);
+    fs.specular.xyzw = fs.color;
+    return fs;
 }

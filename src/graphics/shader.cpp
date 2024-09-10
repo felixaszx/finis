@@ -1,19 +1,6 @@
 #include "graphics/shader.hpp"
 #include "slang-com-ptr.h"
 
-struct SlangGlobalSession
-{
-    Slang::ComPtr<slang::IGlobalSession> session_;
-    SlangGlobalSession() { slang::createGlobalSession(session_.writeRef()); }
-    ~SlangGlobalSession() = default;
-};
-
-slang::IGlobalSession& fi::gfx::shader::get_global_session()
-{
-    static SlangGlobalSession session;
-    return *session.session_;
-}
-
 fi::gfx::shader::shader(const std::filesystem::path& shader_file, const std::filesystem::path& include_path)
 {
     if (!std::filesystem::exists(shader_file))
@@ -21,79 +8,19 @@ fi::gfx::shader::shader(const std::filesystem::path& shader_file, const std::fil
         throw std::runtime_error(std::format("{} do not exist", shader_file.generic_string()));
     }
 
-    slang::TargetDesc target_desc;
-    target_desc.forceGLSLScalarBufferLayout = true;
-    target_desc.format = SLANG_SPIRV;
-    target_desc.profile = get_global_session().findProfile("spirv_1_6");
-
-    std::string search_path = include_path.generic_string();
-    if (search_path.empty())
+    std::ifstream file(shader_file, std::ifstream::ate | std::ios::binary);
+    std::vector<char> buffer(file.tellg());
+    file.seekg(0, std::ios::beg);
+    if (!file.read(buffer.data(), buffer.size()))
     {
-        search_path = shader_file.parent_path().generic_string();
+        file.close();
+        throw std::runtime_error(std::format("fail to read {}", shader_file.generic_string()));
     }
-    const char* const path_c = search_path.data();
-
-    std::vector<slang::CompilerOptionEntry> options;
-    options.emplace_back(slang::CompilerOptionName::GLSLForceScalarLayout,
-                         slang::CompilerOptionValue{.kind = slang::CompilerOptionValueKind::Int, //
-                                                    .intValue0 = 1});
-    options.emplace_back(slang::CompilerOptionName::Capability,
-                         slang::CompilerOptionValue{.kind = slang::CompilerOptionValueKind::Int, //
-                                                    .intValue0 = get_global_session().findCapability("all")});
-    options.emplace_back(
-        slang::CompilerOptionName::Optimization,
-        slang::CompilerOptionValue{.kind = slang::CompilerOptionValueKind::Int, //
-                                   .intValue0 = SlangOptimizationLevel::SLANG_OPTIMIZATION_LEVEL_HIGH});
-
-    slang::SessionDesc session_desc{
-        .targets = &target_desc,
-        .targetCount = 1,
-        .searchPaths = &path_c,
-        .searchPathCount = 1,
-        .compilerOptionEntries = options.data(),
-        .compilerOptionEntryCount = util::casts<uint32_t>(options.size()),
-    };
-
-    Slang::ComPtr<slang::ISession> session;
-    if (SLANG_FAILED(get_global_session().createSession(session_desc, session.writeRef())))
-    {
-        throw std::runtime_error("Fail to create slang session");
-    }
-
-    Slang::ComPtr<slang::IBlob> diagnostics;
-    Slang::ComPtr<slang::IModule> module(session->loadModule(shader_file.generic_string().c_str(), //
-                                                             diagnostics.writeRef()));
-    if (diagnostics)
-    {
-        std::cerr << util::castf<const char*>(diagnostics->getBufferPointer());
-        throw std::runtime_error("Fail to compile shader");
-    }
-
-    std::vector<Slang::ComPtr<slang::IEntryPoint>> entry_points_ref(module->getDefinedEntryPointCount());
-    std::vector<slang::IComponentType*> components = {module};
-    for (uint32_t i = 0; i < module->getDefinedEntryPointCount(); i++)
-    {
-        module->getDefinedEntryPoint(i, entry_points_ref[i].writeRef());
-        components.push_back(entry_points_ref[i]);
-    }
-
-    Slang::ComPtr<slang::IComponentType> program;
-    session->createCompositeComponentType(components.data(), components.size(), program.writeRef());
-
-    Slang::ComPtr<slang::IComponentType> linked_program;
-    Slang::ComPtr<ISlangBlob> diagnostic_blob;
-    program->link(linked_program.writeRef(), diagnostic_blob.writeRef());
-
-    Slang::ComPtr<slang::IBlob> kernel_blob;
-    linked_program->getTargetCode(0, kernel_blob.writeRef(), diagnostics.writeRef());
-    if (diagnostics)
-    {
-        std::cerr << util::castr<const uint32_t*>(diagnostics->getBufferPointer());
-    }
+    file.close();
 
     vk::ShaderModuleCreateInfo shader_info{};
-    shader_info.codeSize = kernel_blob->getBufferSize();
-    shader_info.pCode = util::castr<const uint32_t*>(kernel_blob->getBufferPointer());
+    shader_info.codeSize = buffer.size();
+    shader_info.pCode = util::castr<const uint32_t*>(buffer.data());
     module_ = device().createShaderModule(shader_info);
 
     spvc::Compiler reflection(shader_info.pCode, shader_info.codeSize / sizeof(uint32_t));
@@ -161,79 +88,80 @@ fi::gfx::shader::shader(const std::filesystem::path& shader_file, const std::fil
         entrys_.push_back(entry.name);
         stage_info.pName = entrys_.back().c_str();
         stage_info.module = module_;
-    }
 
-    auto get_binding_info = [&](const spvc::Resource& res, vk::DescriptorType desc_type)
-    {
-        const spvc::SPIRType& type = reflection.get_type(res.type_id);
-        uint32_t set = reflection.get_decoration(res.id, spv::DecorationDescriptorSet);
-        desc_sets_.resize(set + 1);
-        desc_names_.resize(set + 1);
-
-        auto& binding = desc_sets_[set].emplace_back();
-        desc_names_[set].push_back(res.name);
-        binding.binding = reflection.get_decoration(res.id, spv::DecorationBinding);
-        binding.stageFlags = vk::ShaderStageFlagBits::eAll;
-        binding.descriptorType = desc_type;
-        binding.descriptorCount = type.array.size() ? -1 : 1;
-
-        bool fixed_arr = true;
-        for (bool literal : type.array_size_literal)
+        auto get_binding_info = [&](const spvc::Resource& res, vk::DescriptorType desc_type)
         {
-            fixed_arr = literal && fixed_arr;
-        }
+            const spvc::SPIRType& type = reflection.get_type(res.type_id);
+            uint32_t set = reflection.get_decoration(res.id, spv::DecorationDescriptorSet);
+            desc_sets_.resize(set + 1);
+            desc_names_.resize(set + 1);
 
-        if (fixed_arr)
-        {
-            for (uint32_t arr_size : type.array)
+            auto& binding = desc_sets_[set].emplace_back();
+            desc_names_[set].push_back(res.name);
+            binding.binding = reflection.get_decoration(res.id, spv::DecorationBinding);
+            binding.stageFlags = vk::ShaderStageFlagBits::eAll;
+            binding.descriptorType = desc_type;
+            binding.descriptorCount = type.array.size() ? -1 : 1;
+
+            bool fixed_arr = true;
+            for (bool literal : type.array_size_literal)
             {
-                binding.descriptorCount += arr_size;
+                fixed_arr = literal && fixed_arr;
             }
-        }
 
-        if (desc_type == vk::DescriptorType::eSampledImage && type.image.dim == spv::DimBuffer)
-        {
-            binding.descriptorType = vk::DescriptorType::eUniformTexelBuffer;
-        }
-        else if (desc_type == vk::DescriptorType::eStorageImage)
-        {
-            binding.descriptorType = vk::DescriptorType::eStorageTexelBuffer;
-        }
-        return binding;
-    };
+            if (fixed_arr)
+            {
+                for (uint32_t arr_size : type.array)
+                {
+                    binding.descriptorCount += arr_size;
+                }
+            }
 
-    spvc::ShaderResources reses = reflection.get_shader_resources();
-    for (const auto& res : reses.push_constant_buffers)
-    {
-        push_const_names_.push_back(res.name);
-    }
-    for (const auto& res : reses.sampled_images)
-    {
-        get_binding_info(res, vk::DescriptorType::eCombinedImageSampler);
-    }
-    for (const auto& res : reses.separate_images)
-    {
-        get_binding_info(res, vk::DescriptorType::eSampledImage);
-    }
-    for (const auto& res : reses.storage_images)
-    {
-        get_binding_info(res, vk::DescriptorType::eStorageImage);
-    }
-    for (const auto& res : reses.separate_samplers)
-    {
-        get_binding_info(res, vk::DescriptorType::eSampler);
-    }
-    for (const auto& res : reses.uniform_buffers)
-    {
-        get_binding_info(res, vk::DescriptorType::eUniformBuffer);
-    }
-    for (const auto& res : reses.subpass_inputs)
-    {
-        get_binding_info(res, vk::DescriptorType::eInputAttachment);
-    }
-    for (const auto& res : reses.storage_buffers)
-    {
-        get_binding_info(res, vk::DescriptorType::eStorageBuffer);
+            if (desc_type == vk::DescriptorType::eSampledImage && type.image.dim == spv::DimBuffer)
+            {
+                binding.descriptorType = vk::DescriptorType::eUniformTexelBuffer;
+            }
+            else if (desc_type == vk::DescriptorType::eStorageImage)
+            {
+                binding.descriptorType = vk::DescriptorType::eStorageTexelBuffer;
+            }
+            return binding;
+        };
+
+        reflection.set_entry_point(entry.name, entry.execution_model);
+        spvc::ShaderResources reses = reflection.get_shader_resources();
+        for (const auto& res : reses.push_constant_buffers)
+        {
+            push_const_names_.push_back(res.name);
+        }
+        for (const auto& res : reses.sampled_images)
+        {
+            get_binding_info(res, vk::DescriptorType::eCombinedImageSampler);
+        }
+        for (const auto& res : reses.separate_images)
+        {
+            get_binding_info(res, vk::DescriptorType::eSampledImage);
+        }
+        for (const auto& res : reses.storage_images)
+        {
+            get_binding_info(res, vk::DescriptorType::eStorageImage);
+        }
+        for (const auto& res : reses.separate_samplers)
+        {
+            get_binding_info(res, vk::DescriptorType::eSampler);
+        }
+        for (const auto& res : reses.uniform_buffers)
+        {
+            get_binding_info(res, vk::DescriptorType::eUniformBuffer);
+        }
+        for (const auto& res : reses.subpass_inputs)
+        {
+            get_binding_info(res, vk::DescriptorType::eInputAttachment);
+        }
+        for (const auto& res : reses.storage_buffers)
+        {
+            get_binding_info(res, vk::DescriptorType::eStorageBuffer);
+        }
     }
 }
 

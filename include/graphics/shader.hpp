@@ -2,6 +2,7 @@
 #define GRAPHICS_SHADER_HPP
 
 #include <map>
+#include <fstream>
 
 #include <spirv_cross/spirv_reflect.hpp>
 
@@ -12,12 +13,8 @@
 namespace fi::gfx
 {
     namespace spvc = spirv_cross;
-    class shader : private graphcis_obj
+    struct shader : private graphcis_obj
     {
-      private:
-        static slang::IGlobalSession& get_global_session();
-
-      public:
         vk::ShaderModule module_{};
         std::vector<std::string> entrys_{};
         std::vector<vk::PipelineShaderStageCreateInfo> stage_infos_{};

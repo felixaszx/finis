@@ -3,9 +3,10 @@ import defines;
 
 struct vert_output
 {
-    float4 position_;
+    float3 position_;
     float3 normal_;
-    float4 tangent_;
+    float3 tangent_;
+    float3 bitangent_;
     float2 texcoord_;
     uint32_t prim_idx_;
 };
@@ -14,14 +15,6 @@ struct vert_stage
 {
     float4 POSITION : SV_Position;
     vert_output OUT : vert_output;
-};
-
-struct frag_stage
-{
-    float4 POSITION : SV_Target0;
-    float4 NORMAL : SV_Target1;
-    float4 COLOR : SV_Target2;
-    float4 SPECULAR : SV_Target3;
 };
 
 struct prim_info_ptrs
@@ -100,16 +93,31 @@ vert_stage vertex_main(uint idx_id: SV_VertexID, //
         morph_info morph = *((morph_info*)(PRIMS.data_ + prim_info.morph_));
     }
 
-    vert_stage vs;
+    vert_stage vs = {};
     vs.POSITION.xyz = { mesh_info.node_, idx, PRIM_SKINS.joints_offset_ };
+    vs.OUT.texcoord_ = texcoord;
+    vs.OUT.position_ = position;
+    vs.OUT.normal_ = normal;
+    vs.OUT.prim_idx_ = get_draw_idx();
     return vs;
 }
 
+struct frag_stage
+{
+    float4 POSITION : SV_Target0;
+    float4 NORMAL : SV_Target1;
+    float4 COLOR : SV_Target2;
+    float4 SPECULAR : SV_Target3;
+};
+
+Sampler2D tex_arr[];
 [shader("fragment")]
 frag_stage fragment_main(vert_output vs: vert_output)
 {
-    frag_stage fs;
-    fs.POSITION = vs.position_ * vs.texcoord_.x * vs.prim_idx_;
-    fs.NORMAL.xyz = vs.normal_ * vs.tangent_.x;
+    frag_stage fs = {};
+    fs.POSITION.xyz = vs.position_;
+    fs.NORMAL.xyz = tex_arr[vs.prim_idx_].Sample(vs.texcoord_).xyz;
+    fs.COLOR.xyz = tex_arr[vs.prim_idx_].Sample(vs.texcoord_).xyz;
+    fs.SPECULAR.xyz = tex_arr[vs.prim_idx_].Sample(vs.texcoord_).xyz;
     return fs;
 }

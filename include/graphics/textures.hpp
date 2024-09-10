@@ -20,6 +20,7 @@ namespace fi::gfx
         ~tex_arr();
 
         // possibly layers
+        void allocate_desc_set(vk::DescriptorPool pool);
         void add_sampler(const vk::SamplerCreateInfo& sampler_info);
         void add_tex(vk::CommandPool cmd_pool,
                      uint32_t sampler_idx,

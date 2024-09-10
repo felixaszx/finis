@@ -8,21 +8,42 @@ using namespace fi;
 struct pipeline : public gfx::gfx_pipeline
 {
     gfx::shader shader_;
+    uint32_t total_tex_;
 
     pipeline()
-        : shader_("res/shaders/test.slang")
+        : shader_("res/shaders/spvs/test.spv")
     {
         shader_ref_ = &shader_;
+        for (auto& pkg : pkgs_)
+        {
+            if (pkg.tex_arr_)
+            {
+                total_tex_ += pkg.tex_arr_->desc_infos_.size();
+            }
+        }
+    }
 
-        for (auto& binding : shader_.desc_sets_)
+    void construct() override
+    {
+        for (auto& bindings : shader_.desc_sets_)
         {
             vk::DescriptorSetLayoutCreateInfo set_layout_info{};
-            set_layout_info.setBindings(binding);
+
+            for (auto& b : bindings)
+            {
+                if (b.descriptorType == vk::DescriptorType::eCombinedImageSampler && b.descriptorCount == -1)
+                {
+                    b.descriptorCount = total_tex_;
+                }
+            }
+
+            set_layout_info.setBindings(bindings);
             set_layouts_.push_back(device().createDescriptorSetLayout(set_layout_info));
         }
+
         vk::PipelineLayoutCreateInfo pl_layout_info{};
         pl_layout_info.setSetLayouts(set_layouts_);
-        if (shader_.push_const_names_.size() == 1)
+        if (shader_.push_const_names_.size() > 0)
         {
         }
         layout_ = device().createPipelineLayout(pl_layout_info);
