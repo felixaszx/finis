@@ -2,8 +2,6 @@
 #include "graphics/pipeline.hpp"
 #include "extensions/cpp_defines.hpp"
 
-static size_t count = 0;
-
 using namespace fi;
 struct pipeline : public gfx::gfx_pipeline
 {
