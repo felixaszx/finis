@@ -15,11 +15,13 @@ namespace fi::gfx
 
     struct gfx_pipeline : protected graphcis_obj
     {
+        gfx::shader* shader_ref_ = nullptr;
+        std::vector<pipeline_pkg> pkgs_{};
+        std::unordered_map<vk::DescriptorType, uint32_t> desc_sizes_{};
+
         vk::Pipeline pipeline_{};
         vk::PipelineLayout layout_{};
-        std::vector<pipeline_pkg> pkgs_;
-        gfx::shader* shader_ref_ = nullptr;
-        std::vector<vk::DescriptorSetLayout> set_layouts_;
+        std::vector<vk::DescriptorSetLayout> set_layouts_{};
 
         vk::PipelineRenderingCreateInfo atchms_{};
         vk::PipelineVertexInputStateCreateInfo vtx_input_{};

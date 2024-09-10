@@ -12,9 +12,9 @@ struct loaded_res : public gfx::prim_res
     std::unique_ptr<gfx::prim_skins> prim_skins_{};
     std::unique_ptr<gfx::tex_arr> tex_arr_{};
 
-    std::unique_ptr<res::gltf_structure> sparta_struct_;
-    std::unique_ptr<res::gltf_skins> sparta_skin_;
-    std::unique_ptr<res::gltf_anim> sparta_anim0_;
+    std::unique_ptr<res::gltf_structure> sparta_struct_{};
+    std::unique_ptr<res::gltf_skins> sparta_skin_{};
+    std::unique_ptr<res::gltf_anim> sparta_anim0_{};
 
     loaded_res()
     {

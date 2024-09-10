@@ -8,12 +8,16 @@ using namespace fi;
 struct pipeline : public gfx::gfx_pipeline
 {
     gfx::shader shader_;
-    uint32_t total_tex_;
+    uint32_t total_tex_ = 0;
 
     pipeline()
         : shader_("res/shaders/spvs/test.spv")
     {
         shader_ref_ = &shader_;
+    }
+
+    void construct() override
+    {
         for (auto& pkg : pkgs_)
         {
             if (pkg.tex_arr_)
@@ -21,10 +25,7 @@ struct pipeline : public gfx::gfx_pipeline
                 total_tex_ += pkg.tex_arr_->desc_infos_.size();
             }
         }
-    }
 
-    void construct() override
-    {
         for (auto& bindings : shader_.desc_sets_)
         {
             vk::DescriptorSetLayoutCreateInfo set_layout_info{};
@@ -34,6 +35,15 @@ struct pipeline : public gfx::gfx_pipeline
                 if (b.descriptorType == vk::DescriptorType::eCombinedImageSampler && b.descriptorCount == -1)
                 {
                     b.descriptorCount = total_tex_;
+                }
+
+                if (desc_sizes_.contains(b.descriptorType))
+                {
+                    desc_sizes_[b.descriptorType]++;
+                }
+                else
+                {
+                    desc_sizes_[b.descriptorType] = b.descriptorCount;
                 }
             }
 

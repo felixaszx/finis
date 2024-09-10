@@ -7,9 +7,12 @@ using namespace std::chrono_literals;
 
 struct render : public mgr::render
 {
-    vk::CommandBuffer cmd_ = nullptr;
-    vk::CommandPool cmd_pool_ = nullptr;
-    vk::Fence frame_fence_ = nullptr;
+    vk::CommandBuffer cmd_{};
+    vk::CommandPool cmd_pool_{};
+    vk::Fence frame_fence_{};
+
+    vk::DescriptorPool desc_pool_{};
+    std::vector<std::vector<vk::DescriptorSet>> desc_sets_{};
 
     func frame_func_ = [&](const std::vector<vk::SemaphoreSubmitInfo>& waits,
                            const std::vector<vk::SemaphoreSubmitInfo>& signals,
@@ -39,10 +42,40 @@ struct render : public mgr::render
     {
         device().destroyCommandPool(cmd_pool_);
         device().destroyFence(frame_fence_);
+        device().destroyDescriptorPool(desc_pool_);
     }
 
     void construct() override
     {
+        desc_sets_.reserve(pipelines_.size());
+        uint32_t total_set = 0;
+        std::unordered_map<vk::DescriptorType, uint32_t> desc_sizes{};
+        for (const auto& pl : pipelines_)
+        {
+            desc_sizes.insert(pl->desc_sizes_.begin(), pl->desc_sizes_.end());
+            total_set += pl->shader_ref_->desc_sets_.size();
+        }
+
+        std::vector<vk::DescriptorPoolSize> pool_sizes{};
+        pool_sizes.reserve(desc_sizes.size());
+        for (const auto& size : desc_sizes)
+        {
+            pool_sizes.emplace_back(size.first, size.second);
+        }
+
+        vk::DescriptorPoolCreateInfo desc_pool_info{};
+        desc_pool_info.setPoolSizes(pool_sizes);
+        desc_pool_info.maxSets = total_set;
+        desc_pool_ = device().createDescriptorPool(desc_pool_info);
+
+        for (const auto& pl : pipelines_)
+        {
+            vk::DescriptorSetAllocateInfo alloc_info{};
+            alloc_info.descriptorPool = desc_pool_;
+            alloc_info.setSetLayouts(pl->set_layouts_);
+            desc_sets_.push_back(device().allocateDescriptorSets(alloc_info));
+        }
+
         vk::CommandPoolCreateInfo pool_info{};
         pool_info.flags = vk::CommandPoolCreateFlagBits::eResetCommandBuffer;
         pool_info.queueFamilyIndex = queue_indices(gfx::context::GRAPHICS);

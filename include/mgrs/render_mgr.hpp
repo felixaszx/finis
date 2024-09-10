@@ -9,19 +9,12 @@
 
 namespace fi::mgr
 {
-    struct pipeline
-    {
-        vk::Pipeline pipeline_ = nullptr;
-        vk::PipelineLayout layout_ = nullptr;
-        std::vector<gfx::pipeline_pkg>* pkgs_{};
-    };
-
     struct render : protected gfx::graphcis_obj
     {
         using func = std::function<void(const std::vector<vk::SemaphoreSubmitInfo>& waits,
                                         const std::vector<vk::SemaphoreSubmitInfo>& signals,
                                         const std::function<void()>& deffered)>;
-        std::vector<pipeline> pipelines_; // always excute in order
+        std::vector<gfx::gfx_pipeline*> pipelines_; // always excute in order
 
         virtual ~render() = default;
 
