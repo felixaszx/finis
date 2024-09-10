@@ -29,12 +29,10 @@ int main(int argc, char** argv)
 
     ext::dll res0_dll("exe/res0.dll");
     auto res0 = res0_dll.load_unique<gfx::prim_res>();
-    auto res1 = res0_dll.load_unique<gfx::prim_res>();
 
     ext::dll pl0_dll("exe/pl0.dll");
     auto pipeline0 = pl0_dll.load_unique<gfx::gfx_pipeline>();
     pipeline0->pkgs_.push_back(res0->get_pipeline_pkg());
-    pipeline0->pkgs_.push_back(res1->get_pipeline_pkg());
     pipeline0->construct();
 
     ext::dll render_dll("exe/render_mgr.dll");
