@@ -26,6 +26,7 @@ namespace fi::gfx
         vk::Pipeline pipeline_{};
         vk::PipelineLayout layout_{};
         std::vector<vk::DescriptorSetLayout> set_layouts_{};
+        std::vector<vk::DescriptorSet> sets_{};
 
         vk::PipelineRenderingCreateInfo atchms_{};
         vk::PipelineVertexInputStateCreateInfo vtx_input_{};
@@ -41,20 +42,23 @@ namespace fi::gfx
         virtual ~gfx_pipeline() = default;
 
         virtual void construct() = 0;
-        virtual std::vector<vk::DescriptorSet> setup_desc_set(vk::DescriptorPool pool) = 0;
+        virtual void setup_desc_set(vk::DescriptorPool pool) = 0;
     };
 
     struct cmp_pipeline : protected graphcis_obj
     {
-        vk::Pipeline pipeline_{};
-        vk::PipelineLayout layout_{};
-        std::vector<pipeline_pkg> pkgs_;
         gfx::shader* shader_ref_ = nullptr;
+        vk::PipelineLayout layout_{};
+
+        vk::Pipeline pipeline_{};
+        std::vector<pipeline_pkg> pkgs_;
         std::vector<vk::DescriptorSetLayout> set_layouts_;
+        std::vector<vk::DescriptorSet> sets_{};
 
         virtual ~cmp_pipeline() = default;
 
         virtual void construct() = 0;
+        virtual void setup_desc_set(vk::DescriptorPool pool) = 0;
     };
 }; // namespace fi::gfx
 
