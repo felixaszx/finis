@@ -16,6 +16,13 @@ namespace fi::mgr
                                         const std::function<void()>& deffered)>;
         std::vector<gfx::gfx_pipeline*> pipelines_;
 
+        std::vector<vk::Image> images_{};
+        std::vector<vk::ImageView> imag_views{};
+        std::vector<vma::Allocation> img_allocs_{};
+
+        std::vector<vk::Buffer> buffers{};
+        std::vector<vma::Allocation> buf_allocs_{};
+
         virtual ~render() = default;
 
         virtual void construct() = 0;
