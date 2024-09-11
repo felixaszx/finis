@@ -16,6 +16,7 @@ struct pipeline : public gfx::gfx_pipeline
         : shader_("res/shaders/spvs/test.spv")
     {
         shader_ref_ = &shader_;
+        name_ = "pl0";
     }
 
     void construct() override

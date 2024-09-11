@@ -14,6 +14,8 @@ namespace fi::mgr
         using func = std::function<void(const std::vector<vk::SemaphoreSubmitInfo>& waits,
                                         const std::vector<vk::SemaphoreSubmitInfo>& signals,
                                         const std::function<void()>& deffered)>;
+
+        std::string name_ = "";
         std::vector<gfx::gfx_pipeline*> pipelines_;
 
         std::vector<vk::Image> images_{};

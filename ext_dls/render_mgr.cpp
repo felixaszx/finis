@@ -47,6 +47,8 @@ struct render : public mgr::render
 
     void construct() override
     {
+        name_ = "render_mgr";
+
         uint32_t total_set = 0;
         std::unordered_map<vk::DescriptorType, uint32_t> desc_sizes{};
         for (const auto& pl : pipelines_)

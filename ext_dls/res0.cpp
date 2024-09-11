@@ -18,6 +18,7 @@ struct loaded_res : public gfx::prim_res
 
     loaded_res()
     {
+        name_ = "sparta";
         thp::task_thread_pool thread_pool;
         vk::CommandPoolCreateInfo pool_info{};
         pool_info.flags = vk::CommandPoolCreateFlagBits::eResetCommandBuffer;

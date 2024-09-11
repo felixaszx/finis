@@ -19,6 +19,7 @@ namespace fi::gfx
         void config();
 
       public:
+        std::string name_ = "";
         gfx::shader* shader_ref_ = nullptr;
         std::vector<pipeline_pkg> pkgs_{};
         std::unordered_map<vk::DescriptorType, uint32_t> desc_sizes_{};

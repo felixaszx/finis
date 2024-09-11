@@ -17,6 +17,7 @@ namespace fi::gfx
 
     struct prim_res : protected graphcis_obj
     {
+        std::string name_ = "";
         virtual gfx::primitives* get_primitives() = 0;
         virtual gfx::prim_structure* get_prim_structure() = 0;
         virtual gfx::prim_skins* get_prim_skin() = 0;
