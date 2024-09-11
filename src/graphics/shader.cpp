@@ -95,8 +95,12 @@ fi::gfx::shader::shader(const std::filesystem::path& shader_file, const std::fil
         {
             const spvc::SPIRType& type = reflection.get_type(res.type_id);
             uint32_t set = reflection.get_decoration(res.id, spv::DecorationDescriptorSet);
-            desc_sets_.resize(set + 1);
-            desc_names_.resize(set + 1);
+
+            if (set >= desc_sets_.size())
+            {
+                desc_sets_.resize(set + 1);
+                desc_names_.resize(set + 1);
+            }
 
             auto& binding = desc_sets_[set].emplace_back();
             desc_names_[set].emplace_back(res.name, -1);

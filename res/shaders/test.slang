@@ -39,11 +39,14 @@ struct prim_skin_ptrs
     uint64_t inv_binds_offset_;
 }
 
+[[vk::binding(0, 0)]]
 ConstantBuffer<prim_info_ptrs> PRIMS;
+[[vk::binding(1, 0)]]
 ConstantBuffer<prim_struc_ptrs> PRIM_STRUCTS;
+[[vk::binding(2, 0)]]
 ConstantBuffer<prim_skin_ptrs> PRIM_SKINS;
 
-[shader("vertex")]
+[[shader("vertex")]]
 vert_stage vertex_main(uint idx_id: SV_VertexID, //
                        uint instance_id: SV_InstanceID)
 {
@@ -110,8 +113,10 @@ struct frag_stage
     float4 SPECULAR : SV_Target3;
 };
 
+[[vk::binding(3, 0)]]
 Sampler2D tex_arr[];
-[shader("fragment")]
+
+[[shader("fragment")]]
 frag_stage fragment_main(vert_output vs: vert_output)
 {
     frag_stage fs = {};
