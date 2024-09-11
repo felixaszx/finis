@@ -50,8 +50,6 @@ void fi::gfx::tex_arr::add_tex(vk::CommandPool cmd_pool,
     auto image = allocator().createImage(image_info, alloc_info);
     images_.push_back(image.first);
     allocs_.push_back(image.second);
-    desc_infos_.push_back(vk::DescriptorImageInfo{.sampler = samplers_[sampler_idx],
-                                                  .imageLayout = vk::ImageLayout::eShaderReadOnlyOptimal});
 
     vk::ImageViewCreateInfo view_info{};
     view_info.image = image.first;
@@ -63,6 +61,10 @@ void fi::gfx::tex_arr::add_tex(vk::CommandPool cmd_pool,
     view_info.subresourceRange.baseArrayLayer = 0;
     view_info.subresourceRange.layerCount = 1;
     views_.push_back(device().createImageView(view_info));
+
+    desc_infos_.push_back(vk::DescriptorImageInfo{.sampler = samplers_[sampler_idx],
+                                                  .imageView = views_.back(),
+                                                  .imageLayout = vk::ImageLayout::eShaderReadOnlyOptimal});
 
     vk::BufferCreateInfo buffer_info{.size = data.size(),
                                      .usage = vk::BufferUsageFlagBits::eTransferSrc | //

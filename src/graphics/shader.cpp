@@ -29,6 +29,7 @@ fi::gfx::shader::shader(const std::filesystem::path& shader_file, const std::fil
     stage_infos_.reserve(entry_points.size());
     for (const auto& entry : entry_points)
     {
+        reflection.set_entry_point(entry.name, entry.execution_model);
         vk::PipelineShaderStageCreateInfo& stage_info = stage_infos_.emplace_back();
         switch (entry.execution_model)
         {
@@ -89,6 +90,7 @@ fi::gfx::shader::shader(const std::filesystem::path& shader_file, const std::fil
         stage_info.pName = entrys_.back().c_str();
         stage_info.module = module_;
 
+        // return the set index and descriptor count
         auto get_binding_info = [&](const spvc::Resource& res, vk::DescriptorType desc_type)
         {
             const spvc::SPIRType& type = reflection.get_type(res.type_id);
@@ -97,7 +99,7 @@ fi::gfx::shader::shader(const std::filesystem::path& shader_file, const std::fil
             desc_names_.resize(set + 1);
 
             auto& binding = desc_sets_[set].emplace_back();
-            desc_names_[set].push_back(res.name);
+            desc_names_[set].emplace_back(res.name, -1);
             binding.binding = reflection.get_decoration(res.id, spv::DecorationBinding);
             binding.stageFlags = vk::ShaderStageFlagBits::eAll;
             binding.descriptorType = desc_type;
@@ -117,50 +119,65 @@ fi::gfx::shader::shader(const std::filesystem::path& shader_file, const std::fil
                 }
             }
 
-            if (desc_type == vk::DescriptorType::eSampledImage && type.image.dim == spv::DimBuffer)
-            {
-                binding.descriptorType = vk::DescriptorType::eUniformTexelBuffer;
-            }
-            else if (desc_type == vk::DescriptorType::eStorageImage)
-            {
-                binding.descriptorType = vk::DescriptorType::eStorageTexelBuffer;
-            }
-            return binding;
+            return std::pair(set, binding.descriptorCount);
         };
 
-        reflection.set_entry_point(entry.name, entry.execution_model);
         spvc::ShaderResources reses = reflection.get_shader_resources();
+
+        push_consts_.reserve(reses.push_constant_buffers.size());
+        push_stages_.reserve(reses.push_constant_buffers.size());
         for (const auto& res : reses.push_constant_buffers)
         {
-            push_const_names_.push_back(res.name);
+            const spvc::SPIRType& type = reflection.get_type(res.base_type_id);
+            push_consts_.emplace_back(res.name, reflection.get_declared_struct_size(type));
+            push_stages_.push_back(stage_info.stage);
         }
         for (const auto& res : reses.sampled_images)
         {
-            get_binding_info(res, vk::DescriptorType::eCombinedImageSampler);
-        }
-        for (const auto& res : reses.separate_images)
-        {
-            get_binding_info(res, vk::DescriptorType::eSampledImage);
+            auto p = get_binding_info(res, vk::DescriptorType::eCombinedImageSampler);
+            if (p.second != -1)
+            {
+                desc_names_[p.first].back().second = image_infos_.size();
+                image_infos_.resize(image_infos_.size() + p.second,
+                                    vk::DescriptorImageInfo{.imageLayout = vk::ImageLayout::eShaderReadOnlyOptimal});
+            }
         }
         for (const auto& res : reses.storage_images)
         {
-            get_binding_info(res, vk::DescriptorType::eStorageImage);
-        }
-        for (const auto& res : reses.separate_samplers)
-        {
-            get_binding_info(res, vk::DescriptorType::eSampler);
+            auto p = get_binding_info(res, vk::DescriptorType::eStorageImage);
+            if (p.second != -1)
+            {
+                desc_names_[p.first].back().second = image_infos_.size();
+                image_infos_.resize(image_infos_.size() + p.second,
+                                    vk::DescriptorImageInfo{.imageLayout = vk::ImageLayout::eGeneral});
+            }
         }
         for (const auto& res : reses.uniform_buffers)
         {
-            get_binding_info(res, vk::DescriptorType::eUniformBuffer);
-        }
-        for (const auto& res : reses.subpass_inputs)
-        {
-            get_binding_info(res, vk::DescriptorType::eInputAttachment);
+            auto p = get_binding_info(res, vk::DescriptorType::eUniformBuffer);
+            if (p.second != -1)
+            {
+                const spvc::SPIRType& type = reflection.get_type(res.type_id);
+                size_t size = reflection.get_declared_struct_size(type);
+                desc_names_[p.first].back().second = buffer_infos_.size();
+                buffer_infos_.resize(buffer_infos_.size() + p.second, vk::DescriptorBufferInfo{.range = size});
+            }
         }
         for (const auto& res : reses.storage_buffers)
         {
-            get_binding_info(res, vk::DescriptorType::eStorageBuffer);
+            auto p = get_binding_info(res, vk::DescriptorType::eStorageBuffer);
+            if (p.second != -1)
+            {
+                const spvc::SPIRType& type = reflection.get_type(res.type_id);
+                size_t size = reflection.get_declared_struct_size(type);
+                desc_names_[p.first].back().second = buffer_infos_.size();
+                buffer_infos_.resize(buffer_infos_.size() + p.second, vk::DescriptorBufferInfo{.range = size});
+            }
+        }
+
+        if (stage_info.stage == vk::ShaderStageFlagBits::eFragment)
+        {
+            atchm_count_ = reses.stage_outputs.size();
         }
     }
 }

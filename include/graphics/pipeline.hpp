@@ -15,6 +15,10 @@ namespace fi::gfx
 
     struct gfx_pipeline : protected graphcis_obj
     {
+      protected:
+        void config();
+
+      public:
         gfx::shader* shader_ref_ = nullptr;
         std::vector<pipeline_pkg> pkgs_{};
         std::unordered_map<vk::DescriptorType, uint32_t> desc_sizes_{};
@@ -37,6 +41,7 @@ namespace fi::gfx
         virtual ~gfx_pipeline() = default;
 
         virtual void construct() = 0;
+        virtual std::vector<vk::DescriptorSet> setup_desc_set(vk::DescriptorPool pool) = 0;
     };
 
     struct cmp_pipeline : protected graphcis_obj

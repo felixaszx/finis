@@ -19,9 +19,14 @@ namespace fi::gfx
         std::vector<std::string> entrys_{};
         std::vector<vk::PipelineShaderStageCreateInfo> stage_infos_{};
 
-        std::vector<std::string> push_const_names_{};
-        std::vector<std::vector<std::string>> desc_names_{};
+        std::vector<vk::ShaderStageFlagBits> push_stages_{};
+        std::vector<std::pair<std::string, vk::DeviceSize>> push_consts_{};
+        std::vector<std::vector<std::pair<std::string, size_t>>> desc_names_{};
         std::vector<std::vector<vk::DescriptorSetLayoutBinding>> desc_sets_{};
+
+        uint32_t atchm_count_ = 0; // without depth or stencil
+        std::vector<vk::DescriptorBufferInfo> buffer_infos_;
+        std::vector<vk::DescriptorImageInfo> image_infos_;
 
         shader(const std::filesystem::path& shader_file, const std::filesystem::path& include_path = "");
         ~shader();

@@ -12,7 +12,7 @@ struct render : public mgr::render
     vk::Fence frame_fence_{};
 
     vk::DescriptorPool desc_pool_{};
-    std::vector<std::vector<vk::DescriptorSet>> desc_sets_{};
+    std::vector<std::vector<vk::DescriptorSet>> desc_sets_{}; // per pipeline
 
     func frame_func_ = [&](const std::vector<vk::SemaphoreSubmitInfo>& waits,
                            const std::vector<vk::SemaphoreSubmitInfo>& signals,
@@ -47,7 +47,6 @@ struct render : public mgr::render
 
     void construct() override
     {
-        desc_sets_.reserve(pipelines_.size());
         uint32_t total_set = 0;
         std::unordered_map<vk::DescriptorType, uint32_t> desc_sizes{};
         for (const auto& pl : pipelines_)
@@ -68,12 +67,10 @@ struct render : public mgr::render
         desc_pool_info.maxSets = total_set;
         desc_pool_ = device().createDescriptorPool(desc_pool_info);
 
+        desc_sets_.reserve(pipelines_.size());
         for (const auto& pl : pipelines_)
         {
-            vk::DescriptorSetAllocateInfo alloc_info{};
-            alloc_info.descriptorPool = desc_pool_;
-            alloc_info.setSetLayouts(pl->set_layouts_);
-            desc_sets_.push_back(device().allocateDescriptorSets(alloc_info));
+            desc_sets_.push_back(pl->setup_desc_set(desc_pool_));
         }
 
         vk::CommandPoolCreateInfo pool_info{};

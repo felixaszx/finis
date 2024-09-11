@@ -8,6 +8,10 @@ struct pipeline : public gfx::gfx_pipeline
     gfx::shader shader_;
     uint32_t total_tex_ = 0;
 
+    std::vector<std::vector<std::byte>> push_consts_{};
+    std::vector<vk::Buffer> uniforms_{};
+    std::vector<vma::Allocation> allocs_{};
+
     pipeline()
         : shader_("res/shaders/spvs/test.spv")
     {
@@ -34,7 +38,6 @@ struct pipeline : public gfx::gfx_pipeline
                 {
                     b.descriptorCount = total_tex_;
                 }
-
                 if (desc_sizes_.contains(b.descriptorType))
                 {
                     desc_sizes_[b.descriptorType]++;
@@ -49,17 +52,9 @@ struct pipeline : public gfx::gfx_pipeline
             set_layouts_.push_back(device().createDescriptorSetLayout(set_layout_info));
         }
 
-        vk::PipelineLayoutCreateInfo pl_layout_info{};
-        pl_layout_info.setSetLayouts(set_layouts_);
-        if (shader_.push_const_names_.size() > 0)
-        {
-        }
-        layout_ = device().createPipelineLayout(pl_layout_info);
+        config();
 
-        static std::array<vk::Format, 4> color_formats_ = {vk::Format::eR32G32B32A32Sfloat, //
-                                                           vk::Format::eR32G32B32A32Sfloat, //
-                                                           vk::Format::eR32G32B32A32Sfloat,
-                                                           vk::Format::eR32G32B32A32Sfloat};
+        std::vector<vk::Format> color_formats_(shader_.atchm_count_, vk::Format::eR32G32B32A32Sfloat);
         atchms_.setColorAttachmentFormats(color_formats_);
         atchms_.depthAttachmentFormat = vk::Format::eD24UnormS8Uint;
         atchms_.stencilAttachmentFormat = atchms_.depthAttachmentFormat;
@@ -73,7 +68,7 @@ struct pipeline : public gfx::gfx_pipeline
         depth_stencil_.depthTestEnable = true;
         depth_stencil_.depthCompareOp = vk::CompareOp::eLess;
 
-        static std::array<vk::PipelineColorBlendAttachmentState, 4> blend_states = {};
+        std::vector<vk::PipelineColorBlendAttachmentState> blend_states(shader_.atchm_count_);
         for (auto& state : blend_states)
         {
             state.colorWriteMask = vk::ColorComponentFlagBits::eR | //
@@ -101,6 +96,44 @@ struct pipeline : public gfx::gfx_pipeline
         create_info.pDynamicState = &dynamic_state_;
         create_info.layout = layout_;
         pipeline_ = device().createGraphicsPipelines(pipeline_cache(), create_info).value[0];
+    }
+
+    std::vector<vk::DescriptorSet> setup_desc_set(vk::DescriptorPool pool) override
+    {
+        vk::DescriptorSetAllocateInfo alloc_info{};
+        alloc_info.descriptorPool = pool;
+        alloc_info.setSetLayouts(set_layouts_);
+        std::vector<vk::DescriptorSet> sets = device().allocateDescriptorSets(alloc_info);
+
+        for (uint32_t s = 0; s < shader_.desc_sets_.size(); s++)
+        {
+            for (auto& binding : shader_.desc_sets_[s])
+            {
+                switch (binding.descriptorType)
+                {
+                    case vk::DescriptorType::eCombinedImageSampler:
+                    {
+                        break;
+                    }
+                    case vk::DescriptorType::eStorageImage:
+                    {
+                        break;
+                    }
+                    case vk::DescriptorType::eUniformBuffer:
+                    {
+                        break;
+                    }
+                    case vk::DescriptorType::eStorageBuffer:
+                    {
+                        break;
+                    }
+                    default:
+                        break;
+                }
+            }
+        }
+
+        return sets;
     }
 
     ~pipeline() override
