@@ -103,37 +103,7 @@ struct pipeline : public gfx::gfx_pipeline
         vk::DescriptorSetAllocateInfo alloc_info{};
         alloc_info.descriptorPool = pool;
         alloc_info.setSetLayouts(set_layouts_);
-        std::vector<vk::DescriptorSet> sets = device().allocateDescriptorSets(alloc_info);
-
-        for (uint32_t s = 0; s < shader_.desc_sets_.size(); s++)
-        {
-            for (auto& binding : shader_.desc_sets_[s])
-            {
-                switch (binding.descriptorType)
-                {
-                    case vk::DescriptorType::eCombinedImageSampler:
-                    {
-                        break;
-                    }
-                    case vk::DescriptorType::eStorageImage:
-                    {
-                        break;
-                    }
-                    case vk::DescriptorType::eUniformBuffer:
-                    {
-                        break;
-                    }
-                    case vk::DescriptorType::eStorageBuffer:
-                    {
-                        break;
-                    }
-                    default:
-                        break;
-                }
-            }
-        }
-
-        return sets;
+        return device().allocateDescriptorSets(alloc_info);
     }
 
     ~pipeline() override
