@@ -27,6 +27,7 @@ namespace fi::gfx
         vk::Pipeline pipeline_{};
         vk::PipelineLayout layout_{};
         std::vector<vk::DescriptorSetLayout> set_layouts_{};
+        std::vector<vk::RenderingAttachmentInfo> atchm_infos_{};
 
         vk::PipelineRenderingCreateInfo atchms_{};
         vk::PipelineVertexInputStateCreateInfo vtx_input_{};
@@ -38,6 +39,7 @@ namespace fi::gfx
         vk::PipelineDepthStencilStateCreateInfo depth_stencil_{};
         vk::PipelineColorBlendStateCreateInfo color_blend_{};
         vk::PipelineDynamicStateCreateInfo dynamic_state_{};
+
 
         virtual ~gfx_pipeline() = default;
 

@@ -16,6 +16,7 @@ namespace fi::mgr
                                         const std::function<void()>& deffered)>;
 
         std::string name_ = "";
+        func frame_func_{};
         std::vector<gfx::gfx_pipeline*> pipelines_;
 
         std::vector<vk::Image> images_{};
@@ -28,7 +29,12 @@ namespace fi::mgr
         virtual ~render() = default;
 
         virtual void construct() = 0;
-        virtual func get_frame_func() = 0;
+        void draw_frame(const std::vector<vk::SemaphoreSubmitInfo>& waits,
+                        const std::vector<vk::SemaphoreSubmitInfo>& signals,
+                        const std::function<void()>& deffered = [](){})
+        {
+            frame_func_(waits, signals, deffered);
+        }
     };
 }; // namespace fi::mgr
 

@@ -79,8 +79,7 @@ struct pipeline : public gfx::gfx_pipeline
         }
         color_blend_.setAttachments(blend_states);
 
-        static std::array<vk::DynamicState, 2> dynamic_states = {vk::DynamicState::eViewport,
-                                                                 vk::DynamicState::eScissor};
+        std::array<vk::DynamicState, 2> dynamic_states = {vk::DynamicState::eViewport, vk::DynamicState::eScissor};
         dynamic_state_.setDynamicStates(dynamic_states);
 
         vk::GraphicsPipelineCreateInfo create_info{};
@@ -97,6 +96,17 @@ struct pipeline : public gfx::gfx_pipeline
         create_info.pDynamicState = &dynamic_state_;
         create_info.layout = layout_;
         pipeline_ = device().createGraphicsPipelines(pipeline_cache(), create_info).value[0];
+
+        atchm_infos_.resize(shader_.atchm_count_ + 1);
+        for (auto& info : atchm_infos_)
+        {
+            info.clearValue.color.setFloat32({0, 0, 0, 1});
+            info.imageLayout = vk::ImageLayout::eColorAttachmentOptimal;
+            info.loadOp = vk::AttachmentLoadOp::eClear;
+            info.storeOp = vk::AttachmentStoreOp::eStore;
+        }
+        atchm_infos_.back().imageLayout = vk::ImageLayout::eDepthStencilAttachmentOptimal;
+        atchm_infos_.back().clearValue.depthStencil.setDepth(1.0f);
     }
 
     std::vector<vk::DescriptorSet> setup_desc_set(vk::DescriptorPool pool) override

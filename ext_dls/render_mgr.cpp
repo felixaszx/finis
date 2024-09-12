@@ -14,30 +14,6 @@ struct render : public mgr::render
     vk::DescriptorPool desc_pool_{};
     std::vector<std::vector<vk::DescriptorSet>> desc_sets_{}; // per pipeline
 
-    func frame_func_ = [&](const std::vector<vk::SemaphoreSubmitInfo>& waits,
-                           const std::vector<vk::SemaphoreSubmitInfo>& signals,
-                           const std::function<void()>& deffered)
-    {
-        auto r = device().waitForFences(frame_fence_, true, std::numeric_limits<uint64_t>::max());
-        if (deffered)
-        {
-            deffered();
-        }
-        device().resetFences(frame_fence_);
-
-        cmd_.reset();
-        vk::CommandBufferBeginInfo begin_info{};
-        cmd_.begin(begin_info);
-        cmd_.end();
-
-        vk::CommandBufferSubmitInfo cmd_submit{.commandBuffer = cmd_};
-        vk::SubmitInfo2 submit2{};
-        submit2.setCommandBufferInfos(cmd_submit);
-        submit2.setSignalSemaphoreInfos(signals);
-        submit2.setWaitSemaphoreInfos(waits);
-        queues(gfx::context::GRAPHICS).submit2(submit2, frame_fence_);
-    };
-
     ~render() override
     {
         device().destroyCommandPool(cmd_pool_);
@@ -88,9 +64,31 @@ struct render : public mgr::render
 
         vk::FenceCreateInfo fence_info{.flags = vk::FenceCreateFlagBits::eSignaled};
         frame_fence_ = device().createFence(fence_info);
-    }
 
-    func get_frame_func() override { return frame_func_; }
+        set_draw_func();
+    }
+    void set_draw_func() { frame_func_ = std::ref(draw_func_derived_); }
+
+    func draw_func_derived_ = [this](const std::vector<vk::SemaphoreSubmitInfo>& waits,
+                                     const std::vector<vk::SemaphoreSubmitInfo>& signals, //
+                                     const std::function<void()>& deffered)
+    {
+        auto r = device().waitForFences(frame_fence_, true, std::numeric_limits<uint64_t>::max());
+        deffered();
+        device().resetFences(frame_fence_);
+
+        cmd_.reset();
+        vk::CommandBufferBeginInfo begin_info{};
+        cmd_.begin(begin_info);
+        cmd_.end();
+
+        vk::CommandBufferSubmitInfo cmd_submit{.commandBuffer = cmd_};
+        vk::SubmitInfo2 submit2{};
+        submit2.setCommandBufferInfos(cmd_submit);
+        submit2.setSignalSemaphoreInfos(signals);
+        submit2.setWaitSemaphoreInfos(waits);
+        queues(gfx::context::GRAPHICS).submit2(submit2, frame_fence_);
+    };
 };
 
 EXPORT_EXTENSION(render);

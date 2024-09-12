@@ -37,7 +37,6 @@ int main(int argc, char** argv)
 
     ext::dll render_dll("exe/render_mgr.dll");
     auto render_mgr = render_dll.load_unique<mgr::render>();
-    mgr::render::func render_func = render_mgr->get_frame_func();
     render_mgr->pipelines_.push_back(pipeline0.get());
     render_mgr->construct();
 
@@ -57,9 +56,9 @@ int main(int argc, char** argv)
         }
 
         uint32_t img_idx = 0;
-        render_func({wait_info},   //
-                    {signal_info}, //
-                    [&]() { sc.aquire_next_image(img_idx, next_img); });
+        render_mgr->draw_frame({wait_info},   //
+                               {signal_info}, //
+                               [&]() { sc.aquire_next_image(img_idx, next_img); });
         sc.present({submit});
     }
 
