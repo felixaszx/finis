@@ -27,6 +27,9 @@ namespace fi::gfx
         vk::Pipeline pipeline_{};
         vk::PipelineLayout layout_{};
         std::vector<vk::DescriptorSetLayout> set_layouts_{};
+
+        vk::Rect2D render_area_{};
+        vk::RenderingInfo render_info_{};
         std::vector<vk::RenderingAttachmentInfo> atchm_infos_{};
 
         vk::PipelineRenderingCreateInfo atchms_{};

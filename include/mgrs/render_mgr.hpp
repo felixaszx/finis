@@ -20,11 +20,11 @@ namespace fi::mgr
         std::vector<gfx::gfx_pipeline*> pipelines_;
 
         std::vector<vk::Image> images_{};
-        std::vector<vk::ImageView> imag_views{};
-        std::vector<vma::Allocation> img_allocs_{};
+        std::vector<vk::ImageView> imag_views_{};
+        std::vector<vma::Allocation> image_allocs_{};
 
-        std::vector<vk::Buffer> buffers{};
-        std::vector<vma::Allocation> buf_allocs_{};
+        std::vector<vk::Buffer> buffers_{};
+        std::vector<vma::Allocation> buffer_allocs_{};
 
         virtual ~render() = default;
 

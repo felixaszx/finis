@@ -107,6 +107,11 @@ struct pipeline : public gfx::gfx_pipeline
         }
         atchm_infos_.back().imageLayout = vk::ImageLayout::eDepthStencilAttachmentOptimal;
         atchm_infos_.back().clearValue.depthStencil.setDepth(1.0f);
+
+        render_info_.pColorAttachments = atchm_infos_.data();
+        render_info_.colorAttachmentCount = shader_.atchm_count_;
+        render_info_.pDepthAttachment = &atchm_infos_.back();
+        render_info_.pStencilAttachment = &atchm_infos_.back();
     }
 
     std::vector<vk::DescriptorSet> setup_desc_set(vk::DescriptorPool pool) override
