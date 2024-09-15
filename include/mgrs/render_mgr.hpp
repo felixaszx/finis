@@ -26,12 +26,29 @@ namespace fi::mgr
         std::vector<vk::Buffer> buffers_{};
         std::vector<vma::Allocation> buffer_allocs_{};
 
-        virtual ~render() = default;
+        virtual ~render()
+        {
+            for (size_t i = 0; i < images_.size(); i++)
+            {
+                allocator().destroyImage(images_[i], image_allocs_[i]);
+            }
+
+            for (vk::ImageView view : imag_views_)
+            {
+                device().destroyImageView(view);
+            }
+
+            for (size_t i = 0; i < buffers_.size(); i++)
+            {
+                allocator().destroyBuffer(buffers_[i], buffer_allocs_[i]);
+            }
+        }
 
         virtual void construct() = 0;
-        void draw_frame(const std::vector<vk::SemaphoreSubmitInfo>& waits,
-                        const std::vector<vk::SemaphoreSubmitInfo>& signals,
-                        const std::function<void()>& deffered = [](){})
+        void draw_frame(
+            const std::vector<vk::SemaphoreSubmitInfo>& waits,
+            const std::vector<vk::SemaphoreSubmitInfo>& signals,
+            const std::function<void()>& deffered = []() {})
         {
             frame_func_(waits, signals, deffered);
         }

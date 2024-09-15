@@ -5,6 +5,8 @@ using namespace glms::literals;
 using namespace util::literals;
 using namespace std::chrono_literals;
 
+EXPORTED_VARIABLE(std::string, test_str);
+
 struct render : public mgr::render
 {
     vk::CommandBuffer cmd_{};
@@ -14,29 +16,38 @@ struct render : public mgr::render
     vk::DescriptorPool desc_pool_{};
     std::vector<std::vector<vk::DescriptorSet>> desc_sets_{}; // per pipeline
 
+    void set_draw_func()
+    {
+        frame_func_ = [this](const std::vector<vk::SemaphoreSubmitInfo>& waits,
+                             const std::vector<vk::SemaphoreSubmitInfo>& signals, //
+                             const std::function<void()>& deffered)
+        {
+            auto r = device().waitForFences(frame_fence_, true, std::numeric_limits<uint64_t>::max());
+            deffered();
+            device().resetFences(frame_fence_);
+
+            cmd_.reset();
+            vk::CommandBufferBeginInfo begin_info{};
+            cmd_.begin(begin_info);
+            cmd_.end();
+
+            vk::CommandBufferSubmitInfo cmd_submit{.commandBuffer = cmd_};
+            vk::SubmitInfo2 submit2{};
+            submit2.setCommandBufferInfos(cmd_submit);
+            submit2.setSignalSemaphoreInfos(signals);
+            submit2.setWaitSemaphoreInfos(waits);
+            queues(gfx::context::GRAPHICS).submit2(submit2, frame_fence_);
+        };
+    }
+
     ~render() override
     {
-        for (size_t i = 0; i < images_.size(); i++)
-        {
-            allocator().destroyImage(images_[i], image_allocs_[i]);
-        }
-
-        for (vk::ImageView view : imag_views_)
-        {
-            device().destroyImageView(view);
-        }
-
-        for (size_t i = 0; i < buffers_.size(); i++)
-        {
-            allocator().destroyBuffer(buffers_[i], buffer_allocs_[i]);
-        }
-
         device().destroyCommandPool(cmd_pool_);
         device().destroyFence(frame_fence_);
         device().destroyDescriptorPool(desc_pool_);
     }
 
-    void construct() override
+    void init()
     {
         name_ = "render_mgr";
 
@@ -79,7 +90,13 @@ struct render : public mgr::render
 
         vk::FenceCreateInfo fence_info{.flags = vk::FenceCreateFlagBits::eSignaled};
         frame_fence_ = device().createFence(fence_info);
+        set_draw_func();
+    }
 
+    void construct() override
+    {
+        init();
+        // creating nessary resources
         vk::ImageCreateInfo atchm_info{.imageType = vk::ImageType::e2D,
                                        .format = vk::Format::eR32G32B32A32Sfloat,
                                        .extent = vk::Extent3D(1920, 1080, 1),
@@ -103,29 +120,21 @@ struct render : public mgr::render
             imag_views_.push_back(device().createImageView(view_info));
         }
 
-        set_draw_func();
+        atchm_info.format = vk::Format::eD24UnormS8Uint;
+        atchm_info.usage = vk::ImageUsageFlagBits::eDepthStencilAttachment;
+        auto allocated = allocator().createImage(atchm_info, alloc_info);
+        images_.push_back(allocated.first);
+        image_allocs_.push_back(allocated.second);
+
+        vk::ImageViewCreateInfo view_info{.image = images_.back(),
+                                          .viewType = vk::ImageViewType::e2D,
+                                          .format = atchm_info.format,
+                                          .subresourceRange = {.aspectMask = vk::ImageAspectFlagBits::eDepth |  //
+                                                                             vk::ImageAspectFlagBits::eStencil, //
+                                                               .levelCount = 1,
+                                                               .layerCount = 1}};
+        imag_views_.push_back(device().createImageView(view_info));
     }
-    func draw_func_derived_ = [this](const std::vector<vk::SemaphoreSubmitInfo>& waits,
-                                     const std::vector<vk::SemaphoreSubmitInfo>& signals, //
-                                     const std::function<void()>& deffered)
-    {
-        auto r = device().waitForFences(frame_fence_, true, std::numeric_limits<uint64_t>::max());
-        deffered();
-        device().resetFences(frame_fence_);
-
-        cmd_.reset();
-        vk::CommandBufferBeginInfo begin_info{};
-        cmd_.begin(begin_info);
-        cmd_.end();
-
-        vk::CommandBufferSubmitInfo cmd_submit{.commandBuffer = cmd_};
-        vk::SubmitInfo2 submit2{};
-        submit2.setCommandBufferInfos(cmd_submit);
-        submit2.setSignalSemaphoreInfos(signals);
-        submit2.setWaitSemaphoreInfos(waits);
-        queues(gfx::context::GRAPHICS).submit2(submit2, frame_fence_);
-    };
-    void set_draw_func() { frame_func_ = std::ref(draw_func_derived_); }
 };
 
 EXPORT_EXTENSION(render);

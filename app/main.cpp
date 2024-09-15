@@ -39,7 +39,7 @@ int main(int argc, char** argv)
     auto render_mgr = render_dll.load_unique<mgr::render>();
     render_mgr->pipelines_.push_back(pipeline0.get());
     render_mgr->construct();
-
+    
     gfx::semaphore next_img;
     gfx::semaphore submit;
     vk::SemaphoreSubmitInfo wait_info{.semaphore = next_img, //
