@@ -19,7 +19,7 @@
     {                                          \
         return (void*)(new Type);              \
     }
-#define EXPORT_EXTENSION(...) GET_EXPORT_EXTENSION(__VA_ARGS__, EXPORT_EXTENSION_1, EXPORT_EXTENSION_0)(__VA_ARGS__)
+#define REGISTER_EXT(...) GET_EXPORT_EXTENSION(__VA_ARGS__, EXPORT_EXTENSION_1, EXPORT_EXTENSION_0)(__VA_ARGS__)
 
 #define GET_CUSTOM_EXPORT_EXT(_0, _1, FUNC, ...) FUNC
 #define CUSTOM_EXPORT_EXT_0(obj)           \
@@ -32,17 +32,6 @@
     {                                          \
         return obj;                            \
     }
-#define CUSTOM_EXPORT_EXT(...) GET_EXPORT_EXTENSION(__VA_ARGS__, CUSTOM_EXPORT_EXT_1, CUSTOM_EXPORT_EXT_0)(__VA_ARGS__)
-
-#define EXPORTED_VARIABLE(type, var)             \
-    type var;                                    \
-    EXTENSION_API void* load_##var()              \
-    {                                            \
-        return &var;                             \
-    }                                            \
-    EXTENSION_API const char* get_##var##_type() \
-    {                                            \
-        return #type;                            \
-    }
+#define REGISTER_EXT2(...) GET_EXPORT_EXTENSION(__VA_ARGS__, CUSTOM_EXPORT_EXT_1, CUSTOM_EXPORT_EXT_0)(__VA_ARGS__)
 
 #endif // EXTENSIONS_CPP_DEFINES_HPP

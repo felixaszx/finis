@@ -119,4 +119,4 @@ struct loaded_res : public gfx::prim_res
     gfx::tex_arr* get_tex_arr() override { return tex_arr_.get(); }
 };
 
-EXPORT_EXTENSION(loaded_res);
+REGISTER_EXT(loaded_res);

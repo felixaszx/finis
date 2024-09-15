@@ -40,7 +40,7 @@ namespace fi::res
         uint32_t sampler_idx_;
         std::vector<std::byte> data_{}; // decoded
 
-        vk::Extent3D get_extent() { return {util::casts<uint32_t>(x_), util::casts<uint32_t>(y_), 1}; };
+        vk::Extent3D get_extent() { return {static_cast<uint32_t>(x_), static_cast<uint32_t>(y_), 1}; };
         uint32_t get_levels() { return mipmapped_ ? std::floor(std::log2(std::max(x_, y_))) + 1 : 1; }
     };
 

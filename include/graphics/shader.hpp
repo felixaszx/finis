@@ -21,6 +21,7 @@ namespace fi::gfx
 
         std::vector<vk::ShaderStageFlagBits> push_stages_{};
         std::vector<std::pair<std::string, vk::DeviceSize>> push_consts_{};
+        
         std::vector<std::vector<std::pair<std::string, size_t>>> desc_names_{};
         std::vector<std::vector<vk::DescriptorSetLayoutBinding>> desc_sets_{};
 

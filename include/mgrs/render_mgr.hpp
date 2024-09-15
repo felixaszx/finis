@@ -20,10 +20,11 @@ namespace fi::mgr
         std::vector<gfx::gfx_pipeline*> pipelines_;
 
         std::vector<vk::Image> images_{};
-        std::vector<vk::ImageView> imag_views_{};
+        std::vector<vk::ImageView> image_views_{};
         std::vector<vma::Allocation> image_allocs_{};
 
         std::vector<vk::Buffer> buffers_{};
+        std::vector<std::byte*> buffer_mappings_{};
         std::vector<vma::Allocation> buffer_allocs_{};
 
         virtual ~render()
@@ -33,7 +34,7 @@ namespace fi::mgr
                 allocator().destroyImage(images_[i], image_allocs_[i]);
             }
 
-            for (vk::ImageView view : imag_views_)
+            for (vk::ImageView view : image_views_)
             {
                 device().destroyImageView(view);
             }

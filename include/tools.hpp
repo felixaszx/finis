@@ -27,36 +27,6 @@ namespace thp = task_thread_pool;
 
 namespace fi::util
 {
-    template <typename T>
-    inline constexpr T casts(auto&& value)
-    {
-        return static_cast<T>(std::forward<decltype(value)>(value));
-    }
-
-    template <typename T>
-    inline constexpr T castr(auto&& value)
-    {
-        return reinterpret_cast<T>(std::forward<decltype(value)>(value));
-    }
-
-    template <typename T>
-    inline constexpr T castc(auto&& value)
-    {
-        return const_cast<T>(std::forward<decltype(value)>(value));
-    }
-
-    template <typename T>
-    inline constexpr T castd(auto&& value)
-    {
-        return dynamic_cast<T>(std::forward<decltype(value)>(value));
-    }
-
-    template <typename T>
-    inline constexpr T castf(auto&& value)
-    {
-        return (T)(std::forward<decltype(value)>(value));
-    }
-
     inline std::size_t sizeof_arr(auto& arr)
     {
         return (arr.size() * sizeof(arr[0]));

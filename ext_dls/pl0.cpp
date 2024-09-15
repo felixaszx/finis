@@ -133,4 +133,4 @@ struct pipeline : public gfx::gfx_pipeline
     }
 };
 
-EXPORT_EXTENSION(pipeline);
+REGISTER_EXT(pipeline);

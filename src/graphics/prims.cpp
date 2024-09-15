@@ -135,8 +135,8 @@ void fi::gfx::primitives::reload_draw_calls(vk::CommandPool pool)
 {
     prims_.draw_calls_offset_ = util::sizeof_arr(prim_infos_);
     flush_staging_memory(pool);
-    staging_span_.push_back(util::castr<const std::byte*>(prim_infos_.data()), util::sizeof_arr(prim_infos_));
-    staging_span_.push_back(util::castr<const std::byte*>(draw_calls_.data()), util::sizeof_arr(draw_calls_));
+    staging_span_.push_back(reinterpret_cast<const std::byte*>(prim_infos_.data()), util::sizeof_arr(prim_infos_));
+    staging_span_.push_back(reinterpret_cast<const std::byte*>(draw_calls_.data()), util::sizeof_arr(draw_calls_));
     allocator().flushAllocation(staging_alloc_, 0, VK_WHOLE_SIZE);
 
     gfx::fence fence;
@@ -223,7 +223,7 @@ void fi::gfx::prim_structure::load_data()
                                              .requiredFlags = vk::MemoryPropertyFlagBits::eHostCoherent};
         vma::AllocationInfo alloc{};
         auto allocated = allocator().createBuffer(buffer_info, alloc_info, alloc);
-        data_.mapping_ = util::castr<std::byte*>(alloc.pMappedData);
+        data_.mapping_ = reinterpret_cast<std::byte*>(alloc.pMappedData);
         data_.buffer_ = allocated.first;
         data_.alloc_ = allocated.second;
         vk::BufferDeviceAddressInfo address_info{.buffer = data_.buffer_};
@@ -368,9 +368,9 @@ void fi::gfx::prim_skins::load_data(vk::CommandPool pool)
         auto staging_allocated = allocator().createBuffer(staging_info, staging_allo_info, staging_alloc);
 
         memcpy(staging_alloc.pMappedData, mesh_skin_idxs_.data(), util::sizeof_arr(mesh_skin_idxs_));
-        memcpy(util::castf<std::byte*>(staging_alloc.pMappedData) + data_.joints_offset_, joints_.data(),
+        memcpy((std::byte*)(staging_alloc.pMappedData) + data_.joints_offset_, joints_.data(),
                util::sizeof_arr(joints_));
-        memcpy(util::castf<std::byte*>(staging_alloc.pMappedData) + data_.inv_binds_offset_, inv_binds_.data(),
+        memcpy((std::byte*)(staging_alloc.pMappedData) + data_.inv_binds_offset_, inv_binds_.data(),
                util::sizeof_arr(inv_binds_));
         allocator().flushAllocation(staging_allocated.second, 0, VK_WHOLE_SIZE);
 

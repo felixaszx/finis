@@ -20,7 +20,7 @@ fi::gfx::shader::shader(const std::filesystem::path& shader_file, const std::fil
 
     vk::ShaderModuleCreateInfo shader_info{};
     shader_info.codeSize = buffer.size();
-    shader_info.pCode = util::castr<const uint32_t*>(buffer.data());
+    shader_info.pCode = reinterpret_cast<const uint32_t*>(buffer.data());
     module_ = device().createShaderModule(shader_info);
 
     spvc::Compiler reflection(shader_info.pCode, shader_info.codeSize / sizeof(uint32_t));

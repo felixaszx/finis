@@ -137,7 +137,7 @@ fi::res::gltf_file::gltf_file(const std::filesystem::path& path,
             gltf_tex& g_tex = textures_.emplace_back();
             g_tex.name_ = std::format("{}__image({})", tex.name, img.name);
             stbi_uc* pixels = stbi_load_from_memory(
-                util::castf<const stbi_uc*>(std::get<3>(buffer.data).bytes.data() + view.byteOffset),
+                (const stbi_uc*)(std::get<3>(buffer.data).bytes.data() + view.byteOffset),
                 view.byteLength, //
                 &g_tex.x_, &g_tex.y_, &g_tex.comp_, STBI_rgb_alpha);
             g_tex.comp_ = 4;

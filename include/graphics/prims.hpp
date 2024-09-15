@@ -56,7 +56,7 @@ namespace fi::gfx
         void end_primitives();
         void reload_draw_calls(vk::CommandPool pool);
         [[nodiscard]] vk::DeviceSize addresses_size() const { return sizeof(addresses_); }
-        [[nodiscard]] const std::byte* addresses() const { return util::castr<const std::byte*>(&addresses_); }
+        [[nodiscard]] const std::byte* addresses() const { return reinterpret_cast<const std::byte*>(&addresses_); }
 
         template <typename T>
         static std::vector<size_t> get_elm_offset_per_prim(const T& data)
@@ -82,11 +82,11 @@ namespace fi::gfx
             {
                 return;
             }
-            size_t offset = write_staging_memory(util::castr<const std::byte*>(data.data()), util::sizeof_arr(data));
+            size_t offset = write_staging_memory(reinterpret_cast<const std::byte*>(data.data()), util::sizeof_arr(data));
             if (offset == -1)
             {
                 flush_staging_memory(pool);
-                offset = write_staging_memory(util::castr<const std::byte*>(data.data()), util::sizeof_arr(data));
+                offset = write_staging_memory(reinterpret_cast<const std::byte*>(data.data()), util::sizeof_arr(data));
             }
 
             size_t i = 0;
@@ -112,11 +112,11 @@ namespace fi::gfx
             {
                 return;
             }
-            size_t offset = write_staging_memory(util::castr<const std::byte*>(data.data()), util::sizeof_arr(data));
+            size_t offset = write_staging_memory(reinterpret_cast<const std::byte*>(data.data()), util::sizeof_arr(data));
             if (offset == -1)
             {
                 flush_staging_memory(pool);
-                offset = write_staging_memory(util::castr<const std::byte*>(data.data()), util::sizeof_arr(data));
+                offset = write_staging_memory(reinterpret_cast<const std::byte*>(data.data()), util::sizeof_arr(data));
             }
 
             size_t i = 0;

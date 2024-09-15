@@ -94,6 +94,7 @@ struct render : public mgr::render
     void construct() override
     {
         init();
+
         // creating nessary resources
         vk::ImageCreateInfo atchm_info{.imageType = vk::ImageType::e2D,
                                        .format = vk::Format::eR32G32B32A32Sfloat,
@@ -115,14 +116,15 @@ struct render : public mgr::render
                                               .subresourceRange = {.aspectMask = vk::ImageAspectFlagBits::eColor, //
                                                                    .levelCount = 1,
                                                                    .layerCount = 1}};
-            imag_views_.push_back(device().createImageView(view_info));
+            image_views_.push_back(device().createImageView(view_info));
+            pipelines_[0]->atchm_infos_[i].imageView = image_views_.back();
         }
 
         atchm_info.format = vk::Format::eD24UnormS8Uint;
         atchm_info.usage = vk::ImageUsageFlagBits::eDepthStencilAttachment;
-        auto allocated = allocator().createImage(atchm_info, alloc_info);
-        images_.push_back(allocated.first);
-        image_allocs_.push_back(allocated.second);
+        auto image_alloc = allocator().createImage(atchm_info, alloc_info);
+        images_.push_back(image_alloc.first);
+        image_allocs_.push_back(image_alloc.second);
 
         vk::ImageViewCreateInfo view_info{.image = images_.back(),
                                           .viewType = vk::ImageViewType::e2D,
@@ -131,8 +133,27 @@ struct render : public mgr::render
                                                                              vk::ImageAspectFlagBits::eStencil, //
                                                                .levelCount = 1,
                                                                .layerCount = 1}};
-        imag_views_.push_back(device().createImageView(view_info));
+        image_views_.push_back(device().createImageView(view_info));
+        pipelines_[0]->atchm_infos_.back().imageView = image_views_.back();
+        pipelines_[0]->render_info_.layerCount = 1;
+
+        vk::DeviceSize buffer_size = 0;
+        for (auto& buffer_info : pipelines_[0]->shader_ref_->buffer_infos_)
+        {
+            buffer_info.offset = buffer_size;
+            buffer_size += buffer_info.range;
+        }
+
+        vk::BufferCreateInfo buffer_info{.size = buffer_size, //
+                                         .usage = vk::BufferUsageFlagBits::eUniformBuffer};
+        vma::AllocationInfo buffer_alloc_info{};
+        alloc_info.flags = vma::AllocationCreateFlagBits::eHostAccessSequentialWrite | //
+                           vma::AllocationCreateFlagBits::eMapped;
+        auto buffer_alloc = allocator().createBuffer(buffer_info, alloc_info, buffer_alloc_info);
+        buffers_.push_back(buffer_alloc.first);
+        buffer_allocs_.push_back(buffer_alloc.second);
+        buffer_mappings_.push_back((std::byte*)(buffer_alloc_info.pMappedData));
     }
 };
 
-EXPORT_EXTENSION(render);
+REGISTER_EXT(render);
