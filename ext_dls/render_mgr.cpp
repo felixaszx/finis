@@ -5,8 +5,6 @@ using namespace glms::literals;
 using namespace util::literals;
 using namespace std::chrono_literals;
 
-EXPORTED_VARIABLE(std::string, test_str);
-
 struct render : public mgr::render
 {
     vk::CommandBuffer cmd_{};

@@ -39,26 +39,6 @@ namespace fi::ext
             }
             throw std::runtime_error(std::format("DLL {} is not loaded", dl_.location().generic_string()));
         }
-
-        template <typename T>
-        [[nodiscard]] T& load_var(const std::string& var)
-        {
-            if (valid())
-            {
-                return *util::castf<T*>(dl_.get<void*()>(std::format("load_{}", var))());
-            }
-            throw std::runtime_error(std::format("DLL {} is not loaded", dl_.location().generic_string()));
-        }
-
-        template <typename T>
-        [[nodiscard]] const char* get_var_type(const std::string& var)
-        {
-            if (valid())
-            {
-                return dl_.get<const char*()>(std::format("get_{}_type", var))();
-            }
-            throw std::runtime_error(std::format("DLL {} is not loaded", dl_.location().generic_string()));
-        }
     };
 }; // namespace fi::ext
 
