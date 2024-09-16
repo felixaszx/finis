@@ -9,8 +9,8 @@
 #define nullptr NULL
 
 #define GET_ALLOC(_0, _1, ALLOC, ...) ALLOC
-#define ALLOC_0(type)                 calloc(1, sizeof(type))
-#define ALLOC_1(type, size)           calloc(size, sizeof(type))
+#define ALLOC_0(type)                 malloc_zero(sizeof(type))
+#define ALLOC_1(type, count)          malloc_zero(count * sizeof(type))
 #define alloc(...)                    GET_ALLOC(__VA_ARGS__, ALLOC_1, ALLOC_0)(__VA_ARGS__)
 #define ffree(ptr) \
     if (ptr)       \
@@ -48,6 +48,13 @@ typedef char byte;
 typedef size_t byte_offset;
 
 struct timespec ms_sleep(size_t ms);
+
+static inline void* malloc_zero(size_t size)
+{
+    void* ptr = malloc(size);
+    memset(ptr, 0x0, size);
+    return ptr;
+}
 
 static inline size_t to_kb(size_t count)
 {
