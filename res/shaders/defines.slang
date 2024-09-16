@@ -1,6 +1,15 @@
 module defines;
 
 public typedef uint8_t byte;
+public typedef float2 vec2;
+public typedef float3 vec3;
+public typedef float4 vec4;
+public typedef uint2 uvec2;
+public typedef uint3 uvec3;
+public typedef uint4 uvec4;
+public typedef float2x2 mat2;
+public typedef float3x2 mat3;
+public typedef float4x2 mat4;
 
 public struct prim_info
 {
@@ -36,10 +45,10 @@ public struct mesh_info
 
 public struct mat_info
 {
-    public float4 color_factor_;
-    public float4 emissive_factor_;       // [3] = emissive strength
-    public float4 sheen_color_factor_;    // [3] = sheen roughness factor
-    public float4 specular_color_factor_; // [3] = specular factor
+    public vec4 color_factor_;
+    public vec4 emissive_factor_;       // [3] = emissive strength
+    public vec4 sheen_color_factor_;    // [3] = sheen roughness factor
+    public vec4 specular_color_factor_; // [3] = specular factor
 
     public float alpha_cutoff_; // -1 means blend, 0 means opaque, otherwise means mask
     public float metallic_factor_;

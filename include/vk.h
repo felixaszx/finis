@@ -6,8 +6,11 @@
 #include <string.h>
 #include <stdbool.h>
 
-#define GLFW_INCLUDE_VULKAN
+#define CGLM_FORCE_DEPTH_ZERO_TO_ONE
+#define CGLM_FORCE_LEFT_HANDED
 #include <cglm/cglm.h>
+#include <cglm/quat.h>
+#define GLFW_INCLUDE_VULKAN
 #include <GLFW/glfw3.h>
 #include <vulkan/vulkan.h>
 #include <vma/vk_mem_alloc.h>
@@ -41,8 +44,7 @@ bool vk_ctx_update(vk_ctx* ctx);
 
 typedef struct vk_swapchain
 {
-    vk_ctx* ctx_;
-
+    VkDevice device_;
     VkSwapchainKHR swapchain_;
     uint32_t image_count_;
     VkImage* images_;

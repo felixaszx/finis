@@ -143,7 +143,7 @@ vk_swapchain* new_vk_swapchain(vk_ctx* ctx, VkExtent2D extent)
 
 void init_vk_swapchain(vk_swapchain* swapchain, vk_ctx* ctx, VkExtent2D extent)
 {
-    swapchain->ctx_ = ctx;
+    swapchain->device_ = ctx->device_;
     VkSwapchainCreateInfoKHR swapchain_cinfo = {VK_STRUCTURE_TYPE_SWAPCHAIN_CREATE_INFO_KHR};
     swapchain_cinfo.surface = ctx->surface_;
     swapchain_cinfo.minImageCount = 3;
@@ -212,5 +212,5 @@ void init_vk_swapchain(vk_swapchain* swapchain, vk_ctx* ctx, VkExtent2D extent)
 void release_vk_swapchain(vk_swapchain* swapchain)
 {
     ffree(swapchain->images_);
-    vkDestroySwapchainKHR(swapchain->ctx_->device_, swapchain->swapchain_, nullptr);
+    vkDestroySwapchainKHR(swapchain->device_, swapchain->swapchain_, nullptr);
 }

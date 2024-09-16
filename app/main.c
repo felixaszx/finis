@@ -2,6 +2,7 @@
 #include <stdlib.h>
 
 #include "vk.h"
+#include "vk_mesh.h"
 
 int main(int argc, char** argv)
 {
@@ -40,6 +41,8 @@ int main(int argc, char** argv)
     VkCommandBufferSubmitInfo cmd_submits[1] = {};
     cmd_submits[0].sType = VK_STRUCTURE_TYPE_COMMAND_BUFFER_SUBMIT_INFO;
     cmd_submits[0].commandBuffer = cmd;
+
+    vk_mesh* mesh = new (vk_mesh, &ctx, to_mb(10));
 
     while (vk_ctx_update(&ctx))
     {
