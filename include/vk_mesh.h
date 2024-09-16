@@ -51,7 +51,7 @@ typedef struct vk_prim
 {
     char name_[512];
     size_t attrib_counts_[ATTRIBUTE_COUNT];
-    byte* attrib_datas_[ATTRIBUTE_COUNT];
+    byte* attrib_datas_[ATTRIBUTE_COUNT]; // offset inside vk_mesh::buffer_
 } vk_prim;
 
 vk_prim vk_prim_get_attrib_size(vk_prim_attrib_type attrib_type, size_t count);
