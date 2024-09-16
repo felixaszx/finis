@@ -6,6 +6,7 @@
 #define VK_PRIM_ATTRIB_COUNT 9
 
 typedef uint32_t uvec4[4];
+
 typedef enum vk_prim_attrib_type
 {
     INDEX,
@@ -51,7 +52,7 @@ typedef struct vk_prim
 {
     char name_[512];
     size_t attrib_counts_[VK_PRIM_ATTRIB_COUNT];
-    byte_offset attrib_datas_[VK_PRIM_ATTRIB_COUNT]; // offset inside vk_mesh::buffer_
+    byte_offset attrib_data_[VK_PRIM_ATTRIB_COUNT]; // offset inside vk_mesh::buffer_
 } vk_prim;
 
 DEFINE_OBJ_DEFAULT(vk_prim);
@@ -68,6 +69,10 @@ typedef struct vk_mesh
     VkBuffer buffer_;
     VmaAllocation alloc_;
     VkDeviceSize mem_limit_;
+    VkDeviceAddress address_;
+
+    VkDeviceSize dc_offset_;
+    VkDrawIndirectCommand* draw_calls_;
 
     byte* mapping_;
     VkBuffer staging_;
@@ -75,8 +80,9 @@ typedef struct vk_mesh
 } vk_mesh;
 
 DEFINE_OBJ(vk_mesh, vk_ctx* ctx, const char* name, VkDeviceSize mem_limit, uint32_t prim_limit);
-void vk_mesh_free_staging(vk_mesh* this);
 vk_prim* vk_mesh_add_prim(vk_mesh* this, const char* name);
+void vk_mesh_free_staging(vk_mesh* this);
+void vk_mesh_draw_prims(vk_mesh* this, VkCommandBuffer cmd);
 
 typedef struct vk_model
 {

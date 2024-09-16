@@ -8,6 +8,7 @@
 
 #define CGLM_FORCE_DEPTH_ZERO_TO_ONE
 #define CGLM_FORCE_LEFT_HANDED
+#define CGLM_ALL_UNALIGNED 
 #include <cglm/cglm.h>
 #include <cglm/quat.h>
 #define GLFW_INCLUDE_VULKAN

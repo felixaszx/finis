@@ -4,7 +4,7 @@ IMPL_OBJ_NEW_DEFAULT(vk_prim)
 {
     for (size_t i = 0; i < VK_PRIM_ATTRIB_COUNT; i++)
     {
-        this->attrib_datas_[i] = -1;
+        this->attrib_data_[i] = -1;
     }
     return this;
 }
@@ -29,14 +29,21 @@ void vk_mesh_free_staging(vk_mesh* this)
     }
 }
 
+void vk_mesh_draw_prims(vk_mesh* this, VkCommandBuffer cmd)
+{
+    vkCmdDrawIndirect(cmd, this->buffer_, this->dc_offset_, this->prim_count_, sizeof(VkDrawIndirectCommand));
+}
+
 IMPL_OBJ_NEW(vk_mesh, vk_ctx* ctx, const char* name, VkDeviceSize mem_limit, uint32_t prim_limit)
 {
     this->ctx_ = ctx;
-    this->mem_limit_ = mem_limit;
+    this->mem_limit_ = mem_limit - sizeof(VkDrawIndirectCommand) * prim_limit;
     this->prim_limit_ = prim_limit;
     strcpy_s(this->name_, sizeof(this->name_), name);
 
     this->prims_ = alloc(vk_prim, prim_limit);
+    this->draw_calls_ = alloc(VkDrawIndirectCommand, prim_limit);
+    this->dc_offset_ = this->mem_limit_;
     for (size_t i = 0; i < prim_limit; i++)
     {
         construct_vk_prim(this->prims_ + i);
@@ -50,6 +57,10 @@ IMPL_OBJ_NEW(vk_mesh, vk_ctx* ctx, const char* name, VkDeviceSize mem_limit, uin
     VmaAllocationCreateInfo alloc_info = {};
     alloc_info.usage = VMA_MEMORY_USAGE_AUTO_PREFER_DEVICE;
     vmaCreateBuffer(ctx->allocator_, &buffer_info, &alloc_info, &this->buffer_, &this->alloc_, nullptr);
+
+    VkBufferDeviceAddressInfo address_info = {VK_STRUCTURE_TYPE_BUFFER_DEVICE_ADDRESS_INFO};
+    address_info.buffer = this->buffer_;
+    this->address_ = vkGetBufferDeviceAddress(ctx->device_, &address_info);
 
     buffer_info.size = mem_limit;
     buffer_info.usage = VK_BUFFER_USAGE_VERTEX_BUFFER_BIT | //
@@ -72,6 +83,7 @@ IMPL_OBJ_DELETE(vk_mesh)
         vmaDestroyBuffer(this->ctx_->allocator_, this->buffer_, this->alloc_);
     }
     ffree(this->prims_);
+    ffree(this->draw_calls_);
 }
 
 vk_prim* vk_mesh_add_prim(vk_mesh* this, const char* name)
@@ -113,5 +125,6 @@ vk_mesh* vk_model_add_mesh(vk_model* this, const char* name, VkDeviceSize mem_li
     }
     construct_vk_mesh(this->meshes_ + this->mesh_count_, this->ctx_, name, mem_limit, prim_limit);
     this->mesh_count_++;
+
     return this->meshes_ + this->mesh_count_ - 1;
 }
