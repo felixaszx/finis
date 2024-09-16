@@ -55,7 +55,7 @@ typedef struct vk_prim
 } vk_prim;
 
 void init_vk_prim(vk_prim* prim);
-vk_prim vk_prim_get_attrib_size(vk_prim_attrib_type attrib_type, size_t count);
+size_t vk_prim_get_attrib_size(vk_prim* prim, vk_prim_attrib_type attrib_type);
 
 typedef struct vk_mesh
 {

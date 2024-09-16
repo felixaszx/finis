@@ -8,12 +8,12 @@ void init_vk_prim(vk_prim* prim)
     }
 }
 
-size_t prim_geom_get_attrib_size(vk_prim_attrib_type attrib_type, size_t count)
+size_t vk_prim_get_attrib_size(vk_prim* prim, vk_prim_attrib_type attrib_type)
 {
     const static size_t ATTRIB_SIZES[VK_PRIM_ATTRIB_COUNT] = {sizeof(uint32_t), sizeof(vec3), sizeof(vec3),
                                                               sizeof(vec4),     sizeof(vec2), sizeof(vec4),
                                                               sizeof(uvec4),    sizeof(vec4), sizeof(vk_material)};
-    return ATTRIB_SIZES[attrib_type] * count;
+    return ATTRIB_SIZES[attrib_type] * prim->attrib_counts_[attrib_type];
 }
 
 vk_mesh* new_vk_mesh(vk_ctx* ctx, VkDeviceSize mem_limit)
