@@ -19,7 +19,7 @@ size_t vk_prim_get_attrib_size(vk_prim* prim, vk_prim_attrib_type attrib_type)
 vk_mesh* new_vk_mesh(vk_ctx* ctx, VkDeviceSize mem_limit)
 {
     vk_mesh* m = alloc(vk_mesh);
-     init_vk_mesh(m, ctx, mem_limit);
+    init_vk_mesh(m, ctx, mem_limit);
     return m;
 }
 
