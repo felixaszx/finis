@@ -11,8 +11,16 @@
 #include <GLFW/glfw3.h>
 #include <vulkan/vulkan.h>
 #include <vma/vk_mem_alloc.h>
+#include <pthread.h>
 
 #include "tool.h"
+
+#define QUICK_ENUMERATE(type, func, target, count, ptr) \
+    type* ptr;                                          \
+    func(target, count, nullptr);                       \
+    ptr = alloc(type, *count);                          \
+    func(target, count, ptr)
+#define QUICK_GET(type, func, target, count, ptr) QUICK_ENUMERATE(type, func, target, count, ptr);
 
 typedef struct
 {
@@ -27,5 +35,22 @@ typedef struct
     GLFWwindow* win_;
     VmaAllocator allocator_;
 } vk_ctx;
+
+DEFINE_OBJ(vk_ctx, uint32_t width, uint32_t height);
+bool vk_ctx_update(vk_ctx* ctx);
+
+typedef struct
+{
+    vk_ctx* ctx_;
+
+    VkSwapchainKHR swapchain_;
+    uint32_t image_count_;
+    VkImage* images_;
+    VkFormat format_;
+} vk_swapchain;
+
+DEFINE_OBJ(vk_swapchain, vk_ctx* ctx, VkExtent2D extent);
+
+VkSemaphoreSubmitInfo get_vk_sem_info(VkSemaphore sem, VkPipelineStageFlags2 stage);
 
 #endif // INCLUDE_VK_H

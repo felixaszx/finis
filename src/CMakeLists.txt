@@ -5,16 +5,21 @@ set(CMAKE_C_STANDARD 17)
 set(CMAKE_RUNTIME_OUTPUT_DIRECTORY "${CMAKE_SOURCE_DIR}/exe")
 
 file(GLOB_RECURSE SRC "*.c")
-add_library(finis_lib SHARED ${SRC})
+add_library(finis_lib SHARED ${SRC} "vma.cpp")
 target_include_directories(finis_lib PRIVATE "${CMAKE_SOURCE_DIR}/include")
+
+find_package(PkgConfig REQUIRED)
+pkg_check_modules(glib REQUIRED IMPORTED_TARGET glib-2.0)
 
 find_package(glfw3 REQUIRED)
 find_package(Vulkan REQUIRED)
 find_package(spirv_cross_reflect REQUIRED)
 find_package(spirv_cross_core REQUIRED)
 
+
 target_link_libraries(finis_lib PUBLIC glfw)
 target_link_libraries(finis_lib PUBLIC Vulkan::Vulkan)
 target_link_libraries(finis_lib PUBLIC spirv-cross-core)
 target_link_libraries(finis_lib PUBLIC spirv-cross-reflect)
 target_link_libraries(finis_lib PUBLIC cglm)
+target_link_libraries(finis_lib PUBLIC PkgConfig::glib)
