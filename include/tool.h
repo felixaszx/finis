@@ -45,6 +45,8 @@
     ffree(obj)
 
 typedef char byte;
+typedef size_t byte_offset;
+
 struct timespec ms_sleep(size_t ms);
 
 static inline size_t to_kb(size_t count)

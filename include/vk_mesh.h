@@ -3,7 +3,7 @@
 
 #include "vk.h"
 
-#define ATTRIBUTE_COUNT 9
+#define VK_PRIM_ATTRIB_COUNT 9
 
 typedef uint32_t uvec4[4];
 typedef enum vk_prim_attrib_type
@@ -50,10 +50,11 @@ typedef struct vk_material
 typedef struct vk_prim
 {
     char name_[512];
-    size_t attrib_counts_[ATTRIBUTE_COUNT];
-    byte* attrib_datas_[ATTRIBUTE_COUNT]; // offset inside vk_mesh::buffer_
+    size_t attrib_counts_[VK_PRIM_ATTRIB_COUNT];
+    byte_offset attrib_datas_[VK_PRIM_ATTRIB_COUNT]; // offset inside vk_mesh::buffer_
 } vk_prim;
 
+void init_vk_prim(vk_prim* prim);
 vk_prim vk_prim_get_attrib_size(vk_prim_attrib_type attrib_type, size_t count);
 
 typedef struct vk_mesh

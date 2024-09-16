@@ -1,10 +1,18 @@
 #include "vk_mesh.h"
 
+void init_vk_prim(vk_prim* prim)
+{
+    for (size_t i = 0; i < VK_PRIM_ATTRIB_COUNT; i++)
+    {
+        prim->attrib_datas_[i] = -1;
+    }
+}
+
 size_t prim_geom_get_attrib_size(vk_prim_attrib_type attrib_type, size_t count)
 {
-    const static size_t ATTRIB_SIZES[ATTRIBUTE_COUNT] = {sizeof(uint32_t), sizeof(vec3), sizeof(vec3),
-                                                         sizeof(vec4),     sizeof(vec2), sizeof(vec4),
-                                                         sizeof(uvec4),    sizeof(vec4), sizeof(vk_material)};
+    const static size_t ATTRIB_SIZES[VK_PRIM_ATTRIB_COUNT] = {sizeof(uint32_t), sizeof(vec3), sizeof(vec3),
+                                                              sizeof(vec4),     sizeof(vec2), sizeof(vec4),
+                                                              sizeof(uvec4),    sizeof(vec4), sizeof(vk_material)};
     return ATTRIB_SIZES[attrib_type] * count;
 }
 
