@@ -24,8 +24,8 @@ int main(int argc, char** argv)
     VkSemaphoreCreateInfo sem_cinfo = {VK_STRUCTURE_TYPE_SEMAPHORE_CREATE_INFO};
     vkCreateSemaphore(ctx.device_, &sem_cinfo, nullptr, &acquired);
     vkCreateSemaphore(ctx.device_, &sem_cinfo, nullptr, &submitted);
-    VkSemaphoreSubmitInfo waits[1] = {get_vk_sem_info(acquired, VK_PIPELINE_STAGE_2_BOTTOM_OF_PIPE_BIT)};
-    VkSemaphoreSubmitInfo signals[1] = {get_vk_sem_info(submitted, VK_PIPELINE_STAGE_2_BOTTOM_OF_PIPE_BIT)};
+    VkSemaphoreSubmitInfo waits[1] = {vk_get_sem_info(acquired, VK_PIPELINE_STAGE_2_BOTTOM_OF_PIPE_BIT)};
+    VkSemaphoreSubmitInfo signals[1] = {vk_get_sem_info(submitted, VK_PIPELINE_STAGE_2_BOTTOM_OF_PIPE_BIT)};
 
     VkCommandPool cmd_pool = {};
     VkCommandPoolCreateInfo pool_cinfo = {VK_STRUCTURE_TYPE_COMMAND_POOL_CREATE_INFO};

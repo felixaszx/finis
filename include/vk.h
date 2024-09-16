@@ -56,6 +56,6 @@ typedef struct vk_swapchain
 
 DEFINE_OBJ(vk_swapchain, vk_ctx* ctx);
 
-VkSemaphoreSubmitInfo get_vk_sem_info(VkSemaphore sem, VkPipelineStageFlags2 stage);
+VkSemaphoreSubmitInfo vk_get_sem_info(VkSemaphore sem, VkPipelineStageFlags2 stage);
 
 #endif // INCLUDE_VK_H

@@ -129,7 +129,7 @@ bool vk_ctx_update(vk_ctx* ctx)
     return !glfwWindowShouldClose(ctx->win_);
 }
 
-VkSemaphoreSubmitInfo get_vk_sem_info(VkSemaphore sem, VkPipelineStageFlags2 stage)
+VkSemaphoreSubmitInfo vk_get_sem_info(VkSemaphore sem, VkPipelineStageFlags2 stage)
 {
     VkSemaphoreSubmitInfo info = {VK_STRUCTURE_TYPE_SEMAPHORE_SUBMIT_INFO};
     info.semaphore = sem;
