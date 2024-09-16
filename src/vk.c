@@ -1,18 +1,11 @@
 #include "vk.h"
 
-vk_ctx* new_vk_ctx(uint32_t width, uint32_t height)
-{
-    vk_ctx* ctx = alloc(vk_ctx);
-    init_vk_ctx(ctx, width, height);
-    return ctx;
-}
-
-void init_vk_ctx(vk_ctx* ctx, uint32_t width, uint32_t height)
+IMPL_OBJ_NEW(vk_ctx, uint32_t width, uint32_t height)
 {
     glfwInit();
     glfwWindowHint(GLFW_CLIENT_API, GLFW_NO_API);
     glfwWindowHint(GLFW_RESIZABLE, GLFW_FALSE);
-    ctx->win_ = glfwCreateWindow(width, height, "", nullptr, nullptr);
+    this->win_ = glfwCreateWindow(width, height, "", nullptr, nullptr);
 
     uint32_t glfw_ext_count = 0;
     const char** glfw_exts = glfwGetRequiredInstanceExtensions(&glfw_ext_count);
@@ -26,21 +19,21 @@ void init_vk_ctx(vk_ctx* ctx, uint32_t width, uint32_t height)
     instance_create_info.pApplicationInfo = &app_info;
     instance_create_info.ppEnabledExtensionNames = glfw_exts;
     instance_create_info.enabledExtensionCount = glfw_ext_count;
-    vkCreateInstance(&instance_create_info, nullptr, &ctx->instance_);
-    glfwCreateWindowSurface(ctx->instance_, ctx->win_, nullptr, &ctx->surface_);
+    vkCreateInstance(&instance_create_info, nullptr, &this->instance_);
+    glfwCreateWindowSurface(this->instance_, this->win_, nullptr, &this->surface_);
 
     uint32_t phy_d_count = 0;
-    QUICK_GET(VkPhysicalDevice, vkEnumeratePhysicalDevices, ctx->instance_, &phy_d_count, phy_d);
-    ctx->physical_ = phy_d[0];
+    QUICK_GET(VkPhysicalDevice, vkEnumeratePhysicalDevices, this->instance_, &phy_d_count, phy_d);
+    this->physical_ = phy_d[0];
     for (size_t p = 0; p < phy_d_count; p++)
     {
         VkPhysicalDeviceProperties properties = {};
         vkGetPhysicalDeviceProperties(phy_d[p], &properties);
-        ctx->physical_ = properties.deviceType == VK_PHYSICAL_DEVICE_TYPE_DISCRETE_GPU ? phy_d[p] : ctx->physical_;
+        this->physical_ = properties.deviceType == VK_PHYSICAL_DEVICE_TYPE_DISCRETE_GPU ? phy_d[p] : this->physical_;
     }
     ffree(phy_d);
 
-    ctx->queue_idx_ = 0;
+    this->queue_idx_ = 0;
     float queue_priority = 1.0f;
     VkDeviceQueueCreateInfo queue_info = {VK_STRUCTURE_TYPE_DEVICE_QUEUE_CREATE_INFO};
     queue_info.queueFamilyIndex = 0;
@@ -85,11 +78,11 @@ void init_vk_ctx(vk_ctx* ctx, uint32_t width, uint32_t height)
     device_create_info.ppEnabledExtensionNames = device_ext_names;
     device_create_info.enabledExtensionCount = 1;
 
-    vkCreateDevice(ctx->physical_, &device_create_info, nullptr, &ctx->device_);
-    vkGetDeviceQueue(ctx->device_, ctx->queue_idx_, 0, &ctx->queue_);
+    vkCreateDevice(this->physical_, &device_create_info, nullptr, &this->device_);
+    vkGetDeviceQueue(this->device_, this->queue_idx_, 0, &this->queue_);
 
     VkPipelineCacheCreateInfo pl_cache = {VK_STRUCTURE_TYPE_PIPELINE_CACHE_CREATE_INFO};
-    vkCreatePipelineCache(ctx->device_, &pl_cache, nullptr, &ctx->pipeline_cache_);
+    vkCreatePipelineCache(this->device_, &pl_cache, nullptr, &this->pipeline_cache_);
 
     VmaVulkanFunctions vma_funs = {};
     vma_funs.vkGetInstanceProcAddr = &vkGetInstanceProcAddr;
@@ -101,22 +94,23 @@ void init_vk_ctx(vk_ctx* ctx, uint32_t width, uint32_t height)
     vma_cinfo.flags = VMA_ALLOCATOR_CREATE_BUFFER_DEVICE_ADDRESS_BIT;
     vma_cinfo.vulkanApiVersion = app_info.apiVersion;
     vma_cinfo.pVulkanFunctions = &vma_funs;
-    vma_cinfo.instance = ctx->instance_;
-    vma_cinfo.physicalDevice = ctx->physical_;
-    vma_cinfo.device = ctx->device_;
-    vmaCreateAllocator(&vma_cinfo, &ctx->allocator_);
+    vma_cinfo.instance = this->instance_;
+    vma_cinfo.physicalDevice = this->physical_;
+    vma_cinfo.device = this->device_;
+    vmaCreateAllocator(&vma_cinfo, &this->allocator_);
+    return this;
 }
 
-void release_vk_ctx(vk_ctx* ctx)
+IMPL_OBJ_DELETE(vk_ctx)
 {
-    vkDeviceWaitIdle(ctx->device_);
+    vkDeviceWaitIdle(this->device_);
 
-    vmaDestroyAllocator(ctx->allocator_);
-    vkDestroyPipelineCache(ctx->device_, ctx->pipeline_cache_, nullptr);
-    vkDestroyDevice(ctx->device_, nullptr);
-    vkDestroySurfaceKHR(ctx->instance_, ctx->surface_, nullptr);
-    vkDestroyInstance(ctx->instance_, nullptr);
-    glfwDestroyWindow(ctx->win_);
+    vmaDestroyAllocator(this->allocator_);
+    vkDestroyPipelineCache(this->device_, this->pipeline_cache_, nullptr);
+    vkDestroyDevice(this->device_, nullptr);
+    vkDestroySurfaceKHR(this->instance_, this->surface_, nullptr);
+    vkDestroyInstance(this->instance_, nullptr);
+    glfwDestroyWindow(this->win_);
     glfwTerminate();
 }
 
@@ -134,16 +128,9 @@ VkSemaphoreSubmitInfo get_vk_sem_info(VkSemaphore sem, VkPipelineStageFlags2 sta
     return info;
 }
 
-vk_swapchain* new_vk_swapchain(vk_ctx* ctx, VkExtent2D extent)
+IMPL_OBJ_NEW(vk_swapchain, vk_ctx* ctx, VkExtent2D extent)
 {
-    vk_swapchain* swapchain = alloc(vk_swapchain);
-    init_vk_swapchain(swapchain, ctx, extent);
-    return swapchain;
-}
-
-void init_vk_swapchain(vk_swapchain* swapchain, vk_ctx* ctx, VkExtent2D extent)
-{
-    swapchain->device_ = ctx->device_;
+    this->device_ = ctx->device_;
     VkSwapchainCreateInfoKHR swapchain_cinfo = {VK_STRUCTURE_TYPE_SWAPCHAIN_CREATE_INFO_KHR};
     swapchain_cinfo.surface = ctx->surface_;
     swapchain_cinfo.minImageCount = 3;
@@ -159,11 +146,11 @@ void init_vk_swapchain(vk_swapchain* swapchain, vk_ctx* ctx, VkExtent2D extent)
     swapchain_cinfo.presentMode = VK_PRESENT_MODE_MAILBOX_KHR;
     swapchain_cinfo.clipped = true;
     swapchain_cinfo.oldSwapchain = nullptr;
-    vkCreateSwapchainKHR(ctx->device_, &swapchain_cinfo, nullptr, &swapchain->swapchain_);
+    vkCreateSwapchainKHR(ctx->device_, &swapchain_cinfo, nullptr, &this->swapchain_);
 
-    swapchain->image_count_ = 3;
-    swapchain->images_ = alloc(VkImage, swapchain->image_count_);
-    vkGetSwapchainImagesKHR(ctx->device_, swapchain->swapchain_, &swapchain->image_count_, swapchain->images_);
+    this->image_count_ = 3;
+    this->images_ = alloc(VkImage, this->image_count_);
+    vkGetSwapchainImagesKHR(ctx->device_, this->swapchain_, &this->image_count_, this->images_);
 
     VkFence fence = {};
     VkFenceCreateInfo fence_cinfo = {VK_STRUCTURE_TYPE_FENCE_CREATE_INFO};
@@ -184,10 +171,10 @@ void init_vk_swapchain(vk_swapchain* swapchain, vk_ctx* ctx, VkExtent2D extent)
     VkCommandBufferBeginInfo begin = {VK_STRUCTURE_TYPE_COMMAND_BUFFER_BEGIN_INFO};
     begin.flags = VK_COMMAND_BUFFER_USAGE_ONE_TIME_SUBMIT_BIT;
     vkBeginCommandBuffer(cmd, &begin);
-    for (size_t i = 0; i < swapchain->image_count_; i++)
+    for (size_t i = 0; i < this->image_count_; i++)
     {
         VkImageMemoryBarrier barrier = {VK_STRUCTURE_TYPE_IMAGE_MEMORY_BARRIER};
-        barrier.image = swapchain->images_[i];
+        barrier.image = this->images_[i];
         barrier.newLayout = VK_IMAGE_LAYOUT_PRESENT_SRC_KHR;
         barrier.subresourceRange.aspectMask = VK_IMAGE_ASPECT_COLOR_BIT;
         barrier.subresourceRange.baseMipLevel = 0;
@@ -207,10 +194,11 @@ void init_vk_swapchain(vk_swapchain* swapchain, vk_ctx* ctx, VkExtent2D extent)
 
     vkDestroyFence(ctx->device_, fence, nullptr);
     vkDestroyCommandPool(ctx->device_, cmd_pool, nullptr);
+    return this;
 }
 
-void release_vk_swapchain(vk_swapchain* swapchain)
+IMPL_OBJ_DELETE(vk_swapchain)
 {
-    ffree(swapchain->images_);
-    vkDestroySwapchainKHR(swapchain->device_, swapchain->swapchain_, nullptr);
+    ffree(this->images_);
+    vkDestroySwapchainKHR(this->device_, this->swapchain_, nullptr);
 }

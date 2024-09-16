@@ -10,9 +10,9 @@ int main(int argc, char** argv)
     const uint32_t HEIGHT = 1080;
 
     vk_ctx ctx = {};
-    init_vk_ctx(&ctx, WIDTH, HEIGHT);
+    construct_vk_ctx(&ctx, WIDTH, HEIGHT);
     vk_swapchain sc = {};
-    init_vk_swapchain(&sc, &ctx, (VkExtent2D){WIDTH, HEIGHT});
+    construct_vk_swapchain(&sc, &ctx, (VkExtent2D){WIDTH, HEIGHT});
 
     VkFence frame_fence = {};
     VkFenceCreateInfo fence_cinfo = {VK_STRUCTURE_TYPE_FENCE_CREATE_INFO};
@@ -42,7 +42,8 @@ int main(int argc, char** argv)
     cmd_submits[0].sType = VK_STRUCTURE_TYPE_COMMAND_BUFFER_SUBMIT_INFO;
     cmd_submits[0].commandBuffer = cmd;
 
-    vk_mesh* mesh = new (vk_mesh, &ctx, to_mb(10));
+    vk_model* model = new (vk_model, &ctx, "test_model", 10);
+    vk_model_add_mesh(model, "test_mesh", 10, 1);
 
     while (vk_ctx_update(&ctx))
     {
@@ -82,11 +83,12 @@ int main(int argc, char** argv)
     }
     vkWaitForFences(ctx.device_, 1, &frame_fence, true, UINT64_MAX);
 
+    delete (vk_model, model);
     vkDestroyFence(ctx.device_, frame_fence, nullptr);
     vkDestroySemaphore(ctx.device_, acquired, nullptr);
     vkDestroySemaphore(ctx.device_, submitted, nullptr);
     vkDestroyCommandPool(ctx.device_, cmd_pool, nullptr);
-    release_vk_swapchain(&sc);
-    release_vk_ctx(&ctx);
+    destroy_vk_swapchain(&sc);
+    destroy_vk_ctx(&ctx);
     return 0;
 }

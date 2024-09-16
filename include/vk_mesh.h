@@ -54,12 +54,13 @@ typedef struct vk_prim
     byte_offset attrib_datas_[VK_PRIM_ATTRIB_COUNT]; // offset inside vk_mesh::buffer_
 } vk_prim;
 
-void init_vk_prim(vk_prim* prim);
-size_t vk_prim_get_attrib_size(vk_prim* prim, vk_prim_attrib_type attrib_type);
+DEFINE_OBJ_DEFAULT(vk_prim);
+size_t vk_prim_get_attrib_size(vk_prim* this, vk_prim_attrib_type attrib_type);
 
 typedef struct vk_mesh
 {
     char name_[512];
+    uint32_t prim_limit_;
     uint32_t prim_count_;
     vk_prim* prims_;
 
@@ -67,8 +68,27 @@ typedef struct vk_mesh
     VkBuffer buffer_;
     VmaAllocation alloc_;
     VkDeviceSize mem_limit_;
+
+    byte* mapping_;
+    VkBuffer staging_;
+    VmaAllocation staging_alloc_;
 } vk_mesh;
 
-DEFINE_OBJ(vk_mesh, vk_ctx* ctx, VkDeviceSize mem_limit);
+DEFINE_OBJ(vk_mesh, vk_ctx* ctx, const char* name, VkDeviceSize mem_limit, uint32_t prim_limit);
+void vk_mesh_free_staging(vk_mesh* this);
+vk_prim* vk_mesh_add_prim(vk_mesh* this, const char* name);
+
+typedef struct vk_model
+{
+    char name_[512];
+    uint32_t mesh_limit_;
+    uint32_t mesh_count_;
+    vk_mesh* meshes_;
+
+    vk_ctx* ctx_;
+} vk_model;
+
+DEFINE_OBJ(vk_model, vk_ctx* ctx, const char* name, uint32_t mesh_limit);
+vk_mesh* vk_model_add_mesh(vk_model* this, const char* name, VkDeviceSize mem_limit, uint32_t prim_limit);
 
 #endif // INCLUDE_VK_MESH_H
