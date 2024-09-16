@@ -22,7 +22,7 @@
     func(target, count, ptr)
 #define QUICK_GET(type, func, target, count, ptr) QUICK_ENUMERATE(type, func, target, count, ptr);
 
-typedef struct
+typedef struct vk_ctx
 {
     VkInstance instance_;
     VkSurfaceKHR surface_;
@@ -39,7 +39,7 @@ typedef struct
 DEFINE_OBJ(vk_ctx, uint32_t width, uint32_t height);
 bool vk_ctx_update(vk_ctx* ctx);
 
-typedef struct
+typedef struct vk_swapchain
 {
     vk_ctx* ctx_;
 

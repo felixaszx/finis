@@ -8,21 +8,16 @@
 
 #define nullptr NULL
 
-#define GET_CNEW(_0, _1, CNEW, ...) CNEW
-#define CNEW_0(type)                ((type*)calloc(1, sizeof(type)))
-#define CNEW_1(type, size)          ((type*)calloc(size, sizeof(type)))
-#define alloc(...)                  GET_CNEW(__VA_ARGS__, CNEW_1, CNEW_0)(__VA_ARGS__)
+#define GET_ALLOC(_0, _1, ALLOC, ...) ALLOC
+#define ALLOC_0(type)                 calloc(1, sizeof(type))
+#define ALLOC_1(type, size)           calloc(size, sizeof(type))
+#define alloc(...)                    GET_ALLOC(__VA_ARGS__, ALLOC_1, ALLOC_0)(__VA_ARGS__)
 #define ffree(ptr) \
     if (ptr)       \
     {              \
         free(ptr); \
     }              \
     ptr = NULL
-
-#define new(type, ...) (type*)new_##type(__VA_ARGS__)
-#define delete(type, obj)       \
-    release_##type((type*)obj); \
-    ffree(obj)
 
 // provide new, init and release type
 #define DEFINE_OBJ(type, ...)                 \
@@ -33,6 +28,12 @@
 #define DEFINE_OBJ_FUNC0(type, rt, func)      rt type_##func(type* obj)
 #define DEFINE_OBJ_FUNC1(type, rt, func, ...) rt type_##func(type* obj, __VA_ARGS__)
 
+#define new(type, ...) (type*)new_##type(__VA_ARGS__)
+#define delete(type, obj)       \
+    release_##type((type*)obj); \
+    ffree(obj)
+
+typedef char byte;
 struct timespec ms_sleep(size_t ms);
 
 #endif // INCLUDE_TOOL_H
