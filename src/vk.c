@@ -1,11 +1,20 @@
 #include "vk.h"
 
-IMPL_OBJ_NEW(vk_ctx, uint32_t width, uint32_t height)
+IMPL_OBJ_NEW(vk_ctx, uint32_t width, uint32_t height, bool full_screen)
 {
+    this->width_ = width;
+    this->height_ = height;
     glfwInit();
     glfwWindowHint(GLFW_CLIENT_API, GLFW_NO_API);
     glfwWindowHint(GLFW_RESIZABLE, GLFW_FALSE);
-    this->win_ = glfwCreateWindow(width, height, "", nullptr, nullptr);
+    if (full_screen)
+    {
+        this->win_ = glfwCreateWindow(width, height, "", glfwGetPrimaryMonitor(), nullptr);
+    }
+    else
+    {
+        this->win_ = glfwCreateWindow(width, height, "", nullptr, nullptr);
+    }
 
     uint32_t glfw_ext_count = 0;
     const char** glfw_exts = glfwGetRequiredInstanceExtensions(&glfw_ext_count);
@@ -128,7 +137,7 @@ VkSemaphoreSubmitInfo get_vk_sem_info(VkSemaphore sem, VkPipelineStageFlags2 sta
     return info;
 }
 
-IMPL_OBJ_NEW(vk_swapchain, vk_ctx* ctx, VkExtent2D extent)
+IMPL_OBJ_NEW(vk_swapchain, vk_ctx* ctx)
 {
     this->device_ = ctx->device_;
     VkSwapchainCreateInfoKHR swapchain_cinfo = {VK_STRUCTURE_TYPE_SWAPCHAIN_CREATE_INFO_KHR};
@@ -136,7 +145,7 @@ IMPL_OBJ_NEW(vk_swapchain, vk_ctx* ctx, VkExtent2D extent)
     swapchain_cinfo.minImageCount = 3;
     swapchain_cinfo.imageFormat = VK_FORMAT_R8G8B8A8_SRGB;
     swapchain_cinfo.imageColorSpace = VK_COLOR_SPACE_SRGB_NONLINEAR_KHR;
-    swapchain_cinfo.imageExtent = extent;
+    swapchain_cinfo.imageExtent = (VkExtent2D){ctx->width_, ctx->height_};
     swapchain_cinfo.imageArrayLayers = 1;
     swapchain_cinfo.imageUsage = VK_IMAGE_USAGE_COLOR_ATTACHMENT_BIT | //
                                  VK_IMAGE_USAGE_TRANSFER_DST_BIT |     //

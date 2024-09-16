@@ -8,7 +8,6 @@
 
 #define CGLM_FORCE_DEPTH_ZERO_TO_ONE
 #define CGLM_FORCE_LEFT_HANDED
-#define CGLM_ALL_UNALIGNED 
 #include <cglm/cglm.h>
 #include <cglm/quat.h>
 #define GLFW_INCLUDE_VULKAN
@@ -38,9 +37,12 @@ typedef struct vk_ctx
     uint32_t queue_idx_;
     GLFWwindow* win_;
     VmaAllocator allocator_;
+
+    uint32_t width_;
+    uint32_t height_;
 } vk_ctx;
 
-DEFINE_OBJ(vk_ctx, uint32_t width, uint32_t height);
+DEFINE_OBJ(vk_ctx, uint32_t width, uint32_t height, bool full_screen);
 bool vk_ctx_update(vk_ctx* ctx);
 
 typedef struct vk_swapchain
@@ -52,7 +54,7 @@ typedef struct vk_swapchain
     VkFormat format_;
 } vk_swapchain;
 
-DEFINE_OBJ(vk_swapchain, vk_ctx* ctx, VkExtent2D extent);
+DEFINE_OBJ(vk_swapchain, vk_ctx* ctx);
 
 VkSemaphoreSubmitInfo get_vk_sem_info(VkSemaphore sem, VkPipelineStageFlags2 stage);
 

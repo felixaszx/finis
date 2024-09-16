@@ -10,9 +10,9 @@ int main(int argc, char** argv)
     const uint32_t HEIGHT = 1080;
 
     vk_ctx ctx = {};
-    construct_vk_ctx(&ctx, WIDTH, HEIGHT);
+    construct_vk_ctx(&ctx, WIDTH, HEIGHT, false);
     vk_swapchain sc = {};
-    construct_vk_swapchain(&sc, &ctx, (VkExtent2D){WIDTH, HEIGHT});
+    construct_vk_swapchain(&sc, &ctx);
 
     VkFence frame_fence = {};
     VkFenceCreateInfo fence_cinfo = {VK_STRUCTURE_TYPE_FENCE_CREATE_INFO};
@@ -34,19 +34,31 @@ int main(int argc, char** argv)
     vkCreateCommandPool(ctx.device_, &pool_cinfo, nullptr, &cmd_pool);
 
     VkCommandBuffer cmd = {};
-    VkCommandBufferAllocateInfo alloc_info = {VK_STRUCTURE_TYPE_COMMAND_BUFFER_ALLOCATE_INFO};
-    alloc_info.commandPool = cmd_pool;
-    alloc_info.commandBufferCount = 1;
-    vkAllocateCommandBuffers(ctx.device_, &alloc_info, &cmd);
+    VkCommandBufferAllocateInfo cmd_alloc = {VK_STRUCTURE_TYPE_COMMAND_BUFFER_ALLOCATE_INFO};
+    cmd_alloc.commandPool = cmd_pool;
+    cmd_alloc.commandBufferCount = 1;
+    vkAllocateCommandBuffers(ctx.device_, &cmd_alloc, &cmd);
     VkCommandBufferSubmitInfo cmd_submits[1] = {};
     cmd_submits[0].sType = VK_STRUCTURE_TYPE_COMMAND_BUFFER_SUBMIT_INFO;
     cmd_submits[0].commandBuffer = cmd;
 
     vk_model* model = new (vk_model, &ctx, "test_model", 10);
-    vk_model_add_mesh(model, "test_mesh", 10, 1);
+    vk_mesh* mm = vk_model_add_mesh(model, "test_mesh", to_mb(100), 10);
+    vk_prim* pp = vk_mesh_add_prim(mm);
+    uint32_t indx[5] = {1, 2, 3, 4, 5};
+    float pos[2][3] = {{1, 1, 1}, {2, 2, 2}};
+    vk_mesh_add_prim_attrib(mm, pp, INDEX, indx, 5);
+    vk_mesh_add_prim_attrib(mm, pp, POSITION, pos, 2);
+    vk_mesh_alloc_device_mem(mm, cmd_pool);
 
     while (vk_ctx_update(&ctx))
     {
+        if (glfwGetKey(ctx.win_, GLFW_KEY_ESCAPE))
+        {
+            glfwSetWindowShouldClose(ctx.win_, true);
+            break;
+        }
+
         if (glfwGetWindowAttrib(ctx.win_, GLFW_ICONIFIED))
         {
             ms_sleep(1);
