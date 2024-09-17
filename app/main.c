@@ -2,7 +2,7 @@
 #include <stdlib.h>
 
 #include "vk.h"
-#include "vk_mesh.h"
+#include "vk_model.h"
 
 int main(int argc, char** argv)
 {
@@ -43,13 +43,7 @@ int main(int argc, char** argv)
     cmd_submits[0].commandBuffer = cmd;
 
     vk_model* model = new (vk_model, &ctx, "test_model", 10);
-    vk_mesh* mm = vk_model_add_mesh(model, "test_mesh", to_mb(100), 10);
-    vk_prim* pp = vk_mesh_add_prim(mm);
-    uint32_t indx[5] = {1, 2, 3, 4, 5};
-    float pos[2][3] = {{1, 1, 1}, {2, 2, 2}};
-    vk_mesh_add_prim_attrib(mm, pp, INDEX, indx, 5);
-    vk_mesh_add_prim_attrib(mm, pp, POSITION, pos, 2);
-    vk_mesh_alloc_device_mem(mm, cmd_pool);
+    vk_tex_arr* tex_arr = new (vk_tex_arr, &ctx, 10, 10);
 
     while (vk_ctx_update(&ctx))
     {

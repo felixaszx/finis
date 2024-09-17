@@ -8,8 +8,6 @@
 #include <stdatomic.h>
 #include <pthread.h>
 
-#include <glib-2.0/glib.h>
-
 #define nullptr NULL
 
 #define GET_ALLOC(_0, _1, ALLOC, ...) ALLOC
