@@ -1,4 +1,5 @@
 #include "vk.h"
+#include <volk.c>
 
 IMPL_OBJ_NEW(vk_ctx, uint32_t width, uint32_t height, bool full_screen)
 {
@@ -19,6 +20,7 @@ IMPL_OBJ_NEW(vk_ctx, uint32_t width, uint32_t height, bool full_screen)
     uint32_t glfw_ext_count = 0;
     const char** glfw_exts = glfwGetRequiredInstanceExtensions(&glfw_ext_count);
 
+    volkInitialize();
     VkApplicationInfo app_info = {};
     app_info.applicationVersion = VK_MAKE_VERSION(1, 0, 0);
     app_info.engineVersion = VK_MAKE_VERSION(1, 0, 0);
@@ -29,6 +31,7 @@ IMPL_OBJ_NEW(vk_ctx, uint32_t width, uint32_t height, bool full_screen)
     instance_create_info.ppEnabledExtensionNames = glfw_exts;
     instance_create_info.enabledExtensionCount = glfw_ext_count;
     vkCreateInstance(&instance_create_info, nullptr, &this->instance_);
+    volkLoadInstance(this->instance_);
     glfwCreateWindowSurface(this->instance_, this->win_, nullptr, &this->surface_);
 
     uint32_t phy_d_count = 0;
@@ -89,20 +92,34 @@ IMPL_OBJ_NEW(vk_ctx, uint32_t width, uint32_t height, bool full_screen)
 
     vkCreateDevice(this->physical_, &device_create_info, nullptr, &this->device_);
     vkGetDeviceQueue(this->device_, this->queue_idx_, 0, &this->queue_);
+    volkLoadDevice(this->device_);
 
     VkPipelineCacheCreateInfo pl_cache = {VK_STRUCTURE_TYPE_PIPELINE_CACHE_CREATE_INFO};
     vkCreatePipelineCache(this->device_, &pl_cache, nullptr, &this->pipeline_cache_);
 
-    VmaVulkanFunctions vma_funs = {};
-    vma_funs.vkGetInstanceProcAddr = &vkGetInstanceProcAddr;
-    vma_funs.vkGetDeviceProcAddr = &vkGetDeviceProcAddr;
-    vma_funs.vkGetDeviceBufferMemoryRequirements = &vkGetDeviceBufferMemoryRequirements;
-    vma_funs.vkGetDeviceImageMemoryRequirements = &vkGetDeviceImageMemoryRequirements;
+    VmaVulkanFunctions vma_funcs = {};
+    vma_funcs.vkAllocateMemory = vkAllocateMemory;
+    vma_funcs.vkBindBufferMemory = vkBindBufferMemory;
+    vma_funcs.vkBindImageMemory = vkBindImageMemory;
+    vma_funcs.vkCreateBuffer = vkCreateBuffer;
+    vma_funcs.vkCreateImage = vkCreateImage;
+    vma_funcs.vkDestroyBuffer = vkDestroyBuffer;
+    vma_funcs.vkDestroyImage = vkDestroyImage;
+    vma_funcs.vkFlushMappedMemoryRanges = vkFlushMappedMemoryRanges;
+    vma_funcs.vkFreeMemory = vkFreeMemory;
+    vma_funcs.vkGetBufferMemoryRequirements = vkGetBufferMemoryRequirements;
+    vma_funcs.vkGetImageMemoryRequirements = vkGetImageMemoryRequirements;
+    vma_funcs.vkGetPhysicalDeviceMemoryProperties = vkGetPhysicalDeviceMemoryProperties;
+    vma_funcs.vkGetPhysicalDeviceProperties = vkGetPhysicalDeviceProperties;
+    vma_funcs.vkInvalidateMappedMemoryRanges = vkInvalidateMappedMemoryRanges;
+    vma_funcs.vkMapMemory = vkMapMemory;
+    vma_funcs.vkUnmapMemory = vkUnmapMemory;
+    vma_funcs.vkCmdCopyBuffer = vkCmdCopyBuffer;
 
     VmaAllocatorCreateInfo vma_cinfo = {};
     vma_cinfo.flags = VMA_ALLOCATOR_CREATE_BUFFER_DEVICE_ADDRESS_BIT;
     vma_cinfo.vulkanApiVersion = app_info.apiVersion;
-    vma_cinfo.pVulkanFunctions = &vma_funs;
+    vma_cinfo.pVulkanFunctions = &vma_funcs;
     vma_cinfo.instance = this->instance_;
     vma_cinfo.physicalDevice = this->physical_;
     vma_cinfo.device = this->device_;
