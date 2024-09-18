@@ -10,9 +10,8 @@
 #define CGLM_FORCE_LEFT_HANDED
 #include <cglm/cglm.h>
 #include <cglm/quat.h>
-#define GLFW_INCLUDE_VULKAN
+#include <volk.h>
 #include <GLFW/glfw3.h>
-#include <vulkan/vulkan.h>
 #include <vma/vk_mem_alloc.h>
 #include <pthread.h>
 
