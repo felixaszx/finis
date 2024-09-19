@@ -38,10 +38,10 @@ IMPL_OBJ_NEW_DEFAULT(vk_morph)
     return this;
 }
 
-size_t vk_morph_get_attrib_size(vk_morph* this, vk_morph_attrib attrib_type)
+size_t vk_morph_get_attrib_size(vk_morph* morph, vk_morph_attrib attrib_type)
 {
-    const static size_t ATTRIB_SIZES[VK_MORPH_ATTRIB_COUNT] = {sizeof(float[3]), sizeof(float[3]), sizeof(float[4])};
-    return ATTRIB_SIZES[attrib_type] * this->attrib_counts_[attrib_type];
+    const static size_t ATTRIB_SIZES[VK_MORPH_ATTRIB_COUNT] = {sizeof(float[3]), sizeof(float[3]), sizeof(float[3])};
+    return ATTRIB_SIZES[attrib_type] * morph->attrib_counts_[attrib_type];
 }
 
 IMPL_OBJ_NEW_DEFAULT(vk_prim)
@@ -56,9 +56,9 @@ IMPL_OBJ_NEW_DEFAULT(vk_prim)
 size_t vk_prim_get_attrib_size(vk_prim* this, vk_prim_attrib attrib_type)
 {
     const static size_t ATTRIB_SIZES[VK_PRIM_ATTRIB_COUNT] = {
-        sizeof(uint32_t),    sizeof(float[3]), sizeof(float[3]),    sizeof(float[4]),
-        sizeof(float[2]),    sizeof(float[4]), sizeof(uint32_t[4]), sizeof(float[4]),
-        sizeof(vk_material), sizeof(vk_morph), sizeof(VkDeviceSize)};
+        sizeof(uint32_t),    sizeof(float[3]), sizeof(float[3]),     sizeof(float[4]),
+        sizeof(float[2]),    sizeof(float[4]), sizeof(uint32_t[4]),  sizeof(float[4]),
+        sizeof(vk_material), sizeof(vk_morph), sizeof(VkDeviceSize), sizeof(VkDeviceSize)};
     return ATTRIB_SIZES[attrib_type] * this->attrib_counts_[attrib_type];
 }
 
@@ -73,7 +73,7 @@ IMPL_OBJ_NEW_DEFAULT(vk_prim_transform)
 IMPL_OBJ_NEW_DEFAULT(vk_mesh_node)
 {
     glm_vec3_copy(GLM_VEC3_ONE, this->scale_);
-    glm_quat_copy(GLM_VEC4_BLACK, this->rotation);
-    glm_mat4_copy(GLM_MAT4_IDENTITY, this->preset_);
+    glm_quat_identity(this->rotation);
+    glm_mat4_identity(this->preset_);
     return this;
 }

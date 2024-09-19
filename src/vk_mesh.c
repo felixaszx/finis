@@ -152,6 +152,20 @@ void vk_mesh_add_prim_attrib(vk_mesh* this, vk_prim* prim, vk_prim_attrib attrib
     this->mem_size_ += data_size;
 }
 
+void vk_mesh_add_prim_morph_attrib(vk_mesh* this, vk_morph* morph, vk_morph_attrib attrib, void* data, size_t count)
+{
+    morph->attrib_counts_[attrib] = count;
+    size_t data_size = vk_morph_get_attrib_size(morph, attrib);
+    if (this->mem_size_ + data_size >= this->mem_limit_)
+    {
+        return;
+    }
+
+    morph->attrib_offsets_[attrib] = this->mem_size_;
+    memcpy(this->mapping_ + this->mem_size_, data, data_size);
+    this->mem_size_ += data_size;
+}
+
 IMPL_OBJ_NEW(vk_tex_arr, vk_ctx* ctx, uint32_t tex_limit, uint32_t sampler_limit)
 {
     this->ctx_ = ctx;
@@ -354,17 +368,18 @@ bool vk_tex_arr_add_tex(vk_tex_arr* this,
     return true;
 }
 
-IMPL_OBJ_NEW(vk_mesh_desc, uint32_t node_size)
+IMPL_OBJ_NEW(vk_mesh_desc, vk_ctx* ctx, uint32_t node_size)
 {
+    this->ctx_ = ctx;
     this->node_size_ = node_size;
     this->nodes_ = alloc(vk_mesh_node, node_size);
     this->output_ = alloc(mat4, node_size);
 
     for (uint32_t i = 0; i < node_size; i++)
     {
-        glm_mat4_copy(GLM_MAT4_IDENTITY, this->output_[i]);
-        glm_mat4_copy(GLM_MAT4_IDENTITY, this->nodes_[i].preset_);
+        glm_mat4_identity(this->nodes_[i].preset_);
     }
+    glm_mat4_identity_array(this->output_, node_size);
     return this;
 }
 
@@ -372,27 +387,51 @@ IMPL_OBJ_DELETE(vk_mesh_desc)
 {
     ffree(this->nodes_);
     ffree(this->output_);
+    ffree(this->layers_);
 }
 
-void vk_mesh_desc_update(vk_mesh_desc* this)
+void vk_mesh_desc_update(vk_mesh_desc* this, mat4 root_trans)
 {
     uint32_t iter = 0;
     while (iter < this->node_size_ && !this->nodes_[iter].parent_)
     {
+        mat4* output = this->nodes_[iter].output_;
+        glm_mat4_identity(*output);
+        glm_mat4_mul(root_trans, *output, *output);
+        glm_translate(*output, this->nodes_[iter].translation_);
+        glm_quat_rotate(*output, this->nodes_[iter].rotation, *output);
+        glm_scale(*output, this->nodes_[iter].scale_);
+        iter++;
+    }
+    while (iter < this->node_size_)
+    {
+        mat4* output = this->nodes_[iter].output_;
+        mat4* parent_transform = this->nodes_[iter].parent_;
+        glm_mat4_identity(*output);
+        glm_mat4_mul(*parent_transform, *output, *output);
+        glm_translate(*output, this->nodes_[iter].translation_);
+        glm_quat_rotate(*output, this->nodes_[iter].rotation, *output);
+        glm_scale(*output, this->nodes_[iter].scale_);
         iter++;
     }
 }
 
-IMPL_OBJ_NEW(vk_mesh_skin, uint32_t joint_size)
+void vk_mesh_desc_set_layer(vk_mesh_desc* this, uint32_t layer_size)
 {
+    this->layer_sizes_ = layer_size;
+    this->layers_ = alloc(uint32_t, layer_size);
+}
+
+IMPL_OBJ_NEW(vk_mesh_skin, vk_ctx* ctx, uint32_t joint_size)
+{
+    this->ctx_ = ctx;
     this->joint_size_ = joint_size;
-    this->joints_ = alloc(uint32_t, joint_size);
-    this->inv_binding_ = alloc(mat4, joint_size);
+    this->joints_ = alloc(vk_mesh_joint, joint_size);
 
     for (uint32_t i = 0; i < joint_size; i++)
     {
-        this->joints_[i] = 0;
-        glm_mat4_copy(GLM_MAT4_IDENTITY, this->inv_binding_[i]);
+        this->joints_[i].joint_ = 0;
+        glm_mat4_identity(this->joints_[i].inv_binding_);
     }
     return this;
 }
@@ -400,5 +439,4 @@ IMPL_OBJ_NEW(vk_mesh_skin, uint32_t joint_size)
 IMPL_OBJ_DELETE(vk_mesh_skin)
 {
     ffree(this->joints_);
-    ffree(this->inv_binding_);
 }

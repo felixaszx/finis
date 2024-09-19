@@ -41,7 +41,8 @@ int main(int argc, char** argv)
     cmd_submits[0].commandBuffer = cmd;
 
     vk_mesh* mesh = new (vk_mesh, ctx, "test_mesh", to_mb(10), 100);
-    vk_mesh_desc* mesh_desc = new (vk_mesh_desc, 10);
+    vk_mesh_desc* mesh_desc = new (vk_mesh_desc, ctx, 10);
+    vk_mesh_skin* mesh_skin = new (vk_mesh_skin, ctx, 10);
     vk_tex_arr* tex_arr = new (vk_tex_arr, ctx, 10, 10);
 
     while (vk_ctx_update(ctx))
@@ -97,6 +98,7 @@ int main(int argc, char** argv)
     vkDestroyCommandPool(ctx->device_, cmd_pool, nullptr);
 
     delete (vk_mesh_desc, mesh_desc);
+    delete (vk_mesh_skin, mesh_skin);
     delete (vk_mesh, mesh);
     delete (vk_tex_arr, tex_arr);
     delete (vk_swapchain, sc);
