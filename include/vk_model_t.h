@@ -50,7 +50,7 @@ typedef struct vk_morph
 DEFINE_OBJ_DEFAULT(vk_morph);
 size_t vk_morpj_get_attrib_size(vk_morph* this, vk_morph_attrib attrib_type);
 
-#define VK_PRIM_ATTRIB_COUNT 11
+#define VK_PRIM_ATTRIB_COUNT 10
 typedef enum vk_prim_attrib
 {
     INDEX,
@@ -63,9 +63,6 @@ typedef enum vk_prim_attrib
     WEIGHTS,
     MATERIAL,
     MORPH,
-
-    // TRANSFORM should not be set by vk_mesh_add_prim_attrib(...),
-    TRANSFORM
 } vk_prim_attrib;
 
 typedef struct vk_prim
@@ -76,5 +73,9 @@ typedef struct vk_prim
 
 DEFINE_OBJ_DEFAULT(vk_prim);
 size_t vk_prim_get_attrib_size(vk_prim* this, vk_prim_attrib attrib_type);
+
+typedef struct vk_prim_transform
+{
+}vk_prim_transform;
 
 #endif // INCLUDE_VK_MODEL_T_H
