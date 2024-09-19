@@ -385,9 +385,15 @@ IMPL_OBJ_NEW(vk_mesh_desc, vk_ctx* ctx, uint32_t node_size)
 
 IMPL_OBJ_DELETE(vk_mesh_desc)
 {
+    vmaDestroyBuffer(this->ctx_->allocator_, this->buffer_, this->alloc_);
     ffree(this->nodes_);
     ffree(this->output_);
     ffree(this->layers_);
+}
+
+void vk_mesh_desc_flush(vk_mesh_desc* this)
+{
+    memcpy(this->mapping_, this->output_, sizeof(mat4) * this->node_size_);
 }
 
 void vk_mesh_desc_update(vk_mesh_desc* this, mat4 root_trans)
@@ -422,8 +428,20 @@ void vk_mesh_desc_set_layer(vk_mesh_desc* this, uint32_t layer_size)
     this->layers_ = alloc(uint32_t, layer_size);
 }
 
-void vk_mesh_desc_alloc_device_mem(vk_mesh_desc* this, VkCommandPool pool)
+void vk_mesh_desc_alloc_device_mem(vk_mesh_desc* this)
 {
+    VkBufferCreateInfo buffer_info = {VK_STRUCTURE_TYPE_BUFFER_CREATE_INFO};
+    buffer_info.size = this->node_size_ * sizeof(mat4);
+    buffer_info.usage = VK_BUFFER_USAGE_STORAGE_BUFFER_BIT | VK_BUFFER_USAGE_SHADER_DEVICE_ADDRESS_BIT;
+    VmaAllocationCreateInfo alloc_info = {};
+    alloc_info.usage = VMA_MEMORY_USAGE_AUTO_PREFER_DEVICE;
+    alloc_info.flags = VMA_ALLOCATION_CREATE_HOST_ACCESS_SEQUENTIAL_WRITE_BIT | VMA_ALLOCATION_CREATE_MAPPED_BIT;
+    alloc_info.preferredFlags = VK_MEMORY_PROPERTY_HOST_COHERENT_BIT;
+
+    VmaAllocationInfo allocated = {};
+    vmaCreateBuffer(this->ctx_->allocator_, &buffer_info, &alloc_info, &this->buffer_, &this->alloc_, &allocated);
+    this->mapping_ = allocated.pMappedData;
+    vk_mesh_desc_flush(this);
 }
 
 IMPL_OBJ_NEW(vk_mesh_skin, vk_ctx* ctx, uint32_t joint_size)
