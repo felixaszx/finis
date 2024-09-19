@@ -70,7 +70,7 @@ int main(int argc, char** argv)
 
         VkPipelineStageFlags wait_stages[] = {VK_PIPELINE_STAGE_BOTTOM_OF_PIPE_BIT};
         VkSubmitInfo submit = {VK_STRUCTURE_TYPE_SUBMIT_INFO};
-        submit.commandBufferCount  =1 ;
+        submit.commandBufferCount = 1;
         submit.pCommandBuffers = &cmd;
         submit.waitSemaphoreCount = 1;
         submit.pWaitSemaphores = &acquired;
@@ -93,6 +93,8 @@ int main(int argc, char** argv)
     vkDestroySemaphore(ctx->device_, acquired, nullptr);
     vkDestroySemaphore(ctx->device_, submitted, nullptr);
     vkDestroyCommandPool(ctx->device_, cmd_pool, nullptr);
+    delete (vk_mesh, mesh);
+    delete (vk_tex_arr, tex_arr);
     delete (vk_swapchain, sc);
     delete (vk_ctx, ctx);
     return 0;
