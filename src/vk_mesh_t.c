@@ -69,3 +69,11 @@ IMPL_OBJ_NEW_DEFAULT(vk_prim_transform)
     this->morph_weights_ = -1;
     return this;
 }
+
+IMPL_OBJ_NEW_DEFAULT(vk_mesh_node)
+{
+    glm_vec3_copy(GLM_VEC3_ONE, this->scale_);
+    glm_quat_copy(GLM_VEC4_BLACK, this->rotation);
+    glm_mat4_copy(GLM_MAT4_IDENTITY, this->preset_);
+    return this;
+}

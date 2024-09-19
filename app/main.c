@@ -41,6 +41,7 @@ int main(int argc, char** argv)
     cmd_submits[0].commandBuffer = cmd;
 
     vk_mesh* mesh = new (vk_mesh, ctx, "test_mesh", to_mb(10), 100);
+    vk_mesh_desc* mesh_desc = new (vk_mesh_desc, 10);
     vk_tex_arr* tex_arr = new (vk_tex_arr, ctx, 10, 10);
 
     while (vk_ctx_update(ctx))
@@ -88,11 +89,14 @@ int main(int argc, char** argv)
         vkQueuePresentKHR(ctx->queue_, &present_info);
     }
     vkWaitForFences(ctx->device_, 1, &frame_fence, true, UINT64_MAX);
+    vkDeviceWaitIdle(ctx->device_);
 
     vkDestroyFence(ctx->device_, frame_fence, nullptr);
     vkDestroySemaphore(ctx->device_, acquired, nullptr);
     vkDestroySemaphore(ctx->device_, submitted, nullptr);
     vkDestroyCommandPool(ctx->device_, cmd_pool, nullptr);
+
+    delete (vk_mesh_desc, mesh_desc);
     delete (vk_mesh, mesh);
     delete (vk_tex_arr, tex_arr);
     delete (vk_swapchain, sc);

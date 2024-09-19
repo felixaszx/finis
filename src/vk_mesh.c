@@ -113,7 +113,6 @@ IMPL_OBJ_NEW(vk_mesh, vk_ctx* ctx, const char* name, VkDeviceSize mem_limit, uin
     VmaAllocationInfo allocated = {};
     vmaCreateBuffer(ctx->allocator_, &buffer_info, &alloc_info, &this->staging_, &this->staging_alloc_, &allocated);
     this->mapping_ = allocated.pMappedData;
-
     return this;
 }
 
@@ -165,7 +164,6 @@ IMPL_OBJ_NEW(vk_tex_arr, vk_ctx* ctx, uint32_t tex_limit, uint32_t sampler_limit
 
     this->sampler_limit_ = sampler_limit;
     this->samplers_ = alloc(VkSampler, sampler_limit);
-
     return this;
 }
 
@@ -356,27 +354,51 @@ bool vk_tex_arr_add_tex(vk_tex_arr* this,
     return true;
 }
 
-IMPL_OBJ_NEW(vk_mesh_desc, uint32_t node_limit)
+IMPL_OBJ_NEW(vk_mesh_desc, uint32_t node_size)
 {
+    this->node_size_ = node_size;
+    this->nodes_ = alloc(vk_mesh_node, node_size);
+    this->output_ = alloc(mat4, node_size);
+
+    for (uint32_t i = 0; i < node_size; i++)
+    {
+        glm_mat4_copy(GLM_MAT4_IDENTITY, this->output_[i]);
+        glm_mat4_copy(GLM_MAT4_IDENTITY, this->nodes_[i].preset_);
+    }
     return this;
 }
 
 IMPL_OBJ_DELETE(vk_mesh_desc)
 {
-    for (uint32_t i = 0; i < this->layer_count_; i++)
-    {
-        ffree(this->layers_[i]);
-    }
-    ffree(this->layer_sizes_);
+    ffree(this->nodes_);
     ffree(this->output_);
 }
 
-uint32_t vk_mesh_desc_get_node_size(vk_mesh_desc* this)
+void vk_mesh_desc_update(vk_mesh_desc* this)
 {
-    uint32_t size = 0;
-    for (uint32_t i = 0; i < this->layer_count_; i++)
+    uint32_t iter = 0;
+    while (iter < this->node_size_ && !this->nodes_[iter].parent_)
     {
-        size += this->layer_sizes_[i];
+        iter++;
     }
-    return size;
+}
+
+IMPL_OBJ_NEW(vk_mesh_skin, uint32_t joint_size)
+{
+    this->joint_size_ = joint_size;
+    this->joints_ = alloc(uint32_t, joint_size);
+    this->inv_binding_ = alloc(mat4, joint_size);
+
+    for (uint32_t i = 0; i < joint_size; i++)
+    {
+        this->joints_[i] = 0;
+        glm_mat4_copy(GLM_MAT4_IDENTITY, this->inv_binding_[i]);
+    }
+    return this;
+}
+
+IMPL_OBJ_DELETE(vk_mesh_skin)
+{
+    ffree(this->joints_);
+    ffree(this->inv_binding_);
 }

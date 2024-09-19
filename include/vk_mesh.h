@@ -62,28 +62,26 @@ bool vk_tex_arr_add_tex(vk_tex_arr* this,
                         const VkExtent3D* extent,
                         const VkImageSubresource* sub_res);
 
-typedef struct vk_mesh_node
-{
-    vec3 translation_;
-    versor rotation;
-    vec3 scale_;
-    mat4 preset_;
-
-    mat4* output_;
-    mat4* parent_;
-} vk_mesh_node;
-
 typedef struct vk_mesh_desc
 {
-    uint32_t layer_count_;
-    uint32_t* layer_sizes_;
-    vk_mesh_node** layers_;
-
+    // linearized
+    uint32_t node_size_;
+    vk_mesh_node* nodes_;
     mat4* output_;
 } vk_mesh_desc;
 
-DEFINE_OBJ(vk_mesh_desc, uint32_t node_limit);
+DEFINE_OBJ(vk_mesh_desc, uint32_t node_size_);
 DEFINE_OBJ_DELETE(vk_mesh_desc);
-uint32_t vk_mesh_desc_get_node_size(vk_mesh_desc* this);
+void vk_mesh_desc_update(vk_mesh_desc* this);
+
+typedef struct vk_mesh_skin
+{
+    uint32_t joint_size_;
+    uint32_t* joints_;
+    mat4* inv_binding_;
+} vk_mesh_skin;
+
+DEFINE_OBJ(vk_mesh_skin, uint32_t joint_size_);
+DEFINE_OBJ_DELETE(vk_mesh_skin);
 
 #endif // INCLUDE_VK_MESH_H
