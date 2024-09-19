@@ -27,6 +27,7 @@ typedef struct vk_mesh
 } vk_mesh;
 
 DEFINE_OBJ(vk_mesh, vk_ctx* ctx, const char* name, VkDeviceSize mem_limit, uint32_t prim_limit);
+DEFINE_OBJ_DELETE(vk_mesh);
 vk_prim* vk_mesh_add_prim(vk_mesh* this);
 void vk_mesh_add_prim_attrib(vk_mesh* this, vk_prim* prim, vk_prim_attrib attrib, void* data, size_t count);
 void vk_mesh_set_preset_transform(vk_mesh* this, mat4 transform);
@@ -46,6 +47,7 @@ typedef struct vk_model
 } vk_model;
 
 DEFINE_OBJ(vk_model, vk_ctx* ctx, const char* name, uint32_t mesh_limit);
+DEFINE_OBJ_DELETE(vk_model);
 vk_mesh* vk_model_add_mesh(vk_model* this, const char* name, VkDeviceSize mem_limit, uint32_t prim_limit);
 
 typedef struct vk_tex_arr
@@ -65,6 +67,7 @@ typedef struct vk_tex_arr
 } vk_tex_arr;
 
 DEFINE_OBJ(vk_tex_arr, vk_ctx* ctx, uint32_t tex_limit, uint32_t sampler_limit);
+DEFINE_OBJ_DELETE(vk_tex_arr);
 bool vk_tex_arr_add_sampler(vk_tex_arr* this, VkSamplerCreateInfo* sampler_info);
 bool vk_tex_arr_add_tex(vk_tex_arr* this,
                         VkCommandPool cmd_pool,

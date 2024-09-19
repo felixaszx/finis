@@ -1,6 +1,5 @@
 #include "vk_model_t.h"
 
-IMPL_OBJ_DELETE_DEFAULT(vk_material);
 IMPL_OBJ_NEW_DEFAULT(vk_material)
 {
     memcpy(&this->color_factor_, (float[4]){1, 1, 1, 1}, sizeof(float[4]));
@@ -30,7 +29,6 @@ IMPL_OBJ_NEW_DEFAULT(vk_material)
     return this;
 }
 
-IMPL_OBJ_DELETE_DEFAULT(vk_morph);
 IMPL_OBJ_NEW_DEFAULT(vk_morph)
 {
     for (size_t i = 0; i < VK_MORPH_ATTRIB_COUNT; i++)
@@ -46,7 +44,6 @@ size_t vk_morph_get_attrib_size(vk_morph* this, vk_morph_attrib attrib_type)
     return ATTRIB_SIZES[attrib_type] * this->attrib_counts_[attrib_type];
 }
 
-IMPL_OBJ_DELETE_DEFAULT(vk_prim);
 IMPL_OBJ_NEW_DEFAULT(vk_prim)
 {
     for (size_t i = 0; i < VK_PRIM_ATTRIB_COUNT; i++)
