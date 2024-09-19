@@ -2,59 +2,7 @@
 #define INCLUDE_VK_MODEL_H
 
 #include "fi_vk.h"
-
-#define VK_PRIM_ATTRIB_COUNT 9
-
-typedef enum vk_prim_attrib
-{
-    INDEX,
-    POSITION,
-    NORMAL,
-    TANGENT,
-    TEXCOORD,
-    COLOR,
-    JOINTS,
-    WEIGHTS,
-    MATERIAL
-} vk_prim_attrib;
-
-typedef struct vk_material
-{
-    float color_factor_[4];
-    float emissive_factor_[4];       // [3] = emissive strength
-    float sheen_color_factor_[4];    // [3] = sheen roughness factor
-    float specular_color_factor_[4]; // [3] = specular factor
-
-    float alpha_cutoff_; // -1 means blend, 0 means opaque, otherwise means mask
-    float metallic_factor_;
-    float roughness_factor_;
-
-    uint32_t color_;
-    uint32_t metallic_roughness_;
-    uint32_t normal_;
-    uint32_t emissive_;
-    uint32_t occlusion_;
-
-    float anisotropy_rotation_;
-    float anisotropy_strength_;
-    uint32_t anisotropy_;
-
-    uint32_t specular_;
-    uint32_t spec_color_;
-
-    uint32_t sheen_color_;
-    uint32_t sheen_roughness_;
-} vk_material;
-DEFINE_OBJ_DEFAULT(vk_material);
-
-typedef struct vk_prim
-{
-    size_t attrib_counts_[VK_PRIM_ATTRIB_COUNT];
-    byte_offset attrib_offsets_[VK_PRIM_ATTRIB_COUNT]; // offset inside vk_mesh::buffer_
-} vk_prim;
-
-DEFINE_OBJ_DEFAULT(vk_prim);
-size_t vk_prim_get_attrib_size(vk_prim* this, vk_prim_attrib attrib_type);
+#include "vk_model_t.h"
 
 typedef struct vk_mesh
 {
@@ -81,6 +29,7 @@ typedef struct vk_mesh
 DEFINE_OBJ(vk_mesh, vk_ctx* ctx, const char* name, VkDeviceSize mem_limit, uint32_t prim_limit);
 vk_prim* vk_mesh_add_prim(vk_mesh* this);
 void vk_mesh_add_prim_attrib(vk_mesh* this, vk_prim* prim, vk_prim_attrib attrib, void* data, size_t count);
+void vk_mesh_set_preset_transform(vk_mesh* this, mat4 transform);
 void vk_mesh_free_staging(vk_mesh* this);
 void vk_mesh_flush_staging(vk_mesh* this);
 void vk_mesh_alloc_device_mem(vk_mesh* this, VkCommandPool pool);
@@ -116,8 +65,7 @@ typedef struct vk_tex_arr
 } vk_tex_arr;
 
 DEFINE_OBJ(vk_tex_arr, vk_ctx* ctx, uint32_t tex_limit, uint32_t sampler_limit);
-
-bool vk_tex_arr_add_sampler(vk_tex_arr* this, VkSampler sampler);
+bool vk_tex_arr_add_sampler(vk_tex_arr* this, VkSamplerCreateInfo* sampler_info);
 bool vk_tex_arr_add_tex(vk_tex_arr* this,
                         VkCommandPool cmd_pool,
                         uint32_t sampler_idx,
@@ -125,5 +73,26 @@ bool vk_tex_arr_add_tex(vk_tex_arr* this,
                         size_t size,
                         const VkExtent3D* extent,
                         const VkImageSubresource* sub_res);
+
+typedef struct vk_model_node
+{
+    vec3 translation_;
+    versor rotation;
+    vec3 scale_;
+    mat4 preset_;
+
+    mat4* output_;
+} vk_model_node;
+
+typedef struct vk_model_desc
+{
+    uint32_t node_layers_;
+    uint32_t* layer_sizes_;
+    vk_model_node** nodes_;
+
+    mat4* output_;
+} vk_model_desc;
+
+DEFINE_OBJ(vk_model_desc, uint32_t node_limit);
 
 #endif // INCLUDE_VK_MODEL_H
