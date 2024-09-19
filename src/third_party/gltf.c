@@ -1,2 +1,2 @@
 #define CGLTF_IMPLEMENTATION
-#include "gltf.h"
+#include "third_party/gltf.h"

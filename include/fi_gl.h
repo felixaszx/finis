@@ -4,7 +4,7 @@
 #define CGLM_FORCE_DEPTH_ZERO_TO_ONE
 #define CGLM_FORCE_LEFT_HANDED
 #include <cglm/cglm.h>
-#include "glad.h"
+#include "third_party/glad.h"
 #include <GLFW/glfw3.h>
 
 #include "tool.h"
