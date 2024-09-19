@@ -169,7 +169,7 @@ IMPL_OBJ_NEW(vk_swapchain, vk_ctx* ctx)
                                  VK_IMAGE_USAGE_TRANSFER_SRC_BIT;
     swapchain_cinfo.preTransform = VK_SURFACE_TRANSFORM_IDENTITY_BIT_KHR;
     swapchain_cinfo.compositeAlpha = VK_COMPOSITE_ALPHA_OPAQUE_BIT_KHR;
-    swapchain_cinfo.presentMode = VK_PRESENT_MODE_MAILBOX_KHR;
+    swapchain_cinfo.presentMode = VK_PRESENT_MODE_FIFO_KHR;
     swapchain_cinfo.clipped = true;
     swapchain_cinfo.oldSwapchain = nullptr;
     vkCreateSwapchainKHR(ctx->device_, &swapchain_cinfo, nullptr, &this->swapchain_);
