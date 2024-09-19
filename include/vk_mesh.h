@@ -75,13 +75,15 @@ typedef struct vk_mesh_node
 
 typedef struct vk_mesh_desc
 {
-    uint32_t node_layers_;
+    uint32_t layer_count_;
     uint32_t* layer_sizes_;
-    vk_mesh_node** nodes_;
+    vk_mesh_node** layers_;
 
     mat4* output_;
 } vk_mesh_desc;
 
 DEFINE_OBJ(vk_mesh_desc, uint32_t node_limit);
+DEFINE_OBJ_DELETE(vk_mesh_desc);
+uint32_t vk_mesh_desc_get_node_size(vk_mesh_desc* this);
 
 #endif // INCLUDE_VK_MESH_H

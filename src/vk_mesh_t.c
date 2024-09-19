@@ -61,3 +61,11 @@ size_t vk_prim_get_attrib_size(vk_prim* this, vk_prim_attrib attrib_type)
         sizeof(vk_material), sizeof(vk_morph), sizeof(VkDeviceSize)};
     return ATTRIB_SIZES[attrib_type] * this->attrib_counts_[attrib_type];
 }
+
+IMPL_OBJ_NEW_DEFAULT(vk_prim_transform)
+{
+    this->node_idx_ = -1;
+    this->first_joint_ = -1;
+    this->morph_weights_ = -1;
+    return this;
+}

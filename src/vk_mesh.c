@@ -355,3 +355,28 @@ bool vk_tex_arr_add_tex(vk_tex_arr* this,
     this->tex_size_++;
     return true;
 }
+
+IMPL_OBJ_NEW(vk_mesh_desc, uint32_t node_limit)
+{
+    return this;
+}
+
+IMPL_OBJ_DELETE(vk_mesh_desc)
+{
+    for (uint32_t i = 0; i < this->layer_count_; i++)
+    {
+        ffree(this->layers_[i]);
+    }
+    ffree(this->layer_sizes_);
+    ffree(this->output_);
+}
+
+uint32_t vk_mesh_desc_get_node_size(vk_mesh_desc* this)
+{
+    uint32_t size = 0;
+    for (uint32_t i = 0; i < this->layer_count_; i++)
+    {
+        size += this->layer_sizes_[i];
+    }
+    return size;
+}

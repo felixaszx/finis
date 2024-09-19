@@ -64,7 +64,7 @@ typedef enum vk_prim_attrib
     MATERIAL,
     MORPH,
 
-    NODE,
+    TRANSFORM,
 } vk_prim_attrib;
 
 typedef struct vk_prim
@@ -78,7 +78,10 @@ size_t vk_prim_get_attrib_size(vk_prim* this, vk_prim_attrib attrib_type);
 
 typedef struct vk_prim_transform
 {
-}vk_prim_transform;
-
+    uint32_t node_idx_;
+    uint32_t first_joint_;
+    uint32_t morph_weights_;
+} vk_prim_transform;
+DEFINE_OBJ_DEFAULT(vk_prim_transform);
 
 #endif // INCLUDE_VK_MESH_T_H
