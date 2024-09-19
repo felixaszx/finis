@@ -1,58 +1,4 @@
-#include "vk_model.h"
-
-IMPL_OBJ_NEW_DEFAULT(vk_material)
-{
-    memcpy(&this->color_factor_, (float[4]){1, 1, 1, 1}, sizeof(float[4]));
-    memcpy(&this->emissive_factor_, (float[4]){0, 0, 0, 1}, sizeof(float[4]));
-    memcpy(&this->sheen_color_factor_, (float[4]){0, 0, 0, 0}, sizeof(float[4]));
-    memcpy(&this->specular_color_factor_, (float[4]){1, 1, 1, 1}, sizeof(float[4]));
-
-    this->alpha_cutoff_ = 0;
-    this->metallic_factor_ = 1.0f;
-    this->roughness_factor_ = 1.0f;
-
-    this->color_ = -1;
-    this->metallic_roughness_ = -1;
-    this->normal_ = -1;
-    this->emissive_ = -1;
-    this->occlusion_ = -1;
-
-    this->anisotropy_rotation_ = 0;
-    this->anisotropy_strength_ = 0;
-    this->anisotropy_ = -1;
-
-    this->specular_ = -1;
-    this->spec_color_ = -1;
-
-    this->sheen_color_ = -1;
-    this->sheen_roughness_ = -1;
-    return this;
-}
-
-IMPL_OBJ_DELETE(vk_material)
-{
-}
-
-IMPL_OBJ_NEW_DEFAULT(vk_prim)
-{
-    for (size_t i = 0; i < VK_PRIM_ATTRIB_COUNT; i++)
-    {
-        this->attrib_offsets_[i] = -1;
-    }
-    return this;
-}
-
-IMPL_OBJ_DELETE(vk_prim)
-{
-}
-
-size_t vk_prim_get_attrib_size(vk_prim* this, vk_prim_attrib attrib_type)
-{
-    const static size_t ATTRIB_SIZES[VK_PRIM_ATTRIB_COUNT] = {
-        sizeof(uint32_t), sizeof(float[3]),    sizeof(float[3]), sizeof(float[4]),   sizeof(float[2]),
-        sizeof(float[4]), sizeof(uint32_t[4]), sizeof(float[4]), sizeof(vk_material)};
-    return ATTRIB_SIZES[attrib_type] * this->attrib_counts_[attrib_type];
-}
+#include "vk_mesh.h"
 
 void vk_mesh_free_staging(vk_mesh* this)
 {
@@ -207,37 +153,6 @@ void vk_mesh_add_prim_attrib(vk_mesh* this, vk_prim* prim, vk_prim_attrib attrib
     this->mem_size_ += data_size;
 }
 
-IMPL_OBJ_NEW(vk_model, vk_ctx* ctx, const char* name, uint32_t mesh_limit)
-{
-    this->ctx_ = ctx;
-    this->mesh_limit_ = mesh_limit;
-    strcpy_s(this->name_, sizeof(this->name_), name);
-    this->meshes_ = alloc(vk_mesh, mesh_limit);
-
-    return this;
-}
-
-IMPL_OBJ_DELETE(vk_model)
-{
-    for (size_t m = 0; m < this->size_; m++)
-    {
-        destroy_vk_mesh(this->meshes_ + m);
-    }
-    ffree(this->meshes_);
-}
-
-vk_mesh* vk_model_add_mesh(vk_model* this, const char* name, VkDeviceSize mem_limit, uint32_t prim_limit)
-{
-    if (this->size_ >= this->mesh_limit_)
-    {
-        return nullptr;
-    }
-    construct_vk_mesh(this->meshes_ + this->size_, this->ctx_, name, mem_limit, prim_limit);
-    this->size_++;
-
-    return this->meshes_ + this->size_ - 1;
-}
-
 IMPL_OBJ_NEW(vk_tex_arr, vk_ctx* ctx, uint32_t tex_limit, uint32_t sampler_limit)
 {
     this->ctx_ = ctx;
@@ -261,16 +176,27 @@ IMPL_OBJ_DELETE(vk_tex_arr)
         vkDestroyImageView(this->ctx_->device_, this->views_[i], nullptr);
         vmaDestroyImage(this->ctx_->allocator_, this->texs_[i], this->allocs_[i]);
     }
+
+    for (size_t i = 0; i < this->sampler_size_; i++)
+    {
+        vkDestroySampler(this->ctx_->device_, this->samplers_[i], nullptr);
+    }
+
+    ffree(this->texs_);
+    ffree(this->views_);
+    ffree(this->allocs_);
+    ffree(this->desc_infos_);
+    ffree(this->samplers_);
 }
 
-bool vk_tex_arr_add_sampler(vk_tex_arr* this, VkSampler sampler)
+bool vk_tex_arr_add_sampler(vk_tex_arr* this, VkSamplerCreateInfo* sampler_info)
 {
     if (this->sampler_size_ >= this->sampler_limit_)
     {
         return false;
     }
 
-    this->samplers_[this->sampler_size_] = sampler;
+    vkCreateSampler(this->ctx_->device_, sampler_info, nullptr, this->samplers_ + this->sampler_size_);
 
     this->sampler_size_++;
     return true;

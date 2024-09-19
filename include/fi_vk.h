@@ -36,6 +36,7 @@ typedef struct vk_ctx
 } vk_ctx;
 
 DEFINE_OBJ(vk_ctx, uint32_t width, uint32_t height, bool full_screen);
+DEFINE_OBJ_DELETE(vk_ctx);
 bool vk_ctx_update(vk_ctx* ctx);
 
 typedef struct vk_swapchain
@@ -48,8 +49,7 @@ typedef struct vk_swapchain
 } vk_swapchain;
 
 DEFINE_OBJ(vk_swapchain, vk_ctx* ctx);
-
+DEFINE_OBJ_DELETE(vk_swapchain);
 VkSemaphoreSubmitInfo vk_get_sem_info(VkSemaphore sem, VkPipelineStageFlags2 stage);
-
 
 #endif // INCLUDE_FI_VK_H

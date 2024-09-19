@@ -27,14 +27,13 @@
 #define to_gb(count) (1024 * to_mb(count))
 
 // provide new, init and release type
-#define DEFINE_OBJ(type, ...)                   \
-    type* new_##type();                         \
-    type* construct_##type(type* this, __VA_ARGS__); \
-    void destroy_##type(type* this)
+#define DEFINE_OBJ(type, ...) \
+    type* new_##type();       \
+    type* construct_##type(type* this, __VA_ARGS__);
 #define DEFINE_OBJ_DEFAULT(type, ...) \
     type* new_##type();               \
-    type* construct_##type(type* this);    \
-    void destroy_##type(type* this)
+    type* construct_##type(type* this);
+#define DEFINE_OBJ_DELETE(type) void destroy_##type(type* this)
 
 #define IMPL_OBJ_NEW(type, ...) \
     type* new_##type()          \

@@ -17,6 +17,7 @@ typedef struct gl_ctx
 } gl_ctx;
 
 DEFINE_OBJ(gl_ctx, uint32_t width, uint32_t height, bool full_screen);
+DEFINE_OBJ_DELETE(gl_ctx);
 bool gl_ctx_update(gl_ctx* ctx);
 
 #endif // INCLUDE_GL_H
