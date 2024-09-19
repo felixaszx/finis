@@ -30,7 +30,6 @@ DEFINE_OBJ(vk_mesh, vk_ctx* ctx, const char* name, VkDeviceSize mem_limit, uint3
 DEFINE_OBJ_DELETE(vk_mesh);
 vk_prim* vk_mesh_add_prim(vk_mesh* this);
 void vk_mesh_add_prim_attrib(vk_mesh* this, vk_prim* prim, vk_prim_attrib attrib, void* data, size_t count);
-void vk_mesh_set_preset_transform(vk_mesh* this, mat4 transform);
 void vk_mesh_free_staging(vk_mesh* this);
 void vk_mesh_flush_staging(vk_mesh* this);
 void vk_mesh_alloc_device_mem(vk_mesh* this, VkCommandPool pool);
