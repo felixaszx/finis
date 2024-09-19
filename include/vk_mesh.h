@@ -84,6 +84,7 @@ DEFINE_OBJ(vk_mesh_desc, vk_ctx* ctx, uint32_t node_size_);
 DEFINE_OBJ_DELETE(vk_mesh_desc);
 void vk_mesh_desc_update(vk_mesh_desc* this, mat4 root_trans);
 void vk_mesh_desc_set_layer(vk_mesh_desc* this, uint32_t layer_size);
+void vk_mesh_desc_alloc_device_mem(vk_mesh_desc* this, VkCommandPool pool);
 
 typedef struct vk_mesh_joint
 {
@@ -104,5 +105,6 @@ typedef struct vk_mesh_skin
 
 DEFINE_OBJ(vk_mesh_skin, vk_ctx* ctx, uint32_t joint_size_);
 DEFINE_OBJ_DELETE(vk_mesh_skin);
+void vk_mesh_skin_alloc_device_mem(vk_mesh_skin* this, VkCommandPool pool);
 
 #endif // INCLUDE_VK_MESH_H

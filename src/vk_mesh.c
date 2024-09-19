@@ -422,6 +422,10 @@ void vk_mesh_desc_set_layer(vk_mesh_desc* this, uint32_t layer_size)
     this->layers_ = alloc(uint32_t, layer_size);
 }
 
+void vk_mesh_desc_alloc_device_mem(vk_mesh_desc* this, VkCommandPool pool)
+{
+}
+
 IMPL_OBJ_NEW(vk_mesh_skin, vk_ctx* ctx, uint32_t joint_size)
 {
     this->ctx_ = ctx;
@@ -439,4 +443,8 @@ IMPL_OBJ_NEW(vk_mesh_skin, vk_ctx* ctx, uint32_t joint_size)
 IMPL_OBJ_DELETE(vk_mesh_skin)
 {
     ffree(this->joints_);
+}
+
+void vk_mesh_skin_alloc_device_mem(vk_mesh_skin* this, VkCommandPool pool)
+{
 }
