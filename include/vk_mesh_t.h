@@ -1,5 +1,5 @@
-#ifndef INCLUDE_VK_MODEL_T_H
-#define INCLUDE_VK_MODEL_T_H
+#ifndef INCLUDE_VK_MESH_T_H
+#define INCLUDE_VK_MESH_T_H
 
 #include "fi_vk.h"
 
@@ -50,7 +50,7 @@ typedef struct vk_morph
 DEFINE_OBJ_DEFAULT(vk_morph);
 size_t vk_morpj_get_attrib_size(vk_morph* this, vk_morph_attrib attrib_type);
 
-#define VK_PRIM_ATTRIB_COUNT 10
+#define VK_PRIM_ATTRIB_COUNT 11
 typedef enum vk_prim_attrib
 {
     INDEX,
@@ -63,6 +63,8 @@ typedef enum vk_prim_attrib
     WEIGHTS,
     MATERIAL,
     MORPH,
+
+    NODE,
 } vk_prim_attrib;
 
 typedef struct vk_prim
@@ -78,4 +80,5 @@ typedef struct vk_prim_transform
 {
 }vk_prim_transform;
 
-#endif // INCLUDE_VK_MODEL_T_H
+
+#endif // INCLUDE_VK_MESH_T_H

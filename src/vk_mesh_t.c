@@ -1,4 +1,4 @@
-#include "vk_model_t.h"
+#include "vk_mesh_t.h"
 
 IMPL_OBJ_NEW_DEFAULT(vk_material)
 {
@@ -56,7 +56,8 @@ IMPL_OBJ_NEW_DEFAULT(vk_prim)
 size_t vk_prim_get_attrib_size(vk_prim* this, vk_prim_attrib attrib_type)
 {
     const static size_t ATTRIB_SIZES[VK_PRIM_ATTRIB_COUNT] = {
-        sizeof(uint32_t), sizeof(float[3]),    sizeof(float[3]), sizeof(float[4]),    sizeof(float[2]),
-        sizeof(float[4]), sizeof(uint32_t[4]), sizeof(float[4]), sizeof(vk_material), sizeof(vk_morph)};
+        sizeof(uint32_t),    sizeof(float[3]), sizeof(float[3]),    sizeof(float[4]),
+        sizeof(float[2]),    sizeof(float[4]), sizeof(uint32_t[4]), sizeof(float[4]),
+        sizeof(vk_material), sizeof(vk_morph), sizeof(VkDeviceSize)};
     return ATTRIB_SIZES[attrib_type] * this->attrib_counts_[attrib_type];
 }

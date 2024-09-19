@@ -2,7 +2,7 @@
 #include <stdlib.h>
 
 #include "fi_vk.h"
-#include "vk_model.h"
+#include "vk_mesh.h"
 
 int main(int argc, char** argv)
 {
@@ -40,7 +40,7 @@ int main(int argc, char** argv)
     cmd_submits[0].sType = VK_STRUCTURE_TYPE_COMMAND_BUFFER_SUBMIT_INFO;
     cmd_submits[0].commandBuffer = cmd;
 
-    vk_model* model = new (vk_model, ctx, "test_model", 10);
+    vk_mesh* mesh = new (vk_mesh, ctx, "test_mesh", to_mb(10), 100);
     vk_tex_arr* tex_arr = new (vk_tex_arr, ctx, 10, 10);
 
     while (vk_ctx_update(ctx))
@@ -87,7 +87,6 @@ int main(int argc, char** argv)
     }
     vkWaitForFences(ctx->device_, 1, &frame_fence, true, UINT64_MAX);
 
-    delete (vk_model, model);
     vkDestroyFence(ctx->device_, frame_fence, nullptr);
     vkDestroySemaphore(ctx->device_, acquired, nullptr);
     vkDestroySemaphore(ctx->device_, submitted, nullptr);

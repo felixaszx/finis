@@ -1,4 +1,4 @@
-#include "vk_model.h"
+#include "vk_mesh.h"
 
 void vk_mesh_free_staging(vk_mesh* this)
 {
@@ -151,37 +151,6 @@ void vk_mesh_add_prim_attrib(vk_mesh* this, vk_prim* prim, vk_prim_attrib attrib
     prim->attrib_offsets_[attrib] = this->mem_size_;
     memcpy(this->mapping_ + this->mem_size_, data, data_size);
     this->mem_size_ += data_size;
-}
-
-IMPL_OBJ_NEW(vk_model, vk_ctx* ctx, const char* name, uint32_t mesh_limit)
-{
-    this->ctx_ = ctx;
-    this->mesh_limit_ = mesh_limit;
-    strcpy_s(this->name_, sizeof(this->name_), name);
-    this->meshes_ = alloc(vk_mesh, mesh_limit);
-
-    return this;
-}
-
-IMPL_OBJ_DELETE(vk_model)
-{
-    for (size_t m = 0; m < this->size_; m++)
-    {
-        destroy_vk_mesh(this->meshes_ + m);
-    }
-    ffree(this->meshes_);
-}
-
-vk_mesh* vk_model_add_mesh(vk_model* this, const char* name, VkDeviceSize mem_limit, uint32_t prim_limit)
-{
-    if (this->size_ >= this->mesh_limit_)
-    {
-        return nullptr;
-    }
-    construct_vk_mesh(this->meshes_ + this->size_, this->ctx_, name, mem_limit, prim_limit);
-    this->size_++;
-
-    return this->meshes_ + this->size_ - 1;
 }
 
 IMPL_OBJ_NEW(vk_tex_arr, vk_ctx* ctx, uint32_t tex_limit, uint32_t sampler_limit)
