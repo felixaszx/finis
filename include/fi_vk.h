@@ -1,11 +1,6 @@
 #ifndef INCLUDE_VK_H
 #define INCLUDE_VK_H
 
-#include <stdlib.h>
-#include <stdio.h>
-#include <string.h>
-#include <stdbool.h>
-
 #define CGLM_FORCE_DEPTH_ZERO_TO_ONE
 #define CGLM_FORCE_LEFT_HANDED
 #include <cglm/cglm.h>
@@ -13,7 +8,6 @@
 #include <volk.h>
 #include <GLFW/glfw3.h>
 #include <vma/vk_mem_alloc.h>
-#include <pthread.h>
 
 #include "tool.h"
 

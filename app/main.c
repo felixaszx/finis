@@ -8,7 +8,7 @@ int main(int argc, char** argv)
 {
     const uint32_t WIDTH = 1920;
     const uint32_t HEIGHT = 1080;
-
+    
     vk_ctx ctx = {};
     construct_vk_ctx(&ctx, WIDTH, HEIGHT, false);
     vk_swapchain sc = {};
