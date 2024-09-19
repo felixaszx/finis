@@ -6,8 +6,8 @@
 
 int main(int argc, char** argv)
 {
-    const uint32_t WIDTH = 1920;
-    const uint32_t HEIGHT = 1080;
+    const uint32_t WIDTH = 800;
+    const uint32_t HEIGHT = 600;
 
     vk_ctx* ctx = new (vk_ctx, WIDTH, HEIGHT, false);
     vk_swapchain* sc = new (vk_swapchain, ctx);
@@ -68,14 +68,16 @@ int main(int argc, char** argv)
         vkBeginCommandBuffer(cmd, &begin);
         vkEndCommandBuffer(cmd);
 
-        VkSubmitInfo2 submit = {VK_STRUCTURE_TYPE_SUBMIT_INFO_2};
-        submit.commandBufferInfoCount = 1;
-        submit.pCommandBufferInfos = cmd_submits;
-        submit.waitSemaphoreInfoCount = 1;
-        submit.pWaitSemaphoreInfos = waits;
-        submit.signalSemaphoreInfoCount = 1;
-        submit.pSignalSemaphoreInfos = signals;
-        vkQueueSubmit2(ctx->queue_, 1, &submit, frame_fence);
+        VkPipelineStageFlags wait_stages[] = {VK_PIPELINE_STAGE_BOTTOM_OF_PIPE_BIT};
+        VkSubmitInfo submit = {VK_STRUCTURE_TYPE_SUBMIT_INFO};
+        submit.commandBufferCount  =1 ;
+        submit.pCommandBuffers = &cmd;
+        submit.waitSemaphoreCount = 1;
+        submit.pWaitSemaphores = &acquired;
+        submit.pWaitDstStageMask = wait_stages;
+        submit.signalSemaphoreCount = 1;
+        submit.pSignalSemaphores = &submitted;
+        vkQueueSubmit(ctx->queue_, 1, &submit, frame_fence);
 
         VkPresentInfoKHR present_info = {VK_STRUCTURE_TYPE_PRESENT_INFO_KHR};
         present_info.waitSemaphoreCount = 1;

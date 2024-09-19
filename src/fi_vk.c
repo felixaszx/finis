@@ -115,6 +115,13 @@ IMPL_OBJ_NEW(vk_ctx, uint32_t width, uint32_t height, bool full_screen)
     vma_funcs.vkMapMemory = vkMapMemory;
     vma_funcs.vkUnmapMemory = vkUnmapMemory;
     vma_funcs.vkCmdCopyBuffer = vkCmdCopyBuffer;
+    vma_funcs.vkGetBufferMemoryRequirements2KHR = vkGetBufferMemoryRequirements2;
+    vma_funcs.vkGetImageMemoryRequirements2KHR = vkGetImageMemoryRequirements2;
+    vma_funcs.vkBindBufferMemory2KHR = vkBindBufferMemory2;
+    vma_funcs.vkBindImageMemory2KHR = vkBindImageMemory2KHR;
+    vma_funcs.vkGetPhysicalDeviceMemoryProperties2KHR = vkGetPhysicalDeviceMemoryProperties2;
+    vma_funcs.vkGetDeviceBufferMemoryRequirements = vkGetDeviceBufferMemoryRequirements;
+    vma_funcs.vkGetDeviceImageMemoryRequirements = vkGetDeviceImageMemoryRequirements;
 
     VmaAllocatorCreateInfo vma_cinfo = {};
     vma_cinfo.flags = VMA_ALLOCATOR_CREATE_BUFFER_DEVICE_ADDRESS_BIT;
