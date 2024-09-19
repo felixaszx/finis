@@ -1,5 +1,5 @@
-#ifndef INCLUDE_VK_H
-#define INCLUDE_VK_H
+#ifndef INCLUDE_FI_VK_H
+#define INCLUDE_FI_VK_H
 
 #define CGLM_FORCE_DEPTH_ZERO_TO_ONE
 #define CGLM_FORCE_LEFT_HANDED
@@ -51,4 +51,5 @@ DEFINE_OBJ(vk_swapchain, vk_ctx* ctx);
 
 VkSemaphoreSubmitInfo vk_get_sem_info(VkSemaphore sem, VkPipelineStageFlags2 stage);
 
-#endif // INCLUDE_VK_H
+
+#endif // INCLUDE_FI_VK_H

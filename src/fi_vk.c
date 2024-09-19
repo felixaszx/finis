@@ -1,4 +1,4 @@
-#include "vk.h"
+#include "fi_vk.h"
 #include <volk.c>
 
 IMPL_OBJ_NEW(vk_ctx, uint32_t width, uint32_t height, bool full_screen)

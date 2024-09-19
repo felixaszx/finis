@@ -1,7 +1,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 
-#include "vk.h"
+#include "fi_vk.h"
 #include "vk_model.h"
 
 int main(int argc, char** argv)

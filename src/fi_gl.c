@@ -1,4 +1,4 @@
-#include "gl.h"
+#include "fi_gl.h"
 
 IMPL_OBJ_NEW(gl_ctx, uint32_t width, uint32_t height, bool full_screen)
 {

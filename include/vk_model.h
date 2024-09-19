@@ -1,7 +1,7 @@
 #ifndef INCLUDE_VK_MODEL_H
 #define INCLUDE_VK_MODEL_H
 
-#include "vk.h"
+#include "fi_vk.h"
 
 #define VK_PRIM_ATTRIB_COUNT 9
 
