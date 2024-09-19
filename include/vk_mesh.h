@@ -106,6 +106,6 @@ typedef struct vk_mesh_skin
 
 DEFINE_OBJ(vk_mesh_skin, vk_ctx* ctx, uint32_t joint_size_);
 DEFINE_OBJ_DELETE(vk_mesh_skin);
-void vk_mesh_skin_alloc_device_mem(vk_mesh_skin* this, VkCommandPool pool);
+void vk_mesh_skin_alloc_device_mem(vk_mesh_skin* this, VkCommandPool cmd_pool);
 
 #endif // INCLUDE_VK_MESH_H

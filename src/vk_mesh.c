@@ -67,6 +67,7 @@ void vk_mesh_alloc_device_mem(vk_mesh* this, VkCommandPool pool)
     buffer_info.size = this->mem_size_ + this->prim_size_ * (sizeof(VkDrawIndirectCommand) + sizeof(vk_prim));
     buffer_info.usage = VK_BUFFER_USAGE_STORAGE_BUFFER_BIT |        //
                         VK_BUFFER_USAGE_SHADER_DEVICE_ADDRESS_BIT | //
+                        VK_BUFFER_USAGE_INDIRECT_BUFFER_BIT |       //
                         VK_BUFFER_USAGE_TRANSFER_DST_BIT;
     VmaAllocationCreateInfo alloc_info = {};
     alloc_info.usage = VMA_MEMORY_USAGE_AUTO_PREFER_DEVICE;
@@ -385,7 +386,10 @@ IMPL_OBJ_NEW(vk_mesh_desc, vk_ctx* ctx, uint32_t node_size)
 
 IMPL_OBJ_DELETE(vk_mesh_desc)
 {
-    vmaDestroyBuffer(this->ctx_->allocator_, this->buffer_, this->alloc_);
+    if (this->buffer_)
+    {
+        vmaDestroyBuffer(this->ctx_->allocator_, this->buffer_, this->alloc_);
+    }
     ffree(this->nodes_);
     ffree(this->output_);
     ffree(this->layers_);
@@ -420,6 +424,7 @@ void vk_mesh_desc_update(vk_mesh_desc* this, mat4 root_trans)
         glm_scale(*output, this->nodes_[iter].scale_);
         iter++;
     }
+    vk_mesh_desc_flush(this);
 }
 
 void vk_mesh_desc_set_layer(vk_mesh_desc* this, uint32_t layer_size)
@@ -461,8 +466,63 @@ IMPL_OBJ_NEW(vk_mesh_skin, vk_ctx* ctx, uint32_t joint_size)
 IMPL_OBJ_DELETE(vk_mesh_skin)
 {
     ffree(this->joints_);
+    if (this->buffer_)
+    {
+        vmaDestroyBuffer(this->ctx_->allocator_, this->buffer_, this->alloc_);
+    }
 }
 
-void vk_mesh_skin_alloc_device_mem(vk_mesh_skin* this, VkCommandPool pool)
+void vk_mesh_skin_alloc_device_mem(vk_mesh_skin* this, VkCommandPool cmd_pool)
 {
+    VkBuffer staging = {};
+    VmaAllocation staging_alloc = {};
+    VkBufferCreateInfo buffer_info = {VK_STRUCTURE_TYPE_BUFFER_CREATE_INFO};
+    buffer_info.size = this->joint_size_ * sizeof(vk_mesh_joint);
+    buffer_info.usage = VK_BUFFER_USAGE_VERTEX_BUFFER_BIT | //
+                        VK_BUFFER_USAGE_TRANSFER_SRC_BIT;
+    VmaAllocationCreateInfo alloc_info = {};
+    alloc_info.usage = VMA_MEMORY_USAGE_AUTO_PREFER_HOST;
+    alloc_info.flags = VMA_ALLOCATION_CREATE_HOST_ACCESS_SEQUENTIAL_WRITE_BIT | //
+                       VMA_ALLOCATION_CREATE_MAPPED_BIT;
+    alloc_info.requiredFlags = VK_MEMORY_PROPERTY_HOST_CACHED_BIT;
+    VmaAllocationInfo allocated = {};
+    vmaCreateBuffer(this->ctx_->allocator_, &buffer_info, &alloc_info, &staging, &staging_alloc, &allocated);
+    memcpy(allocated.pMappedData, this->joints_, buffer_info.size);
+    vmaFlushAllocation(this->ctx_->allocator_, staging_alloc, 0, buffer_info.size);
+
+    buffer_info.usage = VK_BUFFER_USAGE_STORAGE_BUFFER_BIT | //
+                        VK_BUFFER_USAGE_TRANSFER_DST_BIT |   //
+                        VK_BUFFER_USAGE_SHADER_DEVICE_ADDRESS_BIT;
+    alloc_info.usage = VMA_MEMORY_USAGE_AUTO_PREFER_DEVICE;
+    alloc_info.flags = 0;
+    alloc_info.requiredFlags = 0;
+    vmaCreateBuffer(this->ctx_->allocator_, &buffer_info, &alloc_info, &this->buffer_, &this->alloc_, nullptr);
+
+    VkFence fence = {};
+    VkFenceCreateInfo fence_cinfo = {VK_STRUCTURE_TYPE_FENCE_CREATE_INFO};
+    vkCreateFence(this->ctx_->device_, &fence_cinfo, nullptr, &fence);
+    vkResetFences(this->ctx_->device_, 1, &fence);
+
+    VkCommandBuffer cmd = {};
+    VkCommandBufferAllocateInfo cmd_alloc = {VK_STRUCTURE_TYPE_COMMAND_BUFFER_ALLOCATE_INFO};
+    cmd_alloc.commandPool = cmd_pool;
+    cmd_alloc.commandBufferCount = 1;
+    vkAllocateCommandBuffers(this->ctx_->device_, &cmd_alloc, &cmd);
+
+    VkCommandBufferBeginInfo begin = {VK_STRUCTURE_TYPE_COMMAND_BUFFER_BEGIN_INFO};
+    begin.flags = VK_COMMAND_BUFFER_USAGE_ONE_TIME_SUBMIT_BIT;
+    vkBeginCommandBuffer(cmd, &begin);
+    VkBufferCopy region = {0, 0, buffer_info.size};
+    vkCmdCopyBuffer(cmd, staging, this->buffer_, 1, &region);
+    vkEndCommandBuffer(cmd);
+
+    VkSubmitInfo submit = {VK_STRUCTURE_TYPE_SUBMIT_INFO};
+    submit.commandBufferCount = 1;
+    submit.pCommandBuffers = &cmd;
+    vkQueueSubmit(this->ctx_->queue_, 1, &submit, fence);
+    vkWaitForFences(this->ctx_->device_, 1, &fence, true, UINT64_MAX);
+
+    vkDestroyFence(this->ctx_->device_, fence, nullptr);
+    vkFreeCommandBuffers(this->ctx_->device_, cmd_pool, 1, &cmd);
+    vmaDestroyBuffer(this->ctx_->allocator_, staging, staging_alloc);
 }
