@@ -16,7 +16,7 @@ typedef struct vk_mesh
     VmaAllocation alloc_;
     VkDeviceAddress address_;
 
-    VkDeviceSize dc_offset_;
+    VkDeviceSize prim_offset_;
     VkDrawIndirectCommand* draw_calls_;
 
     byte* mapping_;

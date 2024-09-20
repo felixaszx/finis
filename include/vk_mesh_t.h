@@ -62,8 +62,7 @@ typedef enum vk_prim_attrib
     WEIGHTS,
     MATERIAL,
     MORPH,
-
-    TRANSFORM, // set by hand
+    TRANSFORM,
 } vk_prim_attrib;
 
 typedef struct vk_prim

@@ -63,6 +63,7 @@ IMPL_OBJ_NEW(vk_ctx, uint32_t width, uint32_t height, bool full_screen)
     feature12.bufferDeviceAddress = true;
     feature12.scalarBlockLayout = true;
     feature12.shaderInt8 = true;
+    feature12.storageBuffer8BitAccess = true;
     feature12.shaderFloat16 = true;
     feature12.uniformAndStorageBuffer8BitAccess = true;
     VkPhysicalDeviceVulkan13Features feature13 = {VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_VULKAN_1_3_FEATURES};

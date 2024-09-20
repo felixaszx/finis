@@ -68,7 +68,7 @@ void vk_mesh_alloc_device_mem(vk_mesh* this, VkCommandPool pool)
     address_info.buffer = this->buffer_;
     this->address_ = vkGetBufferDeviceAddress(this->ctx_->device_, &address_info);
 
-    this->dc_offset_ = this->mem_size_;
+    this->prim_offset_ = this->mem_size_;
     for (size_t p = 0; p < this->prim_size_; p++)
     {
         this->draw_calls_[p].instanceCount = 1;
@@ -123,7 +123,7 @@ void vk_mesh_alloc_device_mem(vk_mesh* this, VkCommandPool pool)
 
 void vk_mesh_draw_prims(vk_mesh* this, VkCommandBuffer cmd)
 {
-    vkCmdDrawIndirect(cmd, this->buffer_, this->dc_offset_, this->prim_size_,
+    vkCmdDrawIndirect(cmd, this->buffer_, this->prim_offset_, this->prim_size_,
                       sizeof(VkDrawIndirectCommand) + sizeof(vk_prim));
 }
 
@@ -150,6 +150,7 @@ void vk_mesh_add_prim_attrib(vk_mesh* this, vk_prim* prim, vk_prim_attrib attrib
     prim->attrib_address_[attrib] = this->mem_size_;
     memcpy(this->mapping_ + this->mem_size_, data, data_size);
     this->mem_size_ += data_size;
+    this->mem_size_ += this->mem_size_ % 16 ? 16 - this->mem_size_ % 16 : 0;
 }
 
 void vk_mesh_add_prim_morph_attrib(vk_mesh* this, vk_morph* morph, vk_morph_attrib attrib, void* data, size_t count)
@@ -164,6 +165,7 @@ void vk_mesh_add_prim_morph_attrib(vk_mesh* this, vk_morph* morph, vk_morph_attr
     morph->attrib_offsets_[attrib] = this->mem_size_;
     memcpy(this->mapping_ + this->mem_size_, data, data_size);
     this->mem_size_ += data_size;
+    this->mem_size_ += this->mem_size_ % 16 ? 16 - this->mem_size_ % 16 : 0;
 }
 
 IMPL_OBJ_NEW(vk_tex_arr, vk_ctx* ctx, uint32_t tex_limit, uint32_t sampler_limit)
@@ -233,6 +235,7 @@ bool vk_tex_arr_add_tex(vk_tex_arr* this,
     tex_info.mipLevels = sub_res->mipLevel;
     tex_info.format = VK_FORMAT_R8G8B8A8_SRGB;
     tex_info.extent = *extent;
+    tex_info.samples = VK_SAMPLE_COUNT_1_BIT;
     tex_info.usage = VK_IMAGE_USAGE_SAMPLED_BIT | VK_IMAGE_USAGE_TRANSFER_DST_BIT | VK_IMAGE_USAGE_TRANSFER_SRC_BIT;
     VmaAllocationCreateInfo alloc_info = {};
     alloc_info.usage = VMA_MEMORY_USAGE_AUTO_PREFER_DEVICE;

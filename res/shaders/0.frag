@@ -1,10 +1,12 @@
 #version 460 core
+#extension GL_EXT_buffer_reference : require
+#extension GL_EXT_scalar_block_layout : require
+#extension GL_EXT_shader_explicit_arithmetic_types : require
 #extension GL_EXT_nonuniform_qualifier : enable
 
-layout(set = 0, binding = 0) uniform sampler2D tex_arr[];
+layout(location = 0) out vec4 COLOR;
 
 void main()
 {
-    vec2 tex_coord = {0, 0};
-    vec4 aa = texture(tex_arr[0], tex_coord);
+    COLOR = vec4(1, 1, 1, 1);
 }
