@@ -45,6 +45,14 @@ int main(int argc, char** argv)
     vk_mesh_skin* mesh_skin = new (vk_mesh_skin, ctx, 10);
     vk_tex_arr* tex_arr = new (vk_tex_arr, ctx, 10, 10);
 
+    vec3 positions[3] = {{-0.5, 0, 0}, {-0.5, 0.5, 0}, {0.5, 0.5, 0}};
+    uint32_t idx[3] = {0, 1, 2};
+
+    vk_prim* prim = vk_mesh_add_prim(mesh);
+    vk_mesh_add_prim_attrib(mesh, prim, INDEX, idx, 3);
+    vk_mesh_add_prim_attrib(mesh, prim, POSITION, positions, 3);
+
+    vk_mesh_alloc_device_mem(mesh, cmd_pool);
     vk_mesh_desc_alloc_device_mem(mesh_desc);
     vk_mesh_desc_flush(mesh_desc);
     vk_mesh_skin_alloc_device_mem(mesh_skin, cmd_pool);

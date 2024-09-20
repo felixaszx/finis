@@ -47,7 +47,6 @@ typedef struct vk_morph
     VkDeviceSize attrib_offsets_[VK_MORPH_ATTRIB_COUNT]; // offset inside vk_mesh::buffer_
 } vk_morph;
 
-DEFINE_OBJ_DEFAULT(vk_morph);
 size_t vk_morph_get_attrib_size(vk_morph* morph, vk_morph_attrib attrib_type);
 
 #define VK_PRIM_ATTRIB_COUNT 11
@@ -64,16 +63,15 @@ typedef enum vk_prim_attrib
     MATERIAL,
     MORPH,
 
-    TRANSFORM,  // set by hand
+    TRANSFORM, // set by hand
 } vk_prim_attrib;
 
 typedef struct vk_prim
 {
     VkDeviceSize attrib_counts_[VK_PRIM_ATTRIB_COUNT];
-    VkDeviceSize attrib_offsets_[VK_PRIM_ATTRIB_COUNT]; // offset inside vk_mesh::buffer_
+    VkDeviceAddress attrib_address_[VK_PRIM_ATTRIB_COUNT]; // offset inside vk_mesh::buffer_
 } vk_prim;
 
-DEFINE_OBJ_DEFAULT(vk_prim);
 size_t vk_prim_get_attrib_size(vk_prim* this, vk_prim_attrib attrib_type);
 
 typedef struct vk_prim_transform

@@ -9,11 +9,6 @@ IMPL_OBJ_NEW(vk_mesh, vk_ctx* ctx, const char* name, VkDeviceSize mem_limit, uin
 
     this->prims_ = alloc(vk_prim, prim_limit);
     this->draw_calls_ = alloc(VkDrawIndirectCommand, prim_limit);
-    for (size_t i = 0; i < prim_limit; i++)
-    {
-        construct_vk_prim(this->prims_ + i);
-    }
-
     VkBufferCreateInfo buffer_info = {VK_STRUCTURE_TYPE_BUFFER_CREATE_INFO};
     buffer_info.size = mem_limit;
     buffer_info.usage = VK_BUFFER_USAGE_VERTEX_BUFFER_BIT | //
@@ -51,11 +46,6 @@ void vk_mesh_free_staging(vk_mesh* this)
     }
 }
 
-void vk_mesh_flush_staging(vk_mesh* this)
-{
-    vmaFlushAllocation(this->ctx_->allocator_, this->staging_alloc_, 0, this->mem_size_);
-}
-
 void vk_mesh_alloc_device_mem(vk_mesh* this, VkCommandPool pool)
 {
     if (this->buffer_)
@@ -71,6 +61,7 @@ void vk_mesh_alloc_device_mem(vk_mesh* this, VkCommandPool pool)
                         VK_BUFFER_USAGE_TRANSFER_DST_BIT;
     VmaAllocationCreateInfo alloc_info = {};
     alloc_info.usage = VMA_MEMORY_USAGE_AUTO_PREFER_DEVICE;
+
     vmaCreateBuffer(this->ctx_->allocator_, &buffer_info, &alloc_info, &this->buffer_, &this->alloc_, nullptr);
 
     VkBufferDeviceAddressInfo address_info = {VK_STRUCTURE_TYPE_BUFFER_DEVICE_ADDRESS_INFO};
@@ -84,12 +75,20 @@ void vk_mesh_alloc_device_mem(vk_mesh* this, VkCommandPool pool)
         this->draw_calls_[p].vertexCount = this->prims_[p].attrib_counts_[INDEX];
         memcpy(this->mapping_ + this->mem_size_, this->draw_calls_ + p, sizeof(VkDrawIndirectCommand));
         this->mem_size_ += sizeof(VkDrawIndirectCommand);
+
+        for (int i = 0; i < VK_PRIM_ATTRIB_COUNT; i++)
+        {
+            if (this->prims_[p].attrib_counts_[i])
+            {
+                this->prims_[p].attrib_address_[i] += this->address_;
+            }
+        }
         memcpy(this->mapping_ + this->mem_size_, this->prims_ + p, sizeof(vk_prim));
         this->mem_size_ += sizeof(vk_prim);
     }
 
     // copy buffer
-    vk_mesh_flush_staging(this);
+    vmaFlushAllocation(this->ctx_->allocator_, this->staging_alloc_, 0, this->mem_size_);
 
     VkFence fence = {};
     VkFenceCreateInfo fence_cinfo = {VK_STRUCTURE_TYPE_FENCE_CREATE_INFO};
@@ -148,7 +147,7 @@ void vk_mesh_add_prim_attrib(vk_mesh* this, vk_prim* prim, vk_prim_attrib attrib
         return;
     }
 
-    prim->attrib_offsets_[attrib] = this->mem_size_;
+    prim->attrib_address_[attrib] = this->mem_size_;
     memcpy(this->mapping_ + this->mem_size_, data, data_size);
     this->mem_size_ += data_size;
 }

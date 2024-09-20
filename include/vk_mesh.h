@@ -32,7 +32,6 @@ vk_prim* vk_mesh_add_prim(vk_mesh* this);
 void vk_mesh_add_prim_attrib(vk_mesh* this, vk_prim* prim, vk_prim_attrib attrib, void* data, size_t count);
 void vk_mesh_add_prim_morph_attrib(vk_mesh* this, vk_morph* morph, vk_morph_attrib attrib, void* data, size_t count);
 void vk_mesh_free_staging(vk_mesh* this);
-void vk_mesh_flush_staging(vk_mesh* this);
 void vk_mesh_alloc_device_mem(vk_mesh* this, VkCommandPool pool);
 void vk_mesh_draw_prims(vk_mesh* this, VkCommandBuffer cmd);
 
