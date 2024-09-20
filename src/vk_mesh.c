@@ -457,8 +457,11 @@ IMPL_OBJ_NEW(vk_mesh_skin, vk_ctx* ctx, uint32_t joint_size)
 
     for (uint32_t i = 0; i < joint_size; i++)
     {
-        this->joints_[i].joint_ = 0;
-        glm_mat4_identity(this->joints_[i].inv_binding_);
+        this->joints_[i].joint_ = -1;
+        this->joints_[i].inv_binding_[0] = 1;
+        this->joints_[i].inv_binding_[5] = 1;
+        this->joints_[i].inv_binding_[10] = 1;
+        this->joints_[i].inv_binding_[15] = 1;
     }
     return this;
 }

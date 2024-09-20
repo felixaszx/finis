@@ -1,1 +1,0 @@
-slangc.exe -force-glsl-scalar-layout test.slang -target spirv -O1 -o spvs/test.spv

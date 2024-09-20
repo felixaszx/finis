@@ -1,2 +1,2 @@
-slangc.exe -force-glsl-scalar-layout test.slang -target spirv -O1 -o test2.spv
-spirv-cross -V test2.spv --stage frag
+glslc vk0.vert -o ./spvs/vk0_vert.spv
+glslc vk0.frag -o ./spvs/vk0_frag.spv

@@ -50,7 +50,7 @@ typedef struct vk_morph
 DEFINE_OBJ_DEFAULT(vk_morph);
 size_t vk_morph_get_attrib_size(vk_morph* morph, vk_morph_attrib attrib_type);
 
-#define VK_PRIM_ATTRIB_COUNT 12
+#define VK_PRIM_ATTRIB_COUNT 11
 typedef enum vk_prim_attrib
 {
     INDEX,
@@ -64,8 +64,7 @@ typedef enum vk_prim_attrib
     MATERIAL,
     MORPH,
 
-    NODE,       // set by hand
-    FIRST_JOINT // set by hand
+    TRANSFORM,  // set by hand
 } vk_prim_attrib;
 
 typedef struct vk_prim
