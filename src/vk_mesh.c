@@ -3,7 +3,7 @@
 IMPL_OBJ_NEW(vk_mesh, vk_ctx* ctx, const char* name, VkDeviceSize mem_limit, uint32_t prim_limit)
 {
     this->ctx_ = ctx;
-    this->mem_limit_ = mem_limit - prim_limit * (sizeof(VkDrawIndirectCommand) + sizeof(vk_prim));
+    this->mem_limit_ = mem_limit - prim_limit * (sizeof(*this->draw_calls_) + sizeof(*this->prims_));
     this->prim_limit_ = prim_limit;
     strcpy_s(this->name_, sizeof(this->name_), name);
 
@@ -54,7 +54,7 @@ void vk_mesh_alloc_device_mem(vk_mesh* this, VkCommandPool pool)
     }
 
     VkBufferCreateInfo buffer_info = {VK_STRUCTURE_TYPE_BUFFER_CREATE_INFO};
-    buffer_info.size = this->mem_size_ + this->prim_size_ * (sizeof(VkDrawIndirectCommand) + sizeof(vk_prim));
+    buffer_info.size = this->mem_size_ + this->prim_size_ * (sizeof(*this->draw_calls_) + sizeof(*this->prims_));
     buffer_info.usage = VK_BUFFER_USAGE_STORAGE_BUFFER_BIT |        //
                         VK_BUFFER_USAGE_SHADER_DEVICE_ADDRESS_BIT | //
                         VK_BUFFER_USAGE_INDIRECT_BUFFER_BIT |       //
@@ -73,8 +73,8 @@ void vk_mesh_alloc_device_mem(vk_mesh* this, VkCommandPool pool)
     {
         this->draw_calls_[p].instanceCount = 1;
         this->draw_calls_[p].vertexCount = this->prims_[p].attrib_counts_[INDEX];
-        memcpy(this->mapping_ + this->mem_size_, this->draw_calls_ + p, sizeof(VkDrawIndirectCommand));
-        this->mem_size_ += sizeof(VkDrawIndirectCommand);
+        memcpy(this->mapping_ + this->mem_size_, this->draw_calls_ + p, sizeof(*this->draw_calls_));
+        this->mem_size_ += sizeof(*this->draw_calls_);
 
         for (int i = 0; i < VK_PRIM_ATTRIB_COUNT; i++)
         {
@@ -83,8 +83,8 @@ void vk_mesh_alloc_device_mem(vk_mesh* this, VkCommandPool pool)
                 this->prims_[p].attrib_address_[i] += this->address_;
             }
         }
-        memcpy(this->mapping_ + this->mem_size_, this->prims_ + p, sizeof(vk_prim));
-        this->mem_size_ += sizeof(vk_prim);
+        memcpy(this->mapping_ + this->mem_size_, this->prims_ + p, sizeof(*this->prims_));
+        this->mem_size_ += sizeof(*this->prims_);
     }
 
     // copy buffer
@@ -123,8 +123,8 @@ void vk_mesh_alloc_device_mem(vk_mesh* this, VkCommandPool pool)
 
 void vk_mesh_draw_prims(vk_mesh* this, VkCommandBuffer cmd)
 {
-    vkCmdDrawIndirect(cmd, this->buffer_, this->prim_offset_, this->prim_size_,
-                      sizeof(VkDrawIndirectCommand) + sizeof(vk_prim));
+    vkCmdDrawIndirect(cmd, this->buffer_, this->prim_offset_, this->prim_size_, //
+                      sizeof(*this->draw_calls_) + sizeof(*this->prims_));
 }
 
 vk_prim* vk_mesh_add_prim(vk_mesh* this)
@@ -399,7 +399,7 @@ IMPL_OBJ_DELETE(vk_mesh_desc)
 
 void vk_mesh_desc_flush(vk_mesh_desc* this)
 {
-    memcpy(this->mapping_, this->output_, sizeof(mat4) * this->node_size_);
+    memcpy(this->mapping_, this->output_, sizeof(*this->output_) * this->node_size_);
 }
 
 void vk_mesh_desc_update(vk_mesh_desc* this, mat4 root_trans)
@@ -438,7 +438,7 @@ void vk_mesh_desc_set_layer(vk_mesh_desc* this, uint32_t layer_size)
 void vk_mesh_desc_alloc_device_mem(vk_mesh_desc* this)
 {
     VkBufferCreateInfo buffer_info = {VK_STRUCTURE_TYPE_BUFFER_CREATE_INFO};
-    buffer_info.size = this->node_size_ * sizeof(mat4);
+    buffer_info.size = this->node_size_ * sizeof(*this->output_);
     buffer_info.usage = VK_BUFFER_USAGE_STORAGE_BUFFER_BIT | VK_BUFFER_USAGE_SHADER_DEVICE_ADDRESS_BIT;
     VmaAllocationCreateInfo alloc_info = {};
     alloc_info.usage = VMA_MEMORY_USAGE_AUTO_PREFER_DEVICE;
@@ -482,7 +482,7 @@ void vk_mesh_skin_alloc_device_mem(vk_mesh_skin* this, VkCommandPool cmd_pool)
     VkBuffer staging = {};
     VmaAllocation staging_alloc = {};
     VkBufferCreateInfo buffer_info = {VK_STRUCTURE_TYPE_BUFFER_CREATE_INFO};
-    buffer_info.size = this->joint_size_ * sizeof(vk_mesh_joint);
+    buffer_info.size = this->joint_size_ * sizeof(*this->joints_);
     buffer_info.usage = VK_BUFFER_USAGE_VERTEX_BUFFER_BIT | //
                         VK_BUFFER_USAGE_TRANSFER_SRC_BIT;
     VmaAllocationCreateInfo alloc_info = {};

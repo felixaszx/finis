@@ -14,7 +14,7 @@ IMPL_OBJ_NEW(vk_shader, vk_ctx* ctx, const char* file_path, VkShaderStageFlags s
     size_t size = ftell(f);
     fseek(f, 0, SEEK_SET);
     byte* spv = alloc(char, size);
-    fread(spv, sizeof(byte), size, f);
+    fread(spv, sizeof(*spv), size, f);
     fclose(f);
 
     VkShaderModuleCreateInfo module_info = {VK_STRUCTURE_TYPE_SHADER_MODULE_CREATE_INFO};
