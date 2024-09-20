@@ -74,7 +74,7 @@
             "options": {
                 "cwd": "${workspaceFolder}/res/shaders"
             },
-            "command": "${workspaceFolder}/res/shaders/compile_to_glsl.bat",
+            "command": "${workspaceFolder}/res/shaders/compile_to_spv.bat",
             "problemMatcher": [],
             "presentation": {
                 "echo": true,

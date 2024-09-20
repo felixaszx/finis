@@ -12,17 +12,17 @@ struct vk_mesh_joint
 
 layout(scalar, buffer_reference, buffer_reference_align = 16) readonly buffer prim_data
 {
-    uint8_t ptr[];
+    uint8_t arr[];
 };
 
 layout(scalar, buffer_reference, buffer_reference_align = 16) readonly buffer node_data
 {
-    mat4 ptr[];
+    mat4 arr[];
 };
 
 layout(scalar, buffer_reference, buffer_reference_align = 16) readonly buffer skin_data
 {
-    vk_mesh_joint ptr[];
+    vk_mesh_joint arr[];
 };
 
 layout(std430, push_constant) uniform _PUSHED
@@ -30,12 +30,11 @@ layout(std430, push_constant) uniform _PUSHED
     prim_data PRIM_DATA;
     node_data NODE_DATA;
     skin_data SKIN_DATA;
-}
-PUSHED;
+};
 
 void main()
 {
-    uint8_t a = PUSHED.PRIM_DATA.ptr[1];
-    float b = PUSHED.PRIM_DATA.ptr[1];
+    uint8_t a = PRIM_DATA.arr[1];
+    float b = PRIM_DATA.arr[1];
     gl_Position.x = gl_DrawID;
 }

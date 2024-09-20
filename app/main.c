@@ -44,7 +44,7 @@ int main(int argc, char** argv)
     vk_mesh_desc* mesh_desc = new (vk_mesh_desc, ctx, 10);
     vk_mesh_skin* mesh_skin = new (vk_mesh_skin, ctx, 10);
     vk_tex_arr* tex_arr = new (vk_tex_arr, ctx, 10, 10);
-
+    
     vk_mesh_desc_alloc_device_mem(mesh_desc);
     vk_mesh_desc_flush(mesh_desc);
     vk_mesh_skin_alloc_device_mem(mesh_skin, cmd_pool);
