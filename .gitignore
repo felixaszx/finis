@@ -38,5 +38,4 @@ build/
 .cache/
 res/models/
 .vs/
-res/shaders/*.spv
 exts/dlls
