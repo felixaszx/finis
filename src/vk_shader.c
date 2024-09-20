@@ -6,6 +6,7 @@ IMPL_OBJ_NEW(vk_shader, vk_ctx* ctx, const char* file_path, VkShaderStageFlags s
     FILE* f = fopen(file_path, "rb");
     if (!f)
     {
+        ffree(this);
         return this;
     }
 

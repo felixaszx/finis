@@ -3,6 +3,7 @@
 
 #include "fi_vk.h"
 #include "vk_mesh.h"
+#include "vk_shader.h"
 
 int main(int argc, char** argv)
 {
