@@ -3,22 +3,27 @@
 #extension GL_EXT_scalar_block_layout : require
 #extension GL_EXT_shader_explicit_arithmetic_types : require
 
-#define VK_MORPH_ATTRIB_COUNT 3
-#define VK_PRIM_ATTRIB_COUNT 11
-#define INDEX                0
-#define POSITION             1
-#define NORMAL               2
-#define TANGENT              3
-#define TEXCOORD             4
-#define COLOR                5
-#define JOINTS               6
-#define WEIGHTS              7
-#define MATERIAL             8
-#define MORPH                9
-#define TRANSFORM            10
-#define DRAW_CALL_SIZE       16
-#define PRIM_INFO_SIZE       176
-#define PRIM_INFO_STRIDE     (DRAW_CALL_SIZE + PRIM_INFO_SIZE)
+//
+// declare block
+//
+
+#define VK_MESH_STORAGE_BUFFER_ALIGNMENT 16
+#define VK_MORPH_ATTRIB_COUNT            3
+#define VK_PRIM_ATTRIB_COUNT             11
+#define INDEX                            0
+#define POSITION                         1
+#define NORMAL                           2
+#define TANGENT                          3
+#define TEXCOORD                         4
+#define COLOR                            5
+#define JOINTS                           6
+#define WEIGHTS                          7
+#define MATERIAL                         8
+#define MORPH                            9
+#define TRANSFORM                        10
+#define DRAW_CALL_SIZE                   16
+#define PRIM_INFO_SIZE                   176
+#define PRIM_INFO_STRIDE                 (DRAW_CALL_SIZE + PRIM_INFO_SIZE)
 
 struct vk_mesh_joint
 {
@@ -59,22 +64,35 @@ struct prim_combo
     vk_prim prim;
 };
 
-layout(scalar, buffer_reference, buffer_reference_align = 16) readonly buffer ptr_t
+layout(scalar, buffer_reference, buffer_reference_align = VK_MESH_STORAGE_BUFFER_ALIGNMENT) //
+    readonly buffer ptr_t
 {
     int8_t val_;
 };
-layout(scalar, buffer_reference, buffer_reference_align = 16) readonly buffer vec3_arr_t
+layout(scalar, buffer_reference, buffer_reference_align = VK_MESH_STORAGE_BUFFER_ALIGNMENT) //
+    readonly buffer vec3_arr_t
 {
     vec3 val_[];
 };
-layout(scalar, buffer_reference, buffer_reference_align = 16) readonly buffer uint32_t_arr_t
+layout(scalar,
+       buffer_reference,
+       buffer_reference_align = VK_MESH_STORAGE_BUFFER_ALIGNMENT) //
+    readonly buffer uint32_t_arr_t
 {
     uint32_t val_[];
 };
-layout(scalar, buffer_reference, buffer_reference_align = 16) readonly buffer prim_combo_arr_t
+layout(scalar,
+       buffer_reference,
+       buffer_reference_align = VK_MESH_STORAGE_BUFFER_ALIGNMENT) //
+    readonly buffer prim_combo_arr_t
 {
     prim_combo val_[];
 };
+
+//
+// logic block
+//
+
 layout(std430, push_constant) uniform _PUSHED
 {
     prim_combo_arr_t PRIM_COMBO_ARR;

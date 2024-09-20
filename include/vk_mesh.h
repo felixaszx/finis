@@ -4,6 +4,12 @@
 #include "fi_vk.h"
 #include "vk_mesh_t.h"
 
+#define VK_MESH_STORAGE_BUFFER_ALIGNMENT 16
+#define VK_MESH_ALIGN_MEMORY(byte)                                                           \
+    byte += byte % VK_MESH_STORAGE_BUFFER_ALIGNMENT                                          \
+                ? VK_MESH_STORAGE_BUFFER_ALIGNMENT - byte % VK_MESH_STORAGE_BUFFER_ALIGNMENT \
+                : 0
+
 typedef struct vk_mesh
 {
     char name_[512];

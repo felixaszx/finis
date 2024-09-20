@@ -64,117 +64,6 @@ int main(int argc, char** argv)
     VkPipelineColorBlendStateCreateInfo color_blend = {VK_STRUCTURE_TYPE_PIPELINE_COLOR_BLEND_STATE_CREATE_INFO};
     VkPipelineDynamicStateCreateInfo dynamic_state = {VK_STRUCTURE_TYPE_PIPELINE_DYNAMIC_STATE_CREATE_INFO};
 
-    VkFormat color_format[1] = {VK_FORMAT_R32G32B32A32_SFLOAT};
-    atchms.colorAttachmentCount = 1;
-    atchms.pColorAttachmentFormats = color_format;
-    input_asm.topology = VK_PRIMITIVE_TOPOLOGY_TRIANGLE_LIST;
-    viewport.viewportCount = 1;
-    viewport.scissorCount = 1;
-    rasterizer.lineWidth = 1;
-    rasterizer.polygonMode = VK_POLYGON_MODE_FILL;
-    multi_sample.rasterizationSamples = 1;
-    depth_stencil.depthWriteEnable = false;
-
-    VkPipelineColorBlendAttachmentState blend_state[1] = {};
-    blend_state[0].colorWriteMask = VK_COLOR_COMPONENT_R_BIT | //
-                                    VK_COLOR_COMPONENT_G_BIT | //
-                                    VK_COLOR_COMPONENT_B_BIT | //
-                                    VK_COLOR_COMPONENT_A_BIT;
-    color_blend.attachmentCount = 1;
-    color_blend.pAttachments = blend_state;
-
-    VkDynamicState dynamic_states[2] = {VK_DYNAMIC_STATE_VIEWPORT, VK_DYNAMIC_STATE_SCISSOR};
-    dynamic_state.dynamicStateCount = 2;
-    dynamic_state.pDynamicStates = dynamic_states;
-
-    VkPipelineLayoutCreateInfo layout_cinfo = {VK_STRUCTURE_TYPE_PIPELINE_LAYOUT_CREATE_INFO};
-    VkPipelineLayout pl_layout = {};
-    VkPushConstantRange push_range = {};
-    push_range.stageFlags = VK_SHADER_STAGE_VERTEX_BIT;
-    push_range.size = 2 * sizeof(VkDeviceAddress);
-    layout_cinfo.pPushConstantRanges = &push_range;
-    layout_cinfo.pushConstantRangeCount = 1;
-    vkCreatePipelineLayout(ctx->device_, &layout_cinfo, nullptr, &pl_layout);
-
-    VkPipeline pl = {};
-    VkGraphicsPipelineCreateInfo pl_info = {VK_STRUCTURE_TYPE_GRAPHICS_PIPELINE_CREATE_INFO};
-    pl_info.layout = pl_layout;
-    pl_info.pNext = &atchms;
-    pl_info.stageCount = 2;
-    pl_info.pStages = pl_stages;
-    pl_info.pVertexInputState = &vtx_input;
-    pl_info.pInputAssemblyState = &input_asm;
-    pl_info.pTessellationState = &tessellation;
-    pl_info.pViewportState = &viewport;
-    pl_info.pRasterizationState = &rasterizer;
-    pl_info.pMultisampleState = &multi_sample;
-    pl_info.pDepthStencilState = &depth_stencil;
-    pl_info.pColorBlendState = &color_blend;
-    pl_info.pDynamicState = &dynamic_state;
-    vkCreateGraphicsPipelines(ctx->device_, ctx->pipeline_cache_, 1, &pl_info, nullptr, &pl);
-
-    VkImage atchm = {};
-    VmaAllocation atchm_alloc = {};
-    VkImageView atchm_view = {};
-    VkImageCreateInfo atchm_cinfo = {VK_STRUCTURE_TYPE_IMAGE_CREATE_INFO};
-    atchm_cinfo.imageType = VK_IMAGE_TYPE_2D;
-    atchm_cinfo.arrayLayers = 1;
-    atchm_cinfo.mipLevels = 1;
-    atchm_cinfo.samples = VK_SAMPLE_COUNT_1_BIT;
-    atchm_cinfo.format = VK_FORMAT_R32G32B32A32_SFLOAT;
-    atchm_cinfo.extent = (VkExtent3D){WIDTH, HEIGHT, 1};
-    atchm_cinfo.usage = VK_IMAGE_USAGE_COLOR_ATTACHMENT_BIT;
-    VmaAllocationCreateInfo alloc_info = {};
-    alloc_info.usage = VMA_MEMORY_USAGE_AUTO_PREFER_DEVICE;
-    vmaCreateImage(ctx->allocator_, &atchm_cinfo, &alloc_info, //
-                   &atchm, &atchm_alloc, nullptr);
-
-    VkImageViewCreateInfo view_info = {VK_STRUCTURE_TYPE_IMAGE_VIEW_CREATE_INFO};
-    view_info.viewType = VK_IMAGE_VIEW_TYPE_2D;
-    view_info.image = atchm;
-    view_info.format = atchm_cinfo.format;
-    view_info.subresourceRange.aspectMask = VK_IMAGE_ASPECT_COLOR_BIT;
-    view_info.subresourceRange.layerCount = atchm_cinfo.arrayLayers;
-    view_info.subresourceRange.levelCount = atchm_cinfo.mipLevels;
-    vkCreateImageView(ctx->device_, &view_info, nullptr, &atchm_view);
-
-    VkImageMemoryBarrier barrier = {VK_STRUCTURE_TYPE_IMAGE_MEMORY_BARRIER};
-    barrier.newLayout = VK_IMAGE_LAYOUT_COLOR_ATTACHMENT_OPTIMAL;
-    barrier.srcQueueFamilyIndex = VK_QUEUE_FAMILY_IGNORED;
-    barrier.dstQueueFamilyIndex = VK_QUEUE_FAMILY_IGNORED;
-    barrier.image = atchm;
-    barrier.subresourceRange.aspectMask = view_info.subresourceRange.aspectMask;
-    barrier.subresourceRange.baseMipLevel = 0;
-    barrier.subresourceRange.levelCount = atchm_cinfo.mipLevels;
-    barrier.subresourceRange.baseArrayLayer = 0;
-    barrier.subresourceRange.layerCount = atchm_cinfo.arrayLayers;
-    barrier.dstAccessMask = VK_ACCESS_TRANSFER_WRITE_BIT;
-
-    VkCommandBufferBeginInfo begin = {VK_STRUCTURE_TYPE_COMMAND_BUFFER_BEGIN_INFO};
-    begin.flags = VK_COMMAND_BUFFER_USAGE_ONE_TIME_SUBMIT_BIT;
-    vkBeginCommandBuffer(cmd, &begin);
-    vkCmdPipelineBarrier(cmd, VK_PIPELINE_STAGE_TOP_OF_PIPE_BIT, VK_PIPELINE_STAGE_TRANSFER_BIT, //
-                         0, 0, nullptr, 0, nullptr, 1, &barrier);
-    vkEndCommandBuffer(cmd);
-    VkSubmitInfo submit = {VK_STRUCTURE_TYPE_SUBMIT_INFO};
-    submit.commandBufferCount = 1;
-    submit.pCommandBuffers = &cmd;
-    vkResetFences(ctx->device_, 1, &frame_fence);
-    vkQueueSubmit(ctx->queue_, 1, &submit, frame_fence);
-
-    VkRenderingAttachmentInfo atchm_info = {VK_STRUCTURE_TYPE_RENDERING_ATTACHMENT_INFO};
-    atchm_info.clearValue.color = (VkClearColorValue){0, 0, 0, 1};
-    atchm_info.imageLayout = barrier.newLayout;
-    atchm_info.imageView = atchm_view;
-    atchm_info.loadOp = VK_ATTACHMENT_LOAD_OP_CLEAR;
-    atchm_info.storeOp = VK_ATTACHMENT_STORE_OP_STORE;
-    VkRenderingInfo rendering_info = {VK_STRUCTURE_TYPE_RENDERING_INFO};
-    rendering_info.pColorAttachments = &atchm_info;
-    rendering_info.colorAttachmentCount = 1;
-    rendering_info.renderArea.extent.width = WIDTH;
-    rendering_info.renderArea.extent.height = HEIGHT;
-    rendering_info.layerCount = 1;
-
     while (vk_ctx_update(ctx))
     {
         if (glfwGetKey(ctx->win_, GLFW_KEY_ESCAPE))
@@ -197,20 +86,7 @@ int main(int argc, char** argv)
 
         VkCommandBufferBeginInfo begin = {VK_STRUCTURE_TYPE_COMMAND_BUFFER_BEGIN_INFO};
         vkResetCommandBuffer(cmd, 0);
-
-        VkDeviceAddress address = mesh->address_;
-        address += mesh->prim_offset_;
-
         vkBeginCommandBuffer(cmd, &begin);
-        vkCmdBeginRendering(cmd, &rendering_info);
-        vkCmdBindPipeline(cmd, VK_PIPELINE_BIND_POINT_GRAPHICS, pl);
-        VkViewport viewport = {.width = WIDTH, .height = HEIGHT};
-        VkRect2D scissor = {.extent = (VkExtent2D){WIDTH, HEIGHT}};
-        vkCmdSetViewport(cmd, 0, 1, &viewport);
-        vkCmdSetScissor(cmd, 0, 1, &scissor);
-        vkCmdPushConstants(cmd, pl_layout, VK_SHADER_STAGE_VERTEX_BIT, 0, 8, &address);
-        vk_mesh_draw_prims(mesh, cmd);
-        vkCmdEndRendering(cmd);
         vkEndCommandBuffer(cmd);
 
         VkSubmitInfo2 submit = {VK_STRUCTURE_TYPE_SUBMIT_INFO_2};
