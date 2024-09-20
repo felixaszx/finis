@@ -5,6 +5,7 @@
 #extension GL_GOOGLE_include_directive : require
 
 #include "define.glslh"
+#include "prim.glslh"
 
 //
 // logic block
