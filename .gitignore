@@ -39,3 +39,4 @@ build/
 res/models/
 .vs/
 res/shaders/spvs
+exts/dlls
