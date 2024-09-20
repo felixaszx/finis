@@ -44,7 +44,7 @@ int main(int argc, char** argv)
     vk_mesh_desc* mesh_desc = new (vk_mesh_desc, ctx, 10);
     vk_mesh_skin* mesh_skin = new (vk_mesh_skin, ctx, 10);
     vk_tex_arr* tex_arr = new (vk_tex_arr, ctx, 10, 10);
-    
+
     vk_mesh_desc_alloc_device_mem(mesh_desc);
     vk_mesh_desc_flush(mesh_desc);
     vk_mesh_skin_alloc_device_mem(mesh_skin, cmd_pool);
@@ -74,16 +74,14 @@ int main(int argc, char** argv)
         vkBeginCommandBuffer(cmd, &begin);
         vkEndCommandBuffer(cmd);
 
-        VkPipelineStageFlags wait_stages[] = {VK_PIPELINE_STAGE_BOTTOM_OF_PIPE_BIT};
-        VkSubmitInfo submit = {VK_STRUCTURE_TYPE_SUBMIT_INFO};
-        submit.commandBufferCount = 1;
-        submit.pCommandBuffers = &cmd;
-        submit.waitSemaphoreCount = 1;
-        submit.pWaitSemaphores = &acquired;
-        submit.pWaitDstStageMask = wait_stages;
-        submit.signalSemaphoreCount = 1;
-        submit.pSignalSemaphores = &submitted;
-        vkQueueSubmit(ctx->queue_, 1, &submit, frame_fence);
+        VkSubmitInfo2 submit = {VK_STRUCTURE_TYPE_SUBMIT_INFO_2};
+        submit.waitSemaphoreInfoCount = 1;
+        submit.pWaitSemaphoreInfos = waits;
+        submit.signalSemaphoreInfoCount = 1;
+        submit.pSignalSemaphoreInfos = signals;
+        submit.commandBufferInfoCount = 1;
+        submit.pCommandBufferInfos = cmd_submits;
+        vkQueueSubmit2(ctx->queue_, 1, &submit, frame_fence);
 
         VkPresentInfoKHR present_info = {VK_STRUCTURE_TYPE_PRESENT_INFO_KHR};
         present_info.waitSemaphoreCount = 1;
