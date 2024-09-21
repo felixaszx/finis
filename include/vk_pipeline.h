@@ -15,7 +15,8 @@ typedef struct vk_shader
 DEFINE_OBJ(vk_shader, vk_ctx* ctx, const char* file_path, VkShaderStageFlags stage);
 void vk_shader_reflect_symbols(vk_shader* this);
 
-typedef struct vk_gfx_pl_desc
+typedef struct vk_gfx_pl_desc vk_gfx_pl_desc;
+struct vk_gfx_pl_desc
 {
     vk_ctx* ctx_;
     uint32_t shader_size_;
@@ -33,22 +34,23 @@ typedef struct vk_gfx_pl_desc
     VkPipelineColorBlendStateCreateInfo color_blend_;
     VkPipelineDynamicStateCreateInfo dynamic_state_;
 
-    VkPipelineLayout (*configurator)(struct vk_gfx_pl_desc* this);
-    void (*cleaner)(struct vk_gfx_pl_desc* this);
-} vk_gfx_pl_desc;
+    VkPipelineLayout (*configurator)(vk_gfx_pl_desc* this);
+    void (*cleaner)(vk_gfx_pl_desc* this);
+};
 
 DEFINE_OBJ_DEFAULT(vk_gfx_pl_desc);
 VkPipeline vk_gfx_pl_desc_build(vk_gfx_pl_desc* this, vk_ctx* ctx, VkPipelineLayout* layout);
 
-typedef struct vk_comp_pl_desc
+typedef struct vk_comp_pl_desc vk_comp_pl_desc;
+struct vk_comp_pl_desc
 {
     vk_ctx* ctx_;
     vk_shader* shader_; // only 1
     VkComputePipelineCreateInfo cinfo_;
 
-    VkPipelineLayout (*configurator)(struct vk_comp_pl_desc* this);
-    void (*cleaner)(struct vk_comp_pl_desc* this);
-} vk_comp_pl_desc;
+    VkPipelineLayout (*configurator)(vk_comp_pl_desc* this);
+    void (*cleaner)(vk_comp_pl_desc* this);
+};
 
 DEFINE_OBJ_DEFAULT(vk_comp_pl_desc);
 VkPipeline vk_comp_pl_desc_build(vk_comp_pl_desc* this, vk_ctx* ctx, VkPipelineLayout* layout);
