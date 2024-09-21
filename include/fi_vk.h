@@ -31,8 +31,10 @@ typedef struct vk_ctx
     GLFWwindow* win_;
     VmaAllocator allocator_;
 
-    uint32_t width_;
-    uint32_t height_;
+    sem_t resize_done_;
+    sem_t recreate_done_;
+    int width_;
+    int height_;
 } vk_ctx;
 
 DEFINE_OBJ(vk_ctx, uint32_t width, uint32_t height, bool full_screen);
@@ -40,14 +42,17 @@ bool vk_ctx_update(vk_ctx* ctx);
 
 typedef struct vk_swapchain
 {
-    VkDevice device_;
+    vk_ctx* ctx_;
     VkSwapchainKHR swapchain_;
     uint32_t image_count_;
     VkImage* images_;
     VkFormat format_;
+    VkFence recreate_fence_;
 } vk_swapchain;
 
 DEFINE_OBJ(vk_swapchain, vk_ctx* ctx);
+bool vk_swapchain_recreate(vk_swapchain* this, VkCommandPool cmd_pool);
+
 VkSemaphoreSubmitInfo vk_get_sem_info(VkSemaphore sem, VkPipelineStageFlags2 stage);
 
 #endif // INCLUDE_FI_VK_H

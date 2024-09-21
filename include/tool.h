@@ -8,6 +8,7 @@
 #include <time.h>
 #include <stdatomic.h>
 #include <pthread.h>
+#include <semaphore.h>
 
 #define nullptr NULL
 

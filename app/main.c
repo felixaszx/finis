@@ -5,13 +5,19 @@
 #include "vk_mesh.h"
 #include "vk_pipeline.h"
 
-int main(int argc, char** argv)
+typedef struct render_thr_arg
 {
-    const uint32_t WIDTH = 800;
-    const uint32_t HEIGHT = 600;
+    vk_ctx* ctx_;
+    vk_swapchain* sc_;
+    atomic_bool rendering_;
+} render_thr_arg;
 
-    vk_ctx* ctx = new (vk_ctx, WIDTH, HEIGHT, false);
-    vk_swapchain* sc = new (vk_swapchain, ctx);
+void* render_thr_func(void* arg)
+{
+    render_thr_arg* ctx_combo = arg;
+    vk_ctx* ctx = ctx_combo->ctx_;
+    vk_swapchain* sc = ctx_combo->sc_;
+    atomic_bool* rendering = &ctx_combo->rendering_;
 
     VkFence frame_fence = {};
     VkFenceCreateInfo fence_cinfo = {VK_STRUCTURE_TYPE_FENCE_CREATE_INFO};
@@ -52,24 +58,26 @@ int main(int argc, char** argv)
     vk_mesh_add_prim_attrib(mesh, prim, POSITION, positions, 3);
     vk_mesh_alloc_device_mem(mesh, cmd_pool);
 
-    while (vk_ctx_update(ctx))
+    while (atomic_load_explicit(rendering, memory_order_relaxed))
     {
-        if (glfwGetKey(ctx->win_, GLFW_KEY_ESCAPE))
-        {
-            glfwSetWindowShouldClose(ctx->win_, true);
-            break;
-        }
-
-        if (glfwGetWindowAttrib(ctx->win_, GLFW_ICONIFIED))
-        {
-            ms_sleep(1);
-            continue;
-        }
-
         uint32_t image_idx_ = -1;
 
         vkWaitForFences(ctx->device_, 1, &frame_fence, true, UINT64_MAX);
-        vkAcquireNextImageKHR(ctx->device_, sc->swapchain_, UINT64_MAX, acquired, nullptr, &image_idx_);
+        if (vkAcquireNextImageKHR(ctx->device_, sc->swapchain_, UINT64_MAX, acquired, nullptr, &image_idx_) ==
+            VK_ERROR_OUT_OF_DATE_KHR)
+        {
+            while (true)
+            {
+                sem_wait(&ctx->resize_done_);
+                if (vk_swapchain_recreate(sc, cmd_pool))
+                {
+                    vkAcquireNextImageKHR(ctx->device_, sc->swapchain_, UINT64_MAX, acquired, nullptr, &image_idx_);
+                    break;
+                }
+                sem_post(&ctx->recreate_done_);
+            }
+            sem_post(&ctx->recreate_done_);
+        }
         vkResetFences(ctx->device_, 1, &frame_fence);
 
         VkCommandBufferBeginInfo begin = {VK_STRUCTURE_TYPE_COMMAND_BUFFER_BEGIN_INFO};
@@ -94,8 +102,8 @@ int main(int argc, char** argv)
         present_info.pImageIndices = &image_idx_;
         vkQueuePresentKHR(ctx->queue_, &present_info);
     }
+
     vkWaitForFences(ctx->device_, 1, &frame_fence, true, UINT64_MAX);
-    vkDeviceWaitIdle(ctx->device_);
 
     vkDestroyFence(ctx->device_, frame_fence, nullptr);
     vkDestroySemaphore(ctx->device_, acquired, nullptr);
@@ -105,6 +113,36 @@ int main(int argc, char** argv)
     delete (vk_shader, vert);
     delete (vk_shader, frag);
     delete (vk_mesh, mesh);
+    return nullptr;
+}
+
+int main(int argc, char** argv)
+{
+    const uint32_t WIDTH = 800;
+    const uint32_t HEIGHT = 600;
+
+    vk_ctx* ctx = new (vk_ctx, WIDTH, HEIGHT, false);
+    vk_swapchain* sc = new (vk_swapchain, ctx);
+    render_thr_arg render_thr_args = {ctx, sc};
+    atomic_init(&render_thr_args.rendering_, true);
+
+    pthread_t render_thr = {};
+    pthread_create(&render_thr, nullptr, render_thr_func, &render_thr_args);
+
+    while (vk_ctx_update(ctx))
+    {
+        if (glfwGetKey(ctx->win_, GLFW_KEY_ESCAPE))
+        {
+            glfwSetWindowShouldClose(ctx->win_, true);
+            break;
+        }
+
+        ms_sleep(1);
+    }
+
+    atomic_store(&render_thr_args.rendering_, false);
+    pthread_join(render_thr, nullptr);
+
     delete (vk_swapchain, sc);
     delete (vk_ctx, ctx);
     return 0;
