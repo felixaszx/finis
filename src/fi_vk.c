@@ -200,7 +200,7 @@ IMPL_OBJ_NEW(vk_swapchain, vk_ctx* ctx)
     swapchain_cinfo.oldSwapchain = nullptr;
     vkCreateSwapchainKHR(ctx->device_, &swapchain_cinfo, nullptr, &this->swapchain_);
 
-    this->image_count_ = 3;
+    this->image_count_ = swapchain_cinfo.minImageCount;
     this->images_ = alloc(VkImage, this->image_count_);
     vkGetSwapchainImagesKHR(ctx->device_, this->swapchain_, &this->image_count_, this->images_);
 
@@ -313,6 +313,43 @@ bool vk_swapchain_recreate(vk_swapchain* this, VkCommandPool cmd_pool)
 
     this->extent_ = swapchain_cinfo.imageExtent;
     return true;
+}
+
+VkResult vk_swapchain_process(vk_swapchain* this,
+                              VkCommandPool cmd_pool,
+                              VkSemaphore signal,
+                              VkFence fence,
+                              uint32_t* image_idx)
+{
+    VkResult result = vkAcquireNextImageKHR(this->ctx_->device_, this->swapchain_, UINT64_MAX, //
+                                            signal, fence, image_idx);
+
+    switch (result)
+    {
+        case VK_ERROR_OUT_OF_DATE_KHR:
+        {
+            while (true)
+            {
+                sem_wait(&this->ctx_->resize_done_);
+                if (vk_swapchain_recreate(this, cmd_pool))
+                {
+                    sem_post(&this->ctx_->recreate_done_);
+                    return vkAcquireNextImageKHR(this->ctx_->device_, this->swapchain_, UINT64_MAX, signal, nullptr,
+                                                 image_idx);
+                }
+                sem_post(&this->ctx_->recreate_done_);
+            }
+            break;
+        }
+        case VK_SUBOPTIMAL_KHR:
+        {
+            vk_swapchain_recreate(this, cmd_pool);
+            return vkAcquireNextImageKHR(this->ctx_->device_, this->swapchain_, UINT64_MAX, signal, nullptr, image_idx);
+            break;
+        }
+        default:
+            return result;
+    }
 }
 
 VkSemaphoreSubmitInfo vk_get_sem_info(VkSemaphore sem, VkPipelineStageFlags2 stage)

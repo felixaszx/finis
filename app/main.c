@@ -12,39 +12,6 @@ typedef struct render_thr_arg
     atomic_bool rendering_;
 } render_thr_arg;
 
-void process_swapchain(render_thr_arg* ctx_combo, VkCommandPool cmd_pool, VkSemaphore acquire, uint32_t* image_idx)
-{
-    vk_ctx* ctx = ctx_combo->ctx_;
-    vk_swapchain* sc = ctx_combo->sc_;
-
-    switch (vkAcquireNextImageKHR(ctx->device_, sc->swapchain_, UINT64_MAX, acquire, nullptr, image_idx))
-    {
-        case VK_ERROR_OUT_OF_DATE_KHR:
-        {
-            while (true)
-            {
-                sem_wait(&ctx->resize_done_);
-                if (vk_swapchain_recreate(sc, cmd_pool))
-                {
-                    sem_post(&ctx->recreate_done_);
-                    vkAcquireNextImageKHR(ctx->device_, sc->swapchain_, UINT64_MAX, acquire, nullptr, image_idx);
-                    break;
-                }
-                sem_post(&ctx->recreate_done_);
-            }
-            break;
-        }
-        case VK_SUBOPTIMAL_KHR:
-        {
-            vk_swapchain_recreate(sc, cmd_pool);
-            vkAcquireNextImageKHR(ctx->device_, sc->swapchain_, UINT64_MAX, acquire, nullptr, image_idx);
-            break;
-        }
-        default:
-            break;
-    }
-}
-
 void* render_thr_func(void* arg)
 {
     render_thr_arg* ctx_combo = arg;
@@ -96,7 +63,7 @@ void* render_thr_func(void* arg)
         uint32_t image_idx = -1;
 
         vkWaitForFences(ctx->device_, 1, &frame_fence, true, UINT64_MAX);
-        process_swapchain(ctx_combo, cmd_pool, acquired, &image_idx);
+        vk_swapchain_process(sc, cmd_pool, acquired, nullptr, &image_idx);
         vkResetFences(ctx->device_, 1, &frame_fence);
 
         VkCommandBufferBeginInfo begin = {VK_STRUCTURE_TYPE_COMMAND_BUFFER_BEGIN_INFO};
@@ -156,7 +123,10 @@ int main(int argc, char** argv)
             break;
         }
 
-        ms_sleep(1);
+        if (glfwGetWindowAttrib(ctx->win_, GLFW_ICONIFIED))
+        {
+            ms_sleep(1);
+        }
     }
 
     atomic_store(&render_thr_args.rendering_, false);

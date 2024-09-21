@@ -53,6 +53,11 @@ typedef struct vk_swapchain
 
 DEFINE_OBJ(vk_swapchain, vk_ctx* ctx);
 bool vk_swapchain_recreate(vk_swapchain* this, VkCommandPool cmd_pool);
+VkResult vk_swapchain_process(vk_swapchain* this,
+                          VkCommandPool cmd_pool,
+                          VkSemaphore signal,
+                          VkFence fence,
+                          uint32_t* image_idx);
 
 VkSemaphoreSubmitInfo vk_get_sem_info(VkSemaphore sem, VkPipelineStageFlags2 stage);
 
