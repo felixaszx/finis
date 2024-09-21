@@ -336,6 +336,7 @@ VkResult vk_swapchain_process(vk_swapchain* this,
                     result = vkAcquireNextImageKHR(this->ctx_->device_, this->swapchain_, UINT64_MAX, signal, nullptr,
                                                    image_idx);
                     sem_post(&this->ctx_->recreate_done_);
+                    break;
                 }
                 sem_post(&this->ctx_->recreate_done_);
             }
@@ -344,6 +345,7 @@ VkResult vk_swapchain_process(vk_swapchain* this,
         default:
             return result;
     }
+    return result;
 }
 
 VkSemaphoreSubmitInfo vk_get_sem_info(VkSemaphore sem, VkPipelineStageFlags2 stage)
