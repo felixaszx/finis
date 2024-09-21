@@ -333,9 +333,9 @@ VkResult vk_swapchain_process(vk_swapchain* this,
                 sem_wait(&this->ctx_->resize_done_);
                 if (vk_swapchain_recreate(this, cmd_pool))
                 {
+                    result = vkAcquireNextImageKHR(this->ctx_->device_, this->swapchain_, UINT64_MAX, signal, nullptr,
+                                                   image_idx);
                     sem_post(&this->ctx_->recreate_done_);
-                    return vkAcquireNextImageKHR(this->ctx_->device_, this->swapchain_, UINT64_MAX, signal, nullptr,
-                                                 image_idx);
                 }
                 sem_post(&this->ctx_->recreate_done_);
             }
