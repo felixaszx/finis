@@ -52,7 +52,6 @@ int main(int argc, char** argv)
     vk_mesh_add_prim_attrib(mesh, prim, POSITION, positions, 3);
     vk_mesh_alloc_device_mem(mesh, cmd_pool);
 
-
     while (vk_ctx_update(ctx))
     {
         if (glfwGetKey(ctx->win_, GLFW_KEY_ESCAPE))
