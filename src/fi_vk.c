@@ -342,8 +342,25 @@ VkResult vk_swapchain_process(vk_swapchain* this,
             }
             break;
         }
+        case VK_SUBOPTIMAL_KHR:
+        {
+            static const VkPipelineStageFlags stage = VK_PIPELINE_STAGE_BOTTOM_OF_PIPE_BIT;
+            VkSubmitInfo submit = {VK_STRUCTURE_TYPE_SUBMIT_INFO};
+            submit.waitSemaphoreCount = 1;
+            submit.pWaitSemaphores = &signal;
+            submit.pWaitDstStageMask = &stage;
+            vkQueueSubmit(this->ctx_->queue_, 1, &submit, this->recreate_fence_);
+            vkWaitForFences(this->ctx_->device_, 1, &this->recreate_fence_, true, UINT64_MAX);
+            vkResetFences(this->ctx_->device_, 1, &this->recreate_fence_);
+
+            sem_wait(&this->ctx_->resize_done_);
+            vk_swapchain_recreate(this, cmd_pool);
+            result = vkAcquireNextImageKHR(this->ctx_->device_, this->swapchain_, UINT64_MAX, signal, fence, image_idx);
+            sem_post(&this->ctx_->recreate_done_);
+            break;
+        }
         default:
-            return result;
+            break;
     }
     return result;
 }
