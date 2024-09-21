@@ -341,12 +341,6 @@ VkResult vk_swapchain_process(vk_swapchain* this,
             }
             break;
         }
-        case VK_SUBOPTIMAL_KHR:
-        {
-            vk_swapchain_recreate(this, cmd_pool);
-            return vkAcquireNextImageKHR(this->ctx_->device_, this->swapchain_, UINT64_MAX, signal, nullptr, image_idx);
-            break;
-        }
         default:
             return result;
     }
