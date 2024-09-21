@@ -4,6 +4,9 @@
 void resize_callback(GLFWwindow* win, int width, int height)
 {
     vk_ctx* ctx = glfwGetWindowUserPointer(win);
+    sem_wait(&ctx->recreate_done_);
+    sem_post(&ctx->resize_done_);
+
     ctx->width_ = width;
     ctx->height_ = height;
 }

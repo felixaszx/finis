@@ -23,11 +23,14 @@ void process_swapchain(render_thr_arg* ctx_combo, VkCommandPool cmd_pool, VkSema
         {
             while (true)
             {
+                sem_wait(&ctx->resize_done_);
                 if (vk_swapchain_recreate(sc, cmd_pool))
                 {
+                    sem_post(&ctx->recreate_done_);
                     vkAcquireNextImageKHR(ctx->device_, sc->swapchain_, UINT64_MAX, acquire, nullptr, image_idx);
                     break;
                 }
+                sem_post(&ctx->recreate_done_);
             }
             break;
         }
@@ -100,8 +103,6 @@ void* render_thr_func(void* arg)
         vkResetCommandBuffer(cmd, 0);
         vkBeginCommandBuffer(cmd, &begin);
         vkEndCommandBuffer(cmd);
-
-        printf("a");
 
         VkSubmitInfo2 submit = {VK_STRUCTURE_TYPE_SUBMIT_INFO_2};
         submit.waitSemaphoreInfoCount = 1;
