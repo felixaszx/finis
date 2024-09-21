@@ -1,8 +1,6 @@
 #ifndef INCLUDE_VK_PIPELINE_H
 #define INCLUDE_VK_PIPELINE_H
 
-#include <spirv_cross_c.h>
-
 #include "fi_vk.h"
 
 typedef struct vk_shader
