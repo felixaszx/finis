@@ -47,6 +47,7 @@ typedef struct vk_swapchain
     uint32_t image_count_;
     VkImage* images_;
     VkFormat format_;
+    VkExtent2D extent_;
     VkFence recreate_fence_;
 } vk_swapchain;
 

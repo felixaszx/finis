@@ -12,6 +12,36 @@ typedef struct render_thr_arg
     atomic_bool rendering_;
 } render_thr_arg;
 
+void process_swapchain(render_thr_arg* ctx_combo, VkCommandPool cmd_pool, VkSemaphore acquire, uint32_t* image_idx)
+{
+    vk_ctx* ctx = ctx_combo->ctx_;
+    vk_swapchain* sc = ctx_combo->sc_;
+
+    switch (vkAcquireNextImageKHR(ctx->device_, sc->swapchain_, UINT64_MAX, acquire, nullptr, image_idx))
+    {
+        case VK_ERROR_OUT_OF_DATE_KHR:
+        {
+            while (true)
+            {
+                if (vk_swapchain_recreate(sc, cmd_pool))
+                {
+                    vkAcquireNextImageKHR(ctx->device_, sc->swapchain_, UINT64_MAX, acquire, nullptr, image_idx);
+                    break;
+                }
+            }
+            break;
+        }
+        case VK_SUBOPTIMAL_KHR:
+        {
+            vk_swapchain_recreate(sc, cmd_pool);
+            vkAcquireNextImageKHR(ctx->device_, sc->swapchain_, UINT64_MAX, acquire, nullptr, image_idx);
+            break;
+        }
+        default:
+            break;
+    }
+}
+
 void* render_thr_func(void* arg)
 {
     render_thr_arg* ctx_combo = arg;
@@ -60,30 +90,18 @@ void* render_thr_func(void* arg)
 
     while (atomic_load_explicit(rendering, memory_order_relaxed))
     {
-        uint32_t image_idx_ = -1;
+        uint32_t image_idx = -1;
 
         vkWaitForFences(ctx->device_, 1, &frame_fence, true, UINT64_MAX);
-        if (vkAcquireNextImageKHR(ctx->device_, sc->swapchain_, UINT64_MAX, acquired, nullptr, &image_idx_) ==
-            VK_ERROR_OUT_OF_DATE_KHR)
-        {
-            while (true)
-            {
-                sem_wait(&ctx->resize_done_);
-                if (vk_swapchain_recreate(sc, cmd_pool))
-                {
-                    vkAcquireNextImageKHR(ctx->device_, sc->swapchain_, UINT64_MAX, acquired, nullptr, &image_idx_);
-                    break;
-                }
-                sem_post(&ctx->recreate_done_);
-            }
-            sem_post(&ctx->recreate_done_);
-        }
+        process_swapchain(ctx_combo, cmd_pool, acquired, &image_idx);
         vkResetFences(ctx->device_, 1, &frame_fence);
 
         VkCommandBufferBeginInfo begin = {VK_STRUCTURE_TYPE_COMMAND_BUFFER_BEGIN_INFO};
         vkResetCommandBuffer(cmd, 0);
         vkBeginCommandBuffer(cmd, &begin);
         vkEndCommandBuffer(cmd);
+
+        printf("a");
 
         VkSubmitInfo2 submit = {VK_STRUCTURE_TYPE_SUBMIT_INFO_2};
         submit.waitSemaphoreInfoCount = 1;
@@ -99,7 +117,7 @@ void* render_thr_func(void* arg)
         present_info.pWaitSemaphores = &submitted;
         present_info.swapchainCount = 1;
         present_info.pSwapchains = &sc->swapchain_;
-        present_info.pImageIndices = &image_idx_;
+        present_info.pImageIndices = &image_idx;
         vkQueuePresentKHR(ctx->queue_, &present_info);
     }
 

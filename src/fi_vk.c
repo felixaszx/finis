@@ -4,10 +4,8 @@
 void resize_callback(GLFWwindow* win, int width, int height)
 {
     vk_ctx* ctx = glfwGetWindowUserPointer(win);
-    sem_wait(&ctx->recreate_done_);
     ctx->width_ = width;
     ctx->height_ = height;
-    sem_post(&ctx->resize_done_);
 }
 
 IMPL_OBJ_NEW(vk_ctx, uint32_t width, uint32_t height, bool full_screen)
@@ -238,8 +236,9 @@ IMPL_OBJ_NEW(vk_swapchain, vk_ctx* ctx)
     vkQueueSubmit(ctx->queue_, 1, &submit, this->recreate_fence_);
     vkWaitForFences(ctx->device_, 1, &this->recreate_fence_, true, UINT64_MAX);
     vkResetFences(this->ctx_->device_, 1, &this->recreate_fence_);
-    
+
     vkDestroyCommandPool(ctx->device_, cmd_pool, nullptr);
+    this->extent_ = swapchain_cinfo.imageExtent;
     return this;
 }
 
@@ -308,6 +307,8 @@ bool vk_swapchain_recreate(vk_swapchain* this, VkCommandPool cmd_pool)
     vkQueueSubmit(this->ctx_->queue_, 1, &submit, this->recreate_fence_);
     vkWaitForFences(this->ctx_->device_, 1, &this->recreate_fence_, true, UINT64_MAX);
     vkResetFences(this->ctx_->device_, 1, &this->recreate_fence_);
+
+    this->extent_ = swapchain_cinfo.imageExtent;
     return true;
 }
 
