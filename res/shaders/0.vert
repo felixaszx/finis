@@ -12,12 +12,6 @@
 //
 
 layout(scalar, buffer_reference, buffer_reference_align = VK_MESH_STORAGE_BUFFER_ALIGNMENT) //
-    readonly buffer ptr_t
-{
-    int8_t val_;
-};
-
-layout(scalar, buffer_reference, buffer_reference_align = VK_MESH_STORAGE_BUFFER_ALIGNMENT) //
     readonly buffer vec3_arr_t
 {
     vec3 val_[];
@@ -41,6 +35,7 @@ layout(scalar,
 
 layout(std430, push_constant) uniform _PUSHED
 {
+    ptr_t DATA;
     prim_combo_arr_t PRIM_COMBO_ARR;
 }
 PUSHED;

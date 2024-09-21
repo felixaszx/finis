@@ -1,6 +1,7 @@
 #define VK_MESH_STORAGE_BUFFER_ALIGNMENT 16
 #define VK_MORPH_ATTRIB_COUNT            3
 #define VK_PRIM_ATTRIB_COUNT             11
+#define ptr_t uint64_t
 
 struct vk_mesh_joint
 {
