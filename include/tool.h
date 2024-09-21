@@ -32,9 +32,9 @@
     type* new_##type();                              \
     type* construct_##type(type* this, __VA_ARGS__); \
     void destroy_##type(type* this)
-#define DEFINE_OBJ_DEFAULT(type, ...) \
-    type* new_##type();               \
-    type* construct_##type(type* this);\
+#define DEFINE_OBJ_DEFAULT(type, ...)   \
+    type* new_##type();                 \
+    type* construct_##type(type* this); \
     void destroy_##type(type* this)
 
 #define IMPL_OBJ_NEW(type, ...) \
@@ -56,11 +56,14 @@
     }
 
 #define new(type, ...) (type*)construct_##type(new_##type(), __VA_ARGS__)
-#define delete(type, obj)       \
-    destroy_##type((type*)obj); \
+#define delete(type, obj)      \
+    {                          \
+        type* t_ptr = obj;     \
+        destroy_##type(t_ptr); \
+    }                          \
     ffree(obj)
 
-typedef char byte;
+typedef unsigned char byte;
 typedef size_t byte_offset;
 typedef void T;
 

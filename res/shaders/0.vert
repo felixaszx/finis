@@ -35,8 +35,8 @@ layout(scalar,
 
 layout(std430, push_constant) uniform _PUSHED
 {
-    ptr_t DATA;
     prim_combo_arr_t PRIM_COMBO_ARR;
+    ptr_t DATA;
 }
 PUSHED;
 
