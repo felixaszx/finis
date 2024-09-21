@@ -3,7 +3,7 @@
 
 #include "fi_vk.h"
 #include "vk_mesh.h"
-#include "vk_shader.h"
+#include "vk_pipeline.h"
 
 int main(int argc, char** argv)
 {
@@ -52,17 +52,6 @@ int main(int argc, char** argv)
     vk_mesh_add_prim_attrib(mesh, prim, POSITION, positions, 3);
     vk_mesh_alloc_device_mem(mesh, cmd_pool);
 
-    VkPipelineShaderStageCreateInfo pl_stages[2] = {vert->stage_info_, frag->stage_info_};
-    VkPipelineRenderingCreateInfo atchms = {VK_STRUCTURE_TYPE_PIPELINE_RENDERING_CREATE_INFO};
-    VkPipelineVertexInputStateCreateInfo vtx_input = {VK_STRUCTURE_TYPE_PIPELINE_VERTEX_INPUT_STATE_CREATE_INFO};
-    VkPipelineInputAssemblyStateCreateInfo input_asm = {VK_STRUCTURE_TYPE_PIPELINE_INPUT_ASSEMBLY_STATE_CREATE_INFO};
-    VkPipelineTessellationStateCreateInfo tessellation = {VK_STRUCTURE_TYPE_PIPELINE_TESSELLATION_STATE_CREATE_INFO};
-    VkPipelineViewportStateCreateInfo viewport = {VK_STRUCTURE_TYPE_PIPELINE_VIEWPORT_STATE_CREATE_INFO};
-    VkPipelineRasterizationStateCreateInfo rasterizer = {VK_STRUCTURE_TYPE_PIPELINE_RASTERIZATION_STATE_CREATE_INFO};
-    VkPipelineMultisampleStateCreateInfo multi_sample = {VK_STRUCTURE_TYPE_PIPELINE_MULTISAMPLE_STATE_CREATE_INFO};
-    VkPipelineDepthStencilStateCreateInfo depth_stencil = {VK_STRUCTURE_TYPE_PIPELINE_DEPTH_STENCIL_STATE_CREATE_INFO};
-    VkPipelineColorBlendStateCreateInfo color_blend = {VK_STRUCTURE_TYPE_PIPELINE_COLOR_BLEND_STATE_CREATE_INFO};
-    VkPipelineDynamicStateCreateInfo dynamic_state = {VK_STRUCTURE_TYPE_PIPELINE_DYNAMIC_STATE_CREATE_INFO};
 
     while (vk_ctx_update(ctx))
     {
