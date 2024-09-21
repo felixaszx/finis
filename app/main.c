@@ -12,7 +12,7 @@ typedef struct render_thr_arg
     atomic_bool rendering_;
 } render_thr_arg;
 
-void* render_thr_func(void* arg)
+T* render_thr_func(T* arg)
 {
     render_thr_arg* ctx_combo = arg;
     vk_ctx* ctx = ctx_combo->ctx_;

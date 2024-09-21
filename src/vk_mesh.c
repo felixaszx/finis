@@ -138,7 +138,7 @@ vk_prim* vk_mesh_add_prim(vk_mesh* this)
     return this->prims_ + this->prim_count_ - 1;
 }
 
-void vk_mesh_add_prim_attrib(vk_mesh* this, vk_prim* prim, vk_prim_attrib attrib, void* data, size_t count)
+void vk_mesh_add_prim_attrib(vk_mesh* this, vk_prim* prim, vk_prim_attrib attrib, T* data, size_t count)
 {
     prim->attrib_counts_[attrib] = count;
     size_t data_size = vk_prim_get_attrib_size(prim, attrib);
@@ -153,7 +153,7 @@ void vk_mesh_add_prim_attrib(vk_mesh* this, vk_prim* prim, vk_prim_attrib attrib
     VK_MESH_ALIGN_MEMORY(this->mem_size_);
 }
 
-void vk_mesh_add_prim_morph_attrib(vk_mesh* this, vk_morph* morph, vk_morph_attrib attrib, void* data, size_t count)
+void vk_mesh_add_prim_morph_attrib(vk_mesh* this, vk_morph* morph, vk_morph_attrib attrib, T* data, size_t count)
 {
     morph->attrib_counts_[attrib] = count;
     size_t data_size = vk_morph_get_attrib_size(morph, attrib);

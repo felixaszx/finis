@@ -62,12 +62,13 @@
 
 typedef char byte;
 typedef size_t byte_offset;
+typedef void T;
 
 struct timespec ms_sleep(size_t ms);
 
-static inline void* malloc_zero(size_t size)
+static inline T* malloc_zero(size_t size)
 {
-    void* ptr = malloc(size);
+    T* ptr = malloc(size);
     memset(ptr, 0x0, size);
     return ptr;
 }
