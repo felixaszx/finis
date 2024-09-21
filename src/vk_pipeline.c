@@ -64,7 +64,7 @@ IMPL_OBJ_NEW_DEFAULT(vk_gfx_pl_desc)
 
 IMPL_OBJ_DELETE(vk_gfx_pl_desc)
 {
-    for (size_t i = 0; i < this->shader_size_; i++)
+    for (size_t i = 0; i < this->shader_count_; i++)
     {
         destroy_vk_shader(this->shaders_ + i);
     }
@@ -75,7 +75,7 @@ VkPipeline vk_gfx_pl_desc_build(vk_gfx_pl_desc* this, vk_ctx* ctx, VkPipelineLay
     this->ctx_ = ctx;
     *layout = this->configurator(this);
 
-    for (size_t i = 0; i < this->shader_size_; i++)
+    for (size_t i = 0; i < this->shader_count_; i++)
     {
         this->stages_[i] = this->shaders_[i].stage_info_;
     }

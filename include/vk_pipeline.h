@@ -17,7 +17,7 @@ typedef struct vk_gfx_pl_desc vk_gfx_pl_desc;
 struct vk_gfx_pl_desc
 {
     vk_ctx* ctx_;
-    uint32_t shader_size_;
+    uint32_t shader_count_;
     vk_shader* shaders_;
     VkGraphicsPipelineCreateInfo cinfo_;
     VkPipelineShaderStageCreateInfo stages_[3]; // no more than 3 stages for now

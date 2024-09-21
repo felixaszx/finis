@@ -48,7 +48,7 @@ IMPL_OBJ_NEW_DEFAULT(vk_prim_transform)
 {
     this->node_idx_ = -1;
     this->first_joint_ = -1;
-    this->morph_weights_ = -1;
+    this->target_count_ = -1;
     return this;
 }
 

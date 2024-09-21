@@ -77,7 +77,7 @@ typedef struct vk_prim_transform
 {
     uint32_t node_idx_;
     uint32_t first_joint_;
-    uint32_t morph_weights_;
+    uint32_t target_count_;
 } vk_prim_transform;
 
 DEFINE_OBJ_DEFAULT(vk_prim_transform);
