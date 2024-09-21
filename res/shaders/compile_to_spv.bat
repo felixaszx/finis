@@ -1,2 +1,5 @@
-glslangValidator -Os -V 0.vert -o ./0.vert.spv
-glslangValidator -Os -V 0.frag -o ./0.frag.spv
+set vert="0.vert"
+set frag="0.frag"
+
+glslangValidator -Os -V %vert% -o ./%vert%.spv
+glslangValidator -Os -V %frag% -o ./%frag%.spv
