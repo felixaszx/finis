@@ -33,7 +33,6 @@ typedef struct vk_mesh
 } vk_mesh;
 
 DEFINE_OBJ(vk_mesh, vk_ctx* ctx, const char* name, VkDeviceSize mem_limit, uint32_t prim_limit);
-DEFINE_OBJ_DELETE(vk_mesh);
 vk_prim* vk_mesh_add_prim(vk_mesh* this);
 void vk_mesh_add_prim_attrib(vk_mesh* this, vk_prim* prim, vk_prim_attrib attrib, void* data, size_t count);
 void vk_mesh_add_prim_morph_attrib(vk_mesh* this, vk_morph* morph, vk_morph_attrib attrib, void* data, size_t count);
@@ -58,7 +57,6 @@ typedef struct vk_tex_arr
 } vk_tex_arr;
 
 DEFINE_OBJ(vk_tex_arr, vk_ctx* ctx, uint32_t tex_limit, uint32_t sampler_limit);
-DEFINE_OBJ_DELETE(vk_tex_arr);
 bool vk_tex_arr_add_sampler(vk_tex_arr* this, VkSamplerCreateInfo* sampler_info);
 bool vk_tex_arr_add_tex(vk_tex_arr* this,
                         VkCommandPool cmd_pool,
@@ -86,7 +84,6 @@ typedef struct vk_mesh_desc
 } vk_mesh_desc;
 
 DEFINE_OBJ(vk_mesh_desc, vk_ctx* ctx, uint32_t node_size_);
-DEFINE_OBJ_DELETE(vk_mesh_desc);
 void vk_mesh_desc_flush(vk_mesh_desc* this);
 void vk_mesh_desc_update(vk_mesh_desc* this, mat4 root_trans);
 void vk_mesh_desc_set_layer(vk_mesh_desc* this, uint32_t layer_size);
@@ -110,7 +107,6 @@ typedef struct vk_mesh_skin
 } vk_mesh_skin;
 
 DEFINE_OBJ(vk_mesh_skin, vk_ctx* ctx, uint32_t joint_size_);
-DEFINE_OBJ_DELETE(vk_mesh_skin);
 void vk_mesh_skin_alloc_device_mem(vk_mesh_skin* this, VkCommandPool cmd_pool);
 
 #endif // INCLUDE_VK_MESH_H

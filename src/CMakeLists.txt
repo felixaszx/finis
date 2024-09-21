@@ -15,5 +15,3 @@ find_package(spirv_cross_reflect REQUIRED)
 find_package(spirv_cross_core REQUIRED)
 
 target_link_libraries(finis_lib PUBLIC glfw)
-target_link_libraries(finis_lib PUBLIC spirv-cross-core)
-target_link_libraries(finis_lib PUBLIC spirv-cross-reflect)

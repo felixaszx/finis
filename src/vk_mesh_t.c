@@ -59,3 +59,4 @@ IMPL_OBJ_NEW_DEFAULT(vk_mesh_node)
     glm_mat4_identity(this->preset_);
     return this;
 }
+IMPL_OBJ_DELETE_DEFAULT(vk_mesh_node)
