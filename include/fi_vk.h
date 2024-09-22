@@ -9,7 +9,7 @@
 #include <GLFW/glfw3.h>
 #include <vma/vk_mem_alloc.h>
 
-#include "tool.h"
+#include "fi_tool.h"
 
 #define QUICK_ENUMERATE(type, func, target, count, ptr) \
     type* ptr;                                          \

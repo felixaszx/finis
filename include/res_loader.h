@@ -4,7 +4,7 @@
 #include <cglm/cglm.h>
 #include <stb/stb_image.h>
 
-#include "tool.h"
+#include "fi_tool.h"
 #include "vk_mesh_t.h"
 #include "third_party/gltf.h"
 

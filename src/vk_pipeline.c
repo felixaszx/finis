@@ -39,8 +39,10 @@ IMPL_OBJ_DELETE(vk_shader)
     }
 }
 
-IMPL_OBJ_NEW_DEFAULT(vk_gfx_pl_desc)
+IMPL_OBJ_NEW(vk_gfx_pl_desc, vk_gfx_pl_configurator configurator, vk_gfx_pl_cleaner cleaner)
 {
+    this->configurator_ = configurator;
+    this->cleaner_ = cleaner;
     this->atchms_.sType = VK_STRUCTURE_TYPE_PIPELINE_RENDERING_CREATE_INFO;
     this->vtx_input_.sType = VK_STRUCTURE_TYPE_PIPELINE_VERTEX_INPUT_STATE_CREATE_INFO;
     this->input_asm_.sType = VK_STRUCTURE_TYPE_PIPELINE_INPUT_ASSEMBLY_STATE_CREATE_INFO;
@@ -67,53 +69,42 @@ IMPL_OBJ_NEW_DEFAULT(vk_gfx_pl_desc)
     return this;
 }
 
-IMPL_OBJ_DELETE(vk_gfx_pl_desc)
-{
-    for (size_t i = 0; i < this->shader_count_; i++)
-    {
-        destroy_vk_shader(this->shaders_ + i);
-    }
-}
+IMPL_OBJ_DELETE_DEFAULT(vk_gfx_pl_desc)
 
 VkPipeline vk_gfx_pl_desc_build(vk_gfx_pl_desc* this, vk_ctx* ctx, VkPipelineLayout* layout)
 {
-    this->ctx_ = ctx;
-    *layout = this->configurator(this);
+    *layout = this->configurator_(ctx, this);
+    this->cinfo_.layout = *layout;
 
-    for (size_t i = 0; i < this->shader_count_; i++)
+    for (size_t i = 0; i < this->cinfo_.stageCount; i++)
     {
         this->stages_[i] = this->shaders_[i].stage_info_;
     }
 
     VkPipeline pl = {};
     vkCreateGraphicsPipelines(ctx->device_, ctx->pipeline_cache_, 1, &this->cinfo_, nullptr, &pl);
-    this->cleaner(this);
+    this->cleaner_(ctx, this);
     return pl;
 }
 
-IMPL_OBJ_NEW_DEFAULT(vk_comp_pl_desc)
+IMPL_OBJ_NEW(vk_comp_pl_desc, vk_comp_pl_configurator configurator, vk_comp_pl_cleaner cleaner)
 {
+    this->configurator_ = configurator;
+    this->cleaner_ = cleaner;
     this->cinfo_.sType = VK_STRUCTURE_TYPE_GRAPHICS_PIPELINE_CREATE_INFO;
     return this;
 }
 
-IMPL_OBJ_DELETE(vk_comp_pl_desc)
-{
-    if (this->shader_)
-    {
-        destroy_vk_shader(this->shader_);
-        free(this->shader_);
-    }
-}
+IMPL_OBJ_DELETE_DEFAULT(vk_comp_pl_desc)
 
 VkPipeline vk_comp_pl_desc_build(vk_comp_pl_desc* this, vk_ctx* ctx, VkPipelineLayout* layout)
 {
-    this->ctx_ = ctx;
-    *layout = this->configurator(this);
+    *layout = this->configurator_(ctx, this);
+    this->cinfo_.layout = *layout;
 
     VkPipeline pl = {};
-    this->cinfo_.stage = this->shader_->stage_info_;
+    this->cinfo_.stage = this->shader_[0].stage_info_;
     vkCreateComputePipelines(ctx->device_, ctx->pipeline_cache_, 1, &this->cinfo_, nullptr, &pl);
-    this->cleaner(this);
+    this->cleaner_(ctx, this);
     return pl;
 }

@@ -1,5 +1,5 @@
-#ifndef INCLUDE_TOOL_H
-#define INCLUDE_TOOL_H
+#ifndef INCLUDE_FI_TOOL_H
+#define INCLUDE_FI_TOOL_H
 
 #include <stdlib.h>
 #include <stdio.h>
@@ -29,7 +29,7 @@
     type* new_##type();                              \
     type* construct_##type(type* this, __VA_ARGS__); \
     void destroy_##type(type* this)
-#define DEFINE_OBJ_DEFAULT(type, ...)   \
+#define DEFINE_OBJ_DEFAULT(type)   \
     type* new_##type();                 \
     type* construct_##type(type* this); \
     void destroy_##type(type* this)
@@ -53,6 +53,7 @@
     }
 
 #define new(type, ...) (type*)construct_##type(new_##type(), __VA_ARGS__)
+#define cnew(type) (type*)construct_##type(new_##type())
 #define delete(type, obj)      \
     {                          \
         type* t_ptr = obj;     \
@@ -73,4 +74,5 @@ static inline T* malloc_zero(size_t size)
     return ptr;
 }
 
-#endif // INCLUDE_TOOL_H
+
+#endif // INCLUDE_FI_TOOL_H

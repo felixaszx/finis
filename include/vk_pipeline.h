@@ -14,11 +14,12 @@ DEFINE_OBJ(vk_shader, vk_ctx* ctx, const char* file_path, VkShaderStageFlags sta
 void vk_shader_reflect_symbols(vk_shader* this);
 
 typedef struct vk_gfx_pl_desc vk_gfx_pl_desc;
+typedef VkPipelineLayout (*vk_gfx_pl_configurator)(vk_ctx* ctx, vk_gfx_pl_desc* pl_desc);
+typedef void (*vk_gfx_pl_cleaner)(vk_ctx* ctx, vk_gfx_pl_desc* pl_desc);
+
 struct vk_gfx_pl_desc
 {
-    vk_ctx* ctx_;
-    uint32_t shader_count_;
-    vk_shader* shaders_;
+    vk_shader shaders_[3];
     VkGraphicsPipelineCreateInfo cinfo_;
     VkPipelineShaderStageCreateInfo stages_[3]; // no more than 3 stages for now
     VkPipelineRenderingCreateInfo atchms_;
@@ -32,25 +33,27 @@ struct vk_gfx_pl_desc
     VkPipelineColorBlendStateCreateInfo color_blend_;
     VkPipelineDynamicStateCreateInfo dynamic_state_;
 
-    VkPipelineLayout (*configurator)(vk_gfx_pl_desc* this);
-    void (*cleaner)(vk_gfx_pl_desc* this);
+    vk_gfx_pl_configurator configurator_;
+    vk_gfx_pl_cleaner cleaner_;
 };
 
-DEFINE_OBJ_DEFAULT(vk_gfx_pl_desc);
+DEFINE_OBJ(vk_gfx_pl_desc, vk_gfx_pl_configurator configurator, vk_gfx_pl_cleaner cleaner);
 VkPipeline vk_gfx_pl_desc_build(vk_gfx_pl_desc* this, vk_ctx* ctx, VkPipelineLayout* layout);
 
 typedef struct vk_comp_pl_desc vk_comp_pl_desc;
+typedef VkPipelineLayout (*vk_comp_pl_configurator)(vk_ctx* ctx, vk_comp_pl_desc* pl_desc);
+typedef void (*vk_comp_pl_cleaner)(vk_ctx* ctx, vk_comp_pl_desc* pl_desc);
+
 struct vk_comp_pl_desc
 {
-    vk_ctx* ctx_;
-    vk_shader* shader_; // only 1
+    vk_shader shader_[1]; // only 1
     VkComputePipelineCreateInfo cinfo_;
 
-    VkPipelineLayout (*configurator)(vk_comp_pl_desc* this);
-    void (*cleaner)(vk_comp_pl_desc* this);
+    vk_comp_pl_configurator configurator_;
+    vk_comp_pl_cleaner cleaner_;
 };
 
-DEFINE_OBJ_DEFAULT(vk_comp_pl_desc);
+DEFINE_OBJ(vk_comp_pl_desc, vk_comp_pl_configurator configurator, vk_comp_pl_cleaner cleaner);
 VkPipeline vk_comp_pl_desc_build(vk_comp_pl_desc* this, vk_ctx* ctx, VkPipelineLayout* layout);
 
 #endif // INCLUDE_VK_PIPELINE_H

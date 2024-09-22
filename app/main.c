@@ -2,6 +2,7 @@
 #include <stdlib.h>
 
 #include "fi_vk.h"
+#include "fi_ext.h"
 #include "vk_mesh.h"
 #include "vk_pipeline.h"
 #include "res_loader.h"
@@ -53,9 +54,6 @@ T* render_thr_func(T* arg)
     cmd_submits[0].sType = VK_STRUCTURE_TYPE_COMMAND_BUFFER_SUBMIT_INFO;
     cmd_submits[0].commandBuffer = cmd;
 
-    vk_shader* vert = new (vk_shader, ctx, "res/shaders/0.vert.spv", VK_SHADER_STAGE_VERTEX_BIT);
-    vk_shader* frag = new (vk_shader, ctx, "res/shaders/0.frag.spv", VK_SHADER_STAGE_FRAGMENT_BIT);
-
     vk_mesh* mesh = new (vk_mesh, ctx, "test_mesh", to_mb(10), 100);
     vk_prim* prim = vk_mesh_add_prim(mesh);
     vk_mesh_add_prim_attrib(mesh, prim, INDEX, sparta->prims_[0].idx_, sparta->prims_[0].idx_count_);
@@ -68,66 +66,11 @@ T* render_thr_func(T* arg)
     vk_mesh_desc_update(mesh_desc, GLM_MAT4_IDENTITY);
     vk_mesh_desc_flush(mesh_desc);
 
-    VkPipelineShaderStageCreateInfo pl_stages[2] = {vert->stage_info_, frag->stage_info_};
-    VkPipelineRenderingCreateInfo atchms = {VK_STRUCTURE_TYPE_PIPELINE_RENDERING_CREATE_INFO};
-    VkPipelineVertexInputStateCreateInfo vtx_input = {VK_STRUCTURE_TYPE_PIPELINE_VERTEX_INPUT_STATE_CREATE_INFO};
-    VkPipelineInputAssemblyStateCreateInfo input_asm = {VK_STRUCTURE_TYPE_PIPELINE_INPUT_ASSEMBLY_STATE_CREATE_INFO};
-    VkPipelineTessellationStateCreateInfo tessellation = {VK_STRUCTURE_TYPE_PIPELINE_TESSELLATION_STATE_CREATE_INFO};
-    VkPipelineViewportStateCreateInfo viewport = {VK_STRUCTURE_TYPE_PIPELINE_VIEWPORT_STATE_CREATE_INFO};
-    VkPipelineRasterizationStateCreateInfo rasterizer = {VK_STRUCTURE_TYPE_PIPELINE_RASTERIZATION_STATE_CREATE_INFO};
-    VkPipelineMultisampleStateCreateInfo multi_sample = {VK_STRUCTURE_TYPE_PIPELINE_MULTISAMPLE_STATE_CREATE_INFO};
-    VkPipelineDepthStencilStateCreateInfo depth_stencil = {VK_STRUCTURE_TYPE_PIPELINE_DEPTH_STENCIL_STATE_CREATE_INFO};
-    VkPipelineColorBlendStateCreateInfo color_blend = {VK_STRUCTURE_TYPE_PIPELINE_COLOR_BLEND_STATE_CREATE_INFO};
-    VkPipelineDynamicStateCreateInfo dynamic_state = {VK_STRUCTURE_TYPE_PIPELINE_DYNAMIC_STATE_CREATE_INFO};
-
-    VkFormat color_format[1] = {VK_FORMAT_R32G32B32A32_SFLOAT};
-    atchms.colorAttachmentCount = 1;
-    atchms.pColorAttachmentFormats = color_format;
-    input_asm.topology = VK_PRIMITIVE_TOPOLOGY_TRIANGLE_LIST;
-    viewport.viewportCount = 1;
-    viewport.scissorCount = 1;
-    rasterizer.lineWidth = 1;
-    rasterizer.polygonMode = VK_POLYGON_MODE_FILL;
-    multi_sample.rasterizationSamples = 1;
-    depth_stencil.depthWriteEnable = false;
-
-    VkPipelineColorBlendAttachmentState blend_state[1] = {};
-    blend_state[0].colorWriteMask = VK_COLOR_COMPONENT_R_BIT | //
-                                    VK_COLOR_COMPONENT_G_BIT | //
-                                    VK_COLOR_COMPONENT_B_BIT | //
-                                    VK_COLOR_COMPONENT_A_BIT;
-    color_blend.attachmentCount = 1;
-    color_blend.pAttachments = blend_state;
-
-    VkDynamicState dynamic_states[2] = {VK_DYNAMIC_STATE_VIEWPORT, VK_DYNAMIC_STATE_SCISSOR};
-    dynamic_state.dynamicStateCount = 2;
-    dynamic_state.pDynamicStates = dynamic_states;
-
-    VkPipelineLayoutCreateInfo layout_cinfo = {VK_STRUCTURE_TYPE_PIPELINE_LAYOUT_CREATE_INFO};
+    dll_handle test_pl_dll = dlopen("exts/dlls/test_pl.dll", RTLD_NOW);
+    vk_gfx_pl_desc* pl_desc = new (vk_gfx_pl_desc, dlsym(test_pl_dll, "configurator"), dlsym(test_pl_dll, "cleaner"));
     VkPipelineLayout pl_layout = {};
-    VkPushConstantRange push_range = {};
-    push_range.stageFlags = VK_SHADER_STAGE_VERTEX_BIT;
-    push_range.size = 2 * sizeof(VkDeviceAddress);
-    layout_cinfo.pPushConstantRanges = &push_range;
-    layout_cinfo.pushConstantRangeCount = 1;
-    vkCreatePipelineLayout(ctx->device_, &layout_cinfo, nullptr, &pl_layout);
-
-    VkPipeline pl = {};
-    VkGraphicsPipelineCreateInfo pl_info = {VK_STRUCTURE_TYPE_GRAPHICS_PIPELINE_CREATE_INFO};
-    pl_info.layout = pl_layout;
-    pl_info.pNext = &atchms;
-    pl_info.stageCount = 2;
-    pl_info.pStages = pl_stages;
-    pl_info.pVertexInputState = &vtx_input;
-    pl_info.pInputAssemblyState = &input_asm;
-    pl_info.pTessellationState = &tessellation;
-    pl_info.pViewportState = &viewport;
-    pl_info.pRasterizationState = &rasterizer;
-    pl_info.pMultisampleState = &multi_sample;
-    pl_info.pDepthStencilState = &depth_stencil;
-    pl_info.pColorBlendState = &color_blend;
-    pl_info.pDynamicState = &dynamic_state;
-    vkCreateGraphicsPipelines(ctx->device_, ctx->pipeline_cache_, 1, &pl_info, nullptr, &pl);
+    VkPipeline pl = vk_gfx_pl_desc_build(pl_desc, ctx, &pl_layout);
+    dlclose(test_pl_dll);
 
     VkImage atchm = {};
     VmaAllocation atchm_alloc = {};
@@ -243,10 +186,14 @@ T* render_thr_func(T* arg)
     vkDestroySemaphore(ctx->device_, acquired, nullptr);
     vkDestroySemaphore(ctx->device_, submitted, nullptr);
     vkDestroyCommandPool(ctx->device_, cmd_pool, nullptr);
+    vkDestroyPipeline(ctx->device_, pl, nullptr);
+    vkDestroyPipelineLayout(ctx->device_, pl_layout, nullptr);
+    vmaDestroyImage(ctx->allocator_, atchm, atchm_alloc);
+    vkDestroyImageView(ctx->device_, atchm_view, nullptr);
 
-    delete (vk_shader, vert);
-    delete (vk_shader, frag);
+    delete (vk_gfx_pl_desc, pl_desc);
     delete (vk_mesh, mesh);
+    delete (vk_mesh_desc, mesh_desc);
     delete (gltf_file, sparta);
     delete (gltf_desc, sparta_desc);
     delete (vk_swapchain, sc);
