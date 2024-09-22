@@ -505,6 +505,10 @@ void vk_mesh_skin_alloc_device_mem(vk_mesh_skin* this, VkCommandPool cmd_pool)
     alloc_info.requiredFlags = 0;
     vmaCreateBuffer(this->ctx_->allocator_, &buffer_info, &alloc_info, &this->buffer_, &this->alloc_, nullptr);
 
+    VkBufferDeviceAddressInfo address_info = {VK_STRUCTURE_TYPE_BUFFER_DEVICE_ADDRESS_INFO};
+    address_info.buffer = this->buffer_;
+    this->address_ = vkGetBufferDeviceAddress(this->ctx_->device_, &address_info);
+
     VkFence fence = {};
     VkFenceCreateInfo fence_cinfo = {VK_STRUCTURE_TYPE_FENCE_CREATE_INFO};
     vkCreateFence(this->ctx_->device_, &fence_cinfo, nullptr, &fence);
