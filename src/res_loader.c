@@ -1,4 +1,5 @@
 #include "res_loader.h"
+#include <stb/stb_ds.h>
 
 #define GET_IDX(this, first) (this ? (this - first) : -1)
 
@@ -56,6 +57,7 @@ IMPL_OBJ_NEW(gltf_file, const char* file_path)
     {
         cgltf_free(this->data_);
         this->data_ = nullptr;
+        fprintf(stderr, "Fail to parse gltf file %s", file_path);
     }
     cgltf_load_buffers(&options, this->data_, file_path);
 
@@ -157,14 +159,13 @@ IMPL_OBJ_NEW(gltf_file, const char* file_path)
         sprintf_s(this->texs_[t].name_, sizeof(this->texs_[t].name_), "%s__[i_%s]", tex->name, tex->image->name);
     }
 
-    size_t prim_count = 0;
     for (size_t m = 0; m < this->data_->meshes_count; m++)
     {
         cgltf_mesh* mesh = this->data_->meshes + m;
-        prim_count += mesh->primitives_count;
+        this->prim_count_ += mesh->primitives_count;
     }
 
-    this->prims_ = alloc(gltf_prim, prim_count);
+    this->prims_ = alloc(gltf_prim, this->prim_count_);
     size_t p = 0;
     for (size_t m = 0; m < this->data_->meshes_count; m++)
     {
@@ -251,19 +252,18 @@ IMPL_OBJ_DELETE(gltf_file)
     for (size_t p = 0; p > this->prim_count_; p++)
     {
         gltf_prim* prim = this->prims_ + p;
-        ffree(prim->position);
-        ffree(prim->normal_);
-        ffree(prim->tangent_);
-        ffree(prim->texcoord_);
-        ffree(prim->color_);
-        ffree(prim->joint_);
-        ffree(prim->weight_);
-        ffree(prim->idx_);
+        free(prim->position);
+        free(prim->normal_);
+        free(prim->tangent_);
+        free(prim->texcoord_);
+        free(prim->color_);
+        free(prim->joint_);
+        free(prim->weight_);
+        free(prim->idx_);
     }
     ffree(this->prims_);
 
     ffree(this->materials_);
-    ffree(this->transforms_);
     ffree(this->sampler_cinfos_);
 
     for (size_t t = 0; t < this->tex_count_; t++)
@@ -271,4 +271,126 @@ IMPL_OBJ_DELETE(gltf_file)
         stbi_image_free(this->texs_[t].data_);
     }
     ffree(this->texs_);
+}
+
+void build_layer(cgltf_node**** layers, cgltf_node* curr, uint32_t depth)
+{
+    size_t layer_count = arrlen((*layers));
+    if (layer_count <= depth)
+    {
+        arrsetlen((*layers), depth + 1);
+        for (size_t i = layer_count; i < depth + 1; i++)
+        {
+            (*layers)[i] = nullptr;
+        }
+    }
+
+    arrput((*layers)[depth], curr);
+
+    for (size_t i = 0; i < curr->children_count; i++)
+    {
+        build_layer(layers, curr->children[i], depth + 1);
+    }
+}
+
+IMPL_OBJ_NEW(gltf_desc, gltf_file* file)
+{
+    cgltf_mesh* meshes = file->data_->meshes;
+    this->mesh_count_ = file->data_->meshes_count;
+    this->prim_offset_ = alloc(uint32_t, this->mesh_count_);
+    this->transform_ = alloc(vk_prim_transform, this->mesh_count_);
+    this->node_count_ = file->data_->nodes_count;
+    this->nodes_ = alloc(vk_mesh_node, this->node_count_);
+    this->mapping_ = alloc(uint32_t, this->node_count_);
+
+    size_t prim_count = 0;
+    for (size_t m = 0; m < this->mesh_count_; m++)
+    {
+        construct_vk_prim_transform(this->transform_ + m);
+        this->prim_offset_[m] = prim_count;
+        prim_count += meshes[m].primitives_count;
+    }
+    this->prim_transform_ = alloc(vk_prim_transform*, file->prim_count_);
+
+    cgltf_node*** layers = nullptr;
+    for (size_t i = 0; i < file->data_->scene[0].nodes_count; i++)
+    {
+        build_layer(&layers, file->data_->scene[0].nodes[i], 0);
+    }
+
+    size_t node_idx = 0;
+    for (size_t i = 0; i < arrlen(layers); i++)
+    {
+        for (size_t j = 0; j < arrlen(layers[i]); j++)
+        {
+            this->mapping_[GET_IDX(layers[i][j], file->data_->nodes)] = node_idx;
+            cgltf_node* node_in = layers[i][j];
+            vk_mesh_node* node = this->nodes_ + node_idx;
+            construct_vk_mesh_node(node);
+
+            if (node_in->has_translation)
+            {
+                memcpy(node->translation_, node_in->translation, sizeof(node->translation_));
+            }
+
+            if (node_in->has_rotation)
+            {
+                memcpy(node->rotation, node_in->rotation, sizeof(node->rotation));
+            }
+
+            if (node_in->has_scale)
+            {
+                memcpy(node->scale_, node_in->scale, sizeof(node->scale_));
+            }
+
+            if (node_in->has_matrix)
+            {
+                memcpy(node->preset_, node_in->matrix, sizeof(node->preset_));
+            }
+
+            if (node_in->parent)
+            {
+                node->parent_idx_ = this->mapping_[GET_IDX(node_in->parent, file->data_->nodes)];
+            }
+
+            if (node_in->mesh)
+            {
+                vk_prim_transform* transform = this->transform_ + GET_IDX(node_in->mesh, file->data_->meshes);
+                transform->node_idx_ = node_idx;
+
+                if (node_in->weights)
+                {
+                    transform->target_count_ = node_in->weights_count;
+                }
+                else if (node_in->mesh->weights)
+                {
+                    transform->target_count_ = node_in->mesh->weights_count;
+                }
+
+                size_t p = this->prim_offset_[GET_IDX(node_in->mesh, file->data_->meshes)];
+                for (size_t pp = 0; pp < node_in->mesh->primitives_count; pp++)
+                {
+                    this->prim_transform_[p + pp] = transform;
+                }
+            }
+
+            node_idx++;
+        }
+    }
+
+    for (size_t i = 0; i < arrlen(layers); i++)
+    {
+        arrfree(layers[i]);
+    }
+    arrfree(layers);
+    return this;
+}
+
+IMPL_OBJ_DELETE(gltf_desc)
+{
+    ffree(this->nodes_);
+    ffree(this->mapping_);
+    ffree(this->transform_);
+    ffree(this->prim_transform_);
+    ffree(this->prim_offset_);
 }

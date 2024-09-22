@@ -17,10 +17,7 @@
 #define ALLOC_1(type, count)          (type*)malloc_zero(count * sizeof(type))
 #define alloc(...)                    GET_ALLOC(__VA_ARGS__, ALLOC_1, ALLOC_0)(__VA_ARGS__)
 #define ffree(ptr) \
-    if (ptr)       \
-    {              \
-        free(ptr); \
-    }              \
+    free(ptr);     \
     ptr = NULL
 
 #define to_kb(count) (1024 * count)

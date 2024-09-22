@@ -13,7 +13,7 @@ IMPL_OBJ_NEW(vk_shader, vk_ctx* ctx, const char* file_path, VkShaderStageFlags s
     fseek(f, 0, SEEK_END);
     size_t size = ftell(f);
     fseek(f, 0, SEEK_SET);
-    byte* spv = alloc(char, size);
+    byte* spv = alloc(byte, size);
     fread(spv, sizeof(*spv), size, f);
     fclose(f);
 
@@ -26,6 +26,8 @@ IMPL_OBJ_NEW(vk_shader, vk_ctx* ctx, const char* file_path, VkShaderStageFlags s
     this->stage_info_.module = this->module_;
     this->stage_info_.stage = stage;
     this->stage_info_.pName = "main";
+
+    ffree(spv);
     return this;
 }
 
@@ -99,7 +101,8 @@ IMPL_OBJ_DELETE(vk_comp_pl_desc)
 {
     if (this->shader_)
     {
-        delete (vk_shader, this->shader_);
+        destroy_vk_shader(this->shader_);
+        free(this->shader_);
     }
 }
 

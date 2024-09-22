@@ -84,13 +84,11 @@ DEFINE_OBJ_DEFAULT(vk_prim_transform);
 
 typedef struct vk_mesh_node
 {
+    uint32_t parent_idx_;
     vec3 translation_;
     versor rotation;
     vec3 scale_;
     mat4 preset_;
-
-    mat4* output_;
-    mat4* parent_;
 } vk_mesh_node;
 
 DEFINE_OBJ_DEFAULT(vk_mesh_node);

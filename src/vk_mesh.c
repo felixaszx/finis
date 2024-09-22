@@ -138,19 +138,20 @@ vk_prim* vk_mesh_add_prim(vk_mesh* this)
     return this->prims_ + this->prim_count_ - 1;
 }
 
-void vk_mesh_add_prim_attrib(vk_mesh* this, vk_prim* prim, vk_prim_attrib attrib, T* data, size_t count)
+VkDeviceSize vk_mesh_add_prim_attrib(vk_mesh* this, vk_prim* prim, vk_prim_attrib attrib, T* data, size_t count)
 {
     prim->attrib_counts_[attrib] = count;
     size_t data_size = vk_prim_get_attrib_size(prim, attrib);
     if (this->mem_size_ + data_size >= this->mem_limit_)
     {
-        return;
+        return -1;
     }
 
     prim->attrib_address_[attrib] = this->mem_size_;
     memcpy(this->mapping_ + this->mem_size_, data, data_size);
     this->mem_size_ += data_size;
     VK_MESH_ALIGN_MEMORY(this->mem_size_);
+    return prim->attrib_address_[attrib];
 }
 
 void vk_mesh_add_prim_morph_attrib(vk_mesh* this, vk_morph* morph, vk_morph_attrib attrib, T* data, size_t count)
@@ -394,7 +395,6 @@ IMPL_OBJ_DELETE(vk_mesh_desc)
     }
     ffree(this->nodes_);
     ffree(this->output_);
-    ffree(this->layers_);
 }
 
 void vk_mesh_desc_flush(vk_mesh_desc* this)
@@ -405,9 +405,9 @@ void vk_mesh_desc_flush(vk_mesh_desc* this)
 void vk_mesh_desc_update(vk_mesh_desc* this, mat4 root_trans)
 {
     uint32_t iter = 0;
-    while (iter < this->node_count_ && !this->nodes_[iter].parent_)
+    while (iter < this->node_count_ && this->nodes_[iter].parent_idx_ == -1)
     {
-        mat4* output = this->nodes_[iter].output_;
+        mat4* output = this->output_ + iter;
         glm_mat4_identity(*output);
         glm_mat4_mul(root_trans, *output, *output);
         glm_translate(*output, this->nodes_[iter].translation_);
@@ -417,8 +417,8 @@ void vk_mesh_desc_update(vk_mesh_desc* this, mat4 root_trans)
     }
     while (iter < this->node_count_)
     {
-        mat4* output = this->nodes_[iter].output_;
-        mat4* parent_transform = this->nodes_[iter].parent_;
+        mat4* output = this->output_ + iter;
+        mat4* parent_transform = this->output_ + this->nodes_[iter].parent_idx_;
         glm_mat4_identity(*output);
         glm_mat4_mul(*parent_transform, *output, *output);
         glm_translate(*output, this->nodes_[iter].translation_);
@@ -427,12 +427,6 @@ void vk_mesh_desc_update(vk_mesh_desc* this, mat4 root_trans)
         iter++;
     }
     vk_mesh_desc_flush(this);
-}
-
-void vk_mesh_desc_set_layer(vk_mesh_desc* this, uint32_t layer_size)
-{
-    this->layer_sizes_ = layer_size;
-    this->layers_ = alloc(uint32_t, layer_size);
 }
 
 void vk_mesh_desc_alloc_device_mem(vk_mesh_desc* this)

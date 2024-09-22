@@ -56,11 +56,22 @@ typedef struct gltf_file
 
     size_t tex_count_;
     gltf_tex* texs_;
-
-    size_t transform_count_;
-    vk_prim_transform* transforms_;
 } gltf_file;
 
 DEFINE_OBJ(gltf_file, const char* file_path);
+
+typedef struct gltf_desc
+{
+    uint32_t node_count_;
+    uint32_t* mapping_;   // original order
+    vk_mesh_node* nodes_; // linearized, indexed by mapping_[idx]
+
+    uint32_t mesh_count_;
+    uint32_t* prim_offset_;
+    vk_prim_transform* transform_;
+    vk_prim_transform** prim_transform_; // a mapping of transform, size is gltf_file::prim_count_
+} gltf_desc;
+
+DEFINE_OBJ(gltf_desc, gltf_file* file);
 
 #endif // INCLUDE_RES_LOADER_H

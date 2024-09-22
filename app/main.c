@@ -23,6 +23,7 @@ T* render_thr_func(T* arg)
 
     vk_swapchain* sc = new (vk_swapchain, ctx);
     gltf_file* sparta = new (gltf_file, "res/models/sponza.glb");
+    gltf_desc* sparta_desc = new (gltf_desc, sparta);
 
     VkFence frame_fence = {};
     VkFenceCreateInfo fence_cinfo = {VK_STRUCTURE_TYPE_FENCE_CREATE_INFO};
@@ -241,6 +242,7 @@ T* render_thr_func(T* arg)
     delete (vk_shader, frag);
     delete (vk_mesh, mesh);
     delete (gltf_file, sparta);
+    delete (gltf_desc, sparta_desc);
     delete (vk_swapchain, sc);
     return nullptr;
 }

@@ -57,6 +57,7 @@ IMPL_OBJ_NEW_DEFAULT(vk_mesh_node)
     glm_vec3_copy(GLM_VEC3_ONE, this->scale_);
     glm_quat_identity(this->rotation);
     glm_mat4_identity(this->preset_);
+    this->parent_idx_ = -1;
     return this;
 }
 IMPL_OBJ_DELETE_DEFAULT(vk_mesh_node)

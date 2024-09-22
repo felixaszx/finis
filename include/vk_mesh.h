@@ -34,7 +34,7 @@ typedef struct vk_mesh
 
 DEFINE_OBJ(vk_mesh, vk_ctx* ctx, const char* name, VkDeviceSize mem_limit, uint32_t prim_limit);
 vk_prim* vk_mesh_add_prim(vk_mesh* this);
-void vk_mesh_add_prim_attrib(vk_mesh* this, vk_prim* prim, vk_prim_attrib attrib, T* data, size_t count);
+VkDeviceSize vk_mesh_add_prim_attrib(vk_mesh* this, vk_prim* prim, vk_prim_attrib attrib, T* data, size_t count);
 void vk_mesh_add_prim_morph_attrib(vk_mesh* this, vk_morph* morph, vk_morph_attrib attrib, T* data, size_t count);
 void vk_mesh_free_staging(vk_mesh* this);
 void vk_mesh_alloc_device_mem(vk_mesh* this, VkCommandPool pool);
@@ -73,9 +73,6 @@ typedef struct vk_mesh_desc
     vk_mesh_node* nodes_;
     mat4* output_;
 
-    uint32_t layer_sizes_;
-    uint32_t* layers_;
-
     vk_ctx* ctx_;
     byte* mapping_;
     VkBuffer buffer_;
@@ -86,7 +83,6 @@ typedef struct vk_mesh_desc
 DEFINE_OBJ(vk_mesh_desc, vk_ctx* ctx, uint32_t node_count_);
 void vk_mesh_desc_flush(vk_mesh_desc* this);
 void vk_mesh_desc_update(vk_mesh_desc* this, mat4 root_trans);
-void vk_mesh_desc_set_layer(vk_mesh_desc* this, uint32_t layer_size);
 void vk_mesh_desc_alloc_device_mem(vk_mesh_desc* this);
 
 typedef struct vk_mesh_joint
