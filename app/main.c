@@ -191,8 +191,13 @@ T* render_thr_func(T* arg)
         vk_swapchain_process(sc, cmd_pool, acquired, nullptr, &image_idx);
         vkResetFences(ctx->device_, 1, &frame_fence);
 
-        VkDeviceAddress address = mesh->address_;
-        address += mesh->prim_offset_;
+        struct
+        {
+            VkDeviceSize prim_address;
+            VkDeviceSize data_address;
+        } pushed = {};
+        pushed.prim_address = mesh->address_ + mesh->prim_offset_;
+        pushed.data_address = mesh->address_;
 
         vkResetCommandBuffer(cmd, 0);
         vkBeginCommandBuffer(cmd, &begin);
@@ -202,7 +207,7 @@ T* render_thr_func(T* arg)
         VkRect2D scissor = {.extent = (VkExtent2D){WIDTH, HEIGHT}};
         vkCmdSetViewport(cmd, 0, 1, &viewport);
         vkCmdSetScissor(cmd, 0, 1, &scissor);
-        vkCmdPushConstants(cmd, pl_layout, VK_SHADER_STAGE_VERTEX_BIT, 0, 8, &address);
+        vkCmdPushConstants(cmd, pl_layout, VK_SHADER_STAGE_VERTEX_BIT, 0, sizeof(pushed), &pushed);
         vk_mesh_draw_prims(mesh, cmd);
         vkCmdEndRendering(cmd);
         vkEndCommandBuffer(cmd);
