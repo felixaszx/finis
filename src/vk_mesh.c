@@ -372,18 +372,18 @@ bool vk_tex_arr_add_tex(vk_tex_arr* this,
     return true;
 }
 
-IMPL_OBJ_NEW(vk_mesh_desc, vk_ctx* ctx, uint32_t node_size)
+IMPL_OBJ_NEW(vk_mesh_desc, vk_ctx* ctx, uint32_t node_count)
 {
     this->ctx_ = ctx;
-    this->node_count_ = node_size;
-    this->nodes_ = alloc(vk_mesh_node, node_size);
-    this->output_ = alloc(mat4, node_size);
+    this->node_count_ = node_count;
+    this->nodes_ = alloc(vk_mesh_node, node_count);
+    this->output_ = alloc(mat4, node_count);
 
-    for (uint32_t i = 0; i < node_size; i++)
+    for (uint32_t i = 0; i < node_count; i++)
     {
-        glm_mat4_identity(this->nodes_[i].preset_);
+        construct_vk_mesh_node(this->nodes_ + i);
     }
-    glm_mat4_identity_array(this->output_, node_size);
+    glm_mat4_identity_array(this->output_, node_count);
     return this;
 }
 
@@ -409,6 +409,7 @@ void vk_mesh_desc_update(vk_mesh_desc* this, mat4 root_trans)
     {
         mat4* output = this->output_ + iter;
         glm_mat4_identity(*output);
+
         glm_mat4_mul(root_trans, *output, *output);
         glm_translate(*output, this->nodes_[iter].translation_);
         glm_quat_rotate(*output, this->nodes_[iter].rotation, *output);
@@ -418,8 +419,10 @@ void vk_mesh_desc_update(vk_mesh_desc* this, mat4 root_trans)
     while (iter < this->node_count_)
     {
         mat4* output = this->output_ + iter;
+        int a = this->nodes_[iter].parent_idx_;
         mat4* parent_transform = this->output_ + this->nodes_[iter].parent_idx_;
         glm_mat4_identity(*output);
+
         glm_mat4_mul(*parent_transform, *output, *output);
         glm_translate(*output, this->nodes_[iter].translation_);
         glm_quat_rotate(*output, this->nodes_[iter].rotation, *output);
@@ -433,16 +436,21 @@ void vk_mesh_desc_alloc_device_mem(vk_mesh_desc* this)
 {
     VkBufferCreateInfo buffer_info = {VK_STRUCTURE_TYPE_BUFFER_CREATE_INFO};
     buffer_info.size = this->node_count_ * sizeof(*this->output_);
-    buffer_info.usage = VK_BUFFER_USAGE_STORAGE_BUFFER_BIT | VK_BUFFER_USAGE_SHADER_DEVICE_ADDRESS_BIT;
+    buffer_info.usage = VK_BUFFER_USAGE_STORAGE_BUFFER_BIT | //
+                        VK_BUFFER_USAGE_SHADER_DEVICE_ADDRESS_BIT;
     VmaAllocationCreateInfo alloc_info = {};
     alloc_info.usage = VMA_MEMORY_USAGE_AUTO_PREFER_DEVICE;
-    alloc_info.flags = VMA_ALLOCATION_CREATE_HOST_ACCESS_SEQUENTIAL_WRITE_BIT | VMA_ALLOCATION_CREATE_MAPPED_BIT;
+    alloc_info.flags = VMA_ALLOCATION_CREATE_HOST_ACCESS_SEQUENTIAL_WRITE_BIT | //
+                       VMA_ALLOCATION_CREATE_MAPPED_BIT;
     alloc_info.preferredFlags = VK_MEMORY_PROPERTY_HOST_COHERENT_BIT;
 
     VmaAllocationInfo allocated = {};
     vmaCreateBuffer(this->ctx_->allocator_, &buffer_info, &alloc_info, &this->buffer_, &this->alloc_, &allocated);
     this->mapping_ = allocated.pMappedData;
-    vk_mesh_desc_flush(this);
+
+    VkBufferDeviceAddressInfo address_info = {VK_STRUCTURE_TYPE_BUFFER_DEVICE_ADDRESS_INFO};
+    address_info.buffer = this->buffer_;
+    this->address_ = vkGetBufferDeviceAddress(this->ctx_->device_, &address_info);
 }
 
 IMPL_OBJ_NEW(vk_mesh_skin, vk_ctx* ctx, uint32_t joint_size)

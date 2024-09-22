@@ -377,7 +377,7 @@ IMPL_OBJ_NEW(gltf_desc, gltf_file* file)
             node_idx++;
         }
     }
-
+    
     for (size_t i = 0; i < arrlen(layers); i++)
     {
         arrfree(layers[i]);

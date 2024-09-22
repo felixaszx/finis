@@ -22,7 +22,7 @@ T* render_thr_func(T* arg)
     atomic_bool* rendering = &ctx_combo->rendering_;
 
     vk_swapchain* sc = new (vk_swapchain, ctx);
-    gltf_file* sparta = new (gltf_file, "res/models/sponza.glb");
+    gltf_file* sparta = new (gltf_file, "res/models/sparta.glb");
     gltf_desc* sparta_desc = new (gltf_desc, sparta);
 
     VkFence frame_fence = {};
@@ -61,6 +61,12 @@ T* render_thr_func(T* arg)
     vk_mesh_add_prim_attrib(mesh, prim, INDEX, sparta->prims_[0].idx_, sparta->prims_[0].idx_count_);
     vk_mesh_add_prim_attrib(mesh, prim, POSITION, sparta->prims_[0].position, sparta->prims_[0].vtx_count_);
     vk_mesh_alloc_device_mem(mesh, cmd_pool);
+
+    vk_mesh_desc* mesh_desc = new (vk_mesh_desc, ctx, sparta_desc->node_count_);
+    memcpy(mesh_desc->nodes_, sparta_desc->nodes_, mesh_desc->node_count_ * sizeof(*mesh_desc->nodes_));
+    vk_mesh_desc_alloc_device_mem(mesh_desc);
+    vk_mesh_desc_update(mesh_desc, GLM_MAT4_IDENTITY);
+    vk_mesh_desc_flush(mesh_desc);
 
     VkPipelineShaderStageCreateInfo pl_stages[2] = {vert->stage_info_, frag->stage_info_};
     VkPipelineRenderingCreateInfo atchms = {VK_STRUCTURE_TYPE_PIPELINE_RENDERING_CREATE_INFO};
