@@ -155,7 +155,8 @@ VkDeviceSize vk_mesh_add_prim_attrib(vk_mesh* this, vk_prim* prim, vk_prim_attri
     prim->attrib_address_[attrib] = this->mem_size_;
     memcpy(this->mapping_ + this->mem_size_, data, data_size);
     this->mem_size_ += data_size;
-    VK_MESH_ALIGN_MEMORY(this->mem_size_);
+    this->padding_size_ += VK_MESH_PAD_MEMORY(this->mem_size_);
+    this->mem_size_ += VK_MESH_PAD_MEMORY(this->mem_size_);
     return prim->attrib_address_[attrib];
 }
 
@@ -176,7 +177,8 @@ void vk_mesh_add_prim_morph_attrib(vk_mesh* this, vk_morph* morph, vk_morph_attr
     morph->attrib_offsets_[attrib] = this->mem_size_;
     memcpy(this->mapping_ + this->mem_size_, data, data_size);
     this->mem_size_ += data_size;
-    VK_MESH_ALIGN_MEMORY(this->mem_size_);
+    this->padding_size_ += VK_MESH_PAD_MEMORY(this->mem_size_);
+    this->mem_size_ += VK_MESH_PAD_MEMORY(this->mem_size_);
 }
 
 IMPL_OBJ_NEW(vk_tex_arr, vk_ctx* ctx, uint32_t tex_limit, uint32_t sampler_limit)

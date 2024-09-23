@@ -5,10 +5,10 @@
 #include "vk_mesh_t.h"
 
 #define VK_MESH_STORAGE_BUFFER_ALIGNMENT 16
-#define VK_MESH_ALIGN_MEMORY(byte)                                                           \
-    byte += byte % VK_MESH_STORAGE_BUFFER_ALIGNMENT                                          \
-                ? VK_MESH_STORAGE_BUFFER_ALIGNMENT - byte % VK_MESH_STORAGE_BUFFER_ALIGNMENT \
-                : 0
+#define VK_MESH_PAD_MEMORY(byte)                                                        \
+    (byte % VK_MESH_STORAGE_BUFFER_ALIGNMENT                                            \
+         ? (VK_MESH_STORAGE_BUFFER_ALIGNMENT - byte % VK_MESH_STORAGE_BUFFER_ALIGNMENT) \
+         : 0)
 
 typedef struct vk_mesh
 {
@@ -29,6 +29,7 @@ typedef struct vk_mesh
     VkBuffer staging_;
     VkDeviceSize mem_limit_;
     VkDeviceSize mem_size_;
+    VkDeviceSize padding_size_;
     VmaAllocation staging_alloc_;
 } vk_mesh;
 
