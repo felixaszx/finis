@@ -140,6 +140,11 @@ vk_prim* vk_mesh_add_prim(vk_mesh* this)
 
 VkDeviceSize vk_mesh_add_prim_attrib(vk_mesh* this, vk_prim* prim, vk_prim_attrib attrib, T* data, size_t count)
 {
+    if (!data)
+    {
+        return -1;
+    }
+
     prim->attrib_counts_[attrib] = count;
     size_t data_size = vk_prim_get_attrib_size(prim, attrib);
     if (this->mem_size_ + data_size >= this->mem_limit_)
@@ -156,6 +161,11 @@ VkDeviceSize vk_mesh_add_prim_attrib(vk_mesh* this, vk_prim* prim, vk_prim_attri
 
 void vk_mesh_add_prim_morph_attrib(vk_mesh* this, vk_morph* morph, vk_morph_attrib attrib, T* data, size_t count)
 {
+    if (!data)
+    {
+        return;
+    }
+
     morph->attrib_counts_[attrib] = count;
     size_t data_size = vk_morph_get_attrib_size(morph, attrib);
     if (this->mem_size_ + data_size >= this->mem_limit_)

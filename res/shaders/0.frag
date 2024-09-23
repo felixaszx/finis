@@ -7,6 +7,15 @@
 
 #include "define.glslh"
 
+struct vs_output
+{
+    vec3 position_;
+    vec3 tangent_;
+    vec3 bi_tangent_;
+    vec2 tex_coord_;
+};
+layout(location = 0) in vs_output fs_in;
+
 layout(location = 0) out vec4 COLOR;
 
 void main()

@@ -59,6 +59,9 @@ T* render_thr_func(T* arg)
     vk_prim* prim = vk_mesh_add_prim(mesh);
     vk_mesh_add_prim_attrib(mesh, prim, INDEX, sparta->prims_[0].idx_, sparta->prims_[0].idx_count_);
     vk_mesh_add_prim_attrib(mesh, prim, POSITION, sparta->prims_[0].position, sparta->prims_[0].vtx_count_);
+    vk_mesh_add_prim_attrib(mesh, prim, TEXCOORD, sparta->prims_[0].texcoord_, sparta->prims_[0].vtx_count_);
+    vk_mesh_add_prim_attrib(mesh, prim, NORMAL, sparta->prims_[0].normal_, sparta->prims_[0].vtx_count_);
+    vk_mesh_add_prim_attrib(mesh, prim, TANGENT, sparta->prims_[0].tangent_, sparta->prims_[0].vtx_count_);
     vk_mesh_alloc_device_mem(mesh, cmd_pool);
 
     VkImageSubresource subres = {};
@@ -237,8 +240,6 @@ int main(int argc, char** argv)
         {
             ms_sleep(1);
         }
-
-        printf("%ld\n", atomic_load_explicit(&render_thr_args.frame_time_, memory_order_relaxed));
     }
 
     atomic_store(&render_thr_args.rendering_, false);
