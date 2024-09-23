@@ -155,7 +155,13 @@ IMPL_OBJ_NEW(gltf_file, const char* file_path)
                                                      &this->texs_[t].width_,                   //
                                                      &this->texs_[t].height_,                  //
                                                      &this->texs_[t].channel_, STBI_rgb_alpha);
+        this->texs_[t].channel_ = 4;
         this->texs_[t].sampler_idx_ = GET_IDX(tex->sampler, this->data_->samplers);
+        if (this->sampler_cinfos_[this->texs_[t].sampler_idx_].maxLod)
+        {
+#define MAX(x, y) (x > y ? x : y)
+            this->texs_[t].levels_ = floor(log2(MAX(this->texs_[t].width_, this->texs_[t].height_))) + 1;
+        }
         sprintf_s(this->texs_[t].name_, sizeof(this->texs_[t].name_), "%s__[i_%s]", tex->name, tex->image->name);
     }
 
@@ -393,4 +399,14 @@ IMPL_OBJ_DELETE(gltf_desc)
     ffree(this->transform_);
     ffree(this->prim_transform_);
     ffree(this->prim_offset_);
+}
+
+size_t gltf_tex_size(gltf_tex* this)
+{
+    return this->width_ * this->height_ * this->channel_;
+}
+
+VkExtent3D gltf_tex_extent(gltf_tex* this)
+{
+    return (VkExtent3D){this->width_, this->height_, 1};
 }

@@ -308,7 +308,7 @@ bool vk_tex_arr_add_tex(vk_tex_arr* this,
     for (size_t i = 1; i < sub_res->mipLevel; i++)
     {
         barrier.subresourceRange.levelCount = 1;
-        barrier.oldLayout = barrier.newLayout;
+        barrier.oldLayout = VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL;
         barrier.newLayout = VK_IMAGE_LAYOUT_TRANSFER_SRC_OPTIMAL;
         barrier.srcAccessMask = VK_ACCESS_TRANSFER_WRITE_BIT;
         barrier.dstAccessMask = VK_ACCESS_TRANSFER_READ_BIT;
@@ -334,7 +334,7 @@ bool vk_tex_arr_add_tex(vk_tex_arr* this,
                        barrier.image, VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL, //
                        1, &blit, VK_FILTER_LINEAR);
 
-        barrier.oldLayout = barrier.newLayout;
+        barrier.oldLayout = VK_IMAGE_LAYOUT_TRANSFER_SRC_OPTIMAL;
         barrier.newLayout = VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL;
         barrier.srcAccessMask = VK_ACCESS_TRANSFER_READ_BIT;
         barrier.dstAccessMask = VK_ACCESS_TRANSFER_READ_BIT;
