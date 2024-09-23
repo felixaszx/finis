@@ -14,6 +14,7 @@ typedef struct render_thr_arg
 {
     vk_ctx* ctx_;
     atomic_bool rendering_;
+    atomic_long frame_time_;
 } render_thr_arg;
 
 T* render_thr_func(T* arg)
@@ -142,6 +143,8 @@ T* render_thr_func(T* arg)
     rendering_info.renderArea.extent.height = HEIGHT;
     rendering_info.layerCount = 1;
 
+    clock_t start = clock();
+
     while (atomic_load_explicit(rendering, memory_order_relaxed))
     {
         uint32_t image_idx = -1;
@@ -149,6 +152,8 @@ T* render_thr_func(T* arg)
         vkWaitForFences(ctx->device_, 1, &frame_fence, true, UINT64_MAX);
         vk_swapchain_process(sc, cmd_pool, acquired, nullptr, &image_idx);
         vkResetFences(ctx->device_, 1, &frame_fence);
+        atomic_store_explicit(&ctx_combo->frame_time_, clock() - start, memory_order_relaxed);
+        start = clock();
 
         struct
         {
@@ -215,6 +220,7 @@ int main(int argc, char** argv)
     vk_ctx* ctx = new (vk_ctx, WIDTH, HEIGHT, false);
     render_thr_arg render_thr_args = {ctx};
     atomic_init(&render_thr_args.rendering_, true);
+    atomic_init(&render_thr_args.frame_time_, 0);
 
     pthread_t render_thr = {};
     pthread_create(&render_thr, nullptr, render_thr_func, &render_thr_args);
@@ -231,6 +237,8 @@ int main(int argc, char** argv)
         {
             ms_sleep(1);
         }
+
+        printf("%ld\n", atomic_load_explicit(&render_thr_args.frame_time_, memory_order_relaxed));
     }
 
     atomic_store(&render_thr_args.rendering_, false);
