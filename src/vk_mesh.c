@@ -140,6 +140,11 @@ vk_prim* vk_mesh_add_prim(vk_mesh* this)
 
 VkDeviceSize vk_mesh_add_prim_attrib(vk_mesh* this, vk_prim* prim, vk_prim_attrib attrib, T* data, size_t count)
 {
+    if (!data)
+    {
+        return -1;
+    }
+
     prim->attrib_counts_[attrib] = count;
     size_t data_size = vk_prim_get_attrib_size(prim, attrib);
     if (this->mem_size_ + data_size >= this->mem_limit_)
@@ -150,12 +155,18 @@ VkDeviceSize vk_mesh_add_prim_attrib(vk_mesh* this, vk_prim* prim, vk_prim_attri
     prim->attrib_address_[attrib] = this->mem_size_;
     memcpy(this->mapping_ + this->mem_size_, data, data_size);
     this->mem_size_ += data_size;
-    VK_MESH_ALIGN_MEMORY(this->mem_size_);
+    this->padding_size_ += VK_MESH_PAD_MEMORY(this->mem_size_);
+    this->mem_size_ += VK_MESH_PAD_MEMORY(this->mem_size_);
     return prim->attrib_address_[attrib];
 }
 
 void vk_mesh_add_prim_morph_attrib(vk_mesh* this, vk_morph* morph, vk_morph_attrib attrib, T* data, size_t count)
 {
+    if (!data)
+    {
+        return;
+    }
+
     morph->attrib_counts_[attrib] = count;
     size_t data_size = vk_morph_get_attrib_size(morph, attrib);
     if (this->mem_size_ + data_size >= this->mem_limit_)
@@ -166,7 +177,8 @@ void vk_mesh_add_prim_morph_attrib(vk_mesh* this, vk_morph* morph, vk_morph_attr
     morph->attrib_offsets_[attrib] = this->mem_size_;
     memcpy(this->mapping_ + this->mem_size_, data, data_size);
     this->mem_size_ += data_size;
-    VK_MESH_ALIGN_MEMORY(this->mem_size_);
+    this->padding_size_ += VK_MESH_PAD_MEMORY(this->mem_size_);
+    this->mem_size_ += VK_MESH_PAD_MEMORY(this->mem_size_);
 }
 
 IMPL_OBJ_NEW(vk_tex_arr, vk_ctx* ctx, uint32_t tex_limit, uint32_t sampler_limit)
@@ -308,7 +320,7 @@ bool vk_tex_arr_add_tex(vk_tex_arr* this,
     for (size_t i = 1; i < sub_res->mipLevel; i++)
     {
         barrier.subresourceRange.levelCount = 1;
-        barrier.oldLayout = barrier.newLayout;
+        barrier.oldLayout = VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL;
         barrier.newLayout = VK_IMAGE_LAYOUT_TRANSFER_SRC_OPTIMAL;
         barrier.srcAccessMask = VK_ACCESS_TRANSFER_WRITE_BIT;
         barrier.dstAccessMask = VK_ACCESS_TRANSFER_READ_BIT;
@@ -334,7 +346,7 @@ bool vk_tex_arr_add_tex(vk_tex_arr* this,
                        barrier.image, VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL, //
                        1, &blit, VK_FILTER_LINEAR);
 
-        barrier.oldLayout = barrier.newLayout;
+        barrier.oldLayout = VK_IMAGE_LAYOUT_TRANSFER_SRC_OPTIMAL;
         barrier.newLayout = VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL;
         barrier.srcAccessMask = VK_ACCESS_TRANSFER_READ_BIT;
         barrier.dstAccessMask = VK_ACCESS_TRANSFER_READ_BIT;

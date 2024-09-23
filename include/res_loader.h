@@ -36,9 +36,12 @@ typedef struct gltf_tex
     int width_;
     int height_;
     int channel_;
+    uint32_t levels_;
     byte* data_;
     uint32_t sampler_idx_;
 } gltf_tex;
+size_t gltf_tex_size(gltf_tex* this);
+VkExtent3D gltf_tex_extent(gltf_tex* this);
 
 // glb only
 typedef struct gltf_file

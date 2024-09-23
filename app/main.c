@@ -14,6 +14,7 @@ typedef struct render_thr_arg
 {
     vk_ctx* ctx_;
     atomic_bool rendering_;
+    atomic_long frame_time_;
 } render_thr_arg;
 
 T* render_thr_func(T* arg)
@@ -58,7 +59,19 @@ T* render_thr_func(T* arg)
     vk_prim* prim = vk_mesh_add_prim(mesh);
     vk_mesh_add_prim_attrib(mesh, prim, INDEX, sparta->prims_[0].idx_, sparta->prims_[0].idx_count_);
     vk_mesh_add_prim_attrib(mesh, prim, POSITION, sparta->prims_[0].position, sparta->prims_[0].vtx_count_);
+    vk_mesh_add_prim_attrib(mesh, prim, TEXCOORD, sparta->prims_[0].texcoord_, sparta->prims_[0].vtx_count_);
+    vk_mesh_add_prim_attrib(mesh, prim, NORMAL, sparta->prims_[0].normal_, sparta->prims_[0].vtx_count_);
+    vk_mesh_add_prim_attrib(mesh, prim, TANGENT, sparta->prims_[0].tangent_, sparta->prims_[0].vtx_count_);
     vk_mesh_alloc_device_mem(mesh, cmd_pool);
+
+    VkImageSubresource subres = {};
+    subres.arrayLayer = 1;
+    subres.aspectMask = VK_IMAGE_ASPECT_COLOR_BIT;
+    subres.mipLevel = sparta->texs_[0].levels_;
+    VkExtent3D ext = gltf_tex_extent(sparta->texs_);
+    vk_tex_arr* tex_arr = new (vk_tex_arr, ctx, 100, 10);
+    vk_tex_arr_add_sampler(tex_arr, sparta->sampler_cinfos_);
+    vk_tex_arr_add_tex(tex_arr, cmd_pool, 0, sparta->texs_[0].data_, gltf_tex_size(sparta->texs_), &ext, &subres);
 
     vk_mesh_desc* mesh_desc = new (vk_mesh_desc, ctx, sparta_desc->node_count_);
     memcpy(mesh_desc->nodes_, sparta_desc->nodes_, mesh_desc->node_count_ * sizeof(*mesh_desc->nodes_));
@@ -133,6 +146,8 @@ T* render_thr_func(T* arg)
     rendering_info.renderArea.extent.height = HEIGHT;
     rendering_info.layerCount = 1;
 
+    clock_t start = clock();
+
     while (atomic_load_explicit(rendering, memory_order_relaxed))
     {
         uint32_t image_idx = -1;
@@ -140,6 +155,8 @@ T* render_thr_func(T* arg)
         vkWaitForFences(ctx->device_, 1, &frame_fence, true, UINT64_MAX);
         vk_swapchain_process(sc, cmd_pool, acquired, nullptr, &image_idx);
         vkResetFences(ctx->device_, 1, &frame_fence);
+        atomic_store_explicit(&ctx_combo->frame_time_, clock() - start, memory_order_relaxed);
+        start = clock();
 
         struct
         {
@@ -197,6 +214,7 @@ T* render_thr_func(T* arg)
     delete (gltf_file, sparta);
     delete (gltf_desc, sparta_desc);
     delete (vk_swapchain, sc);
+    delete (vk_tex_arr, tex_arr);
     return nullptr;
 }
 
@@ -205,6 +223,7 @@ int main(int argc, char** argv)
     vk_ctx* ctx = new (vk_ctx, WIDTH, HEIGHT, false);
     render_thr_arg render_thr_args = {ctx};
     atomic_init(&render_thr_args.rendering_, true);
+    atomic_init(&render_thr_args.frame_time_, 0);
 
     pthread_t render_thr = {};
     pthread_create(&render_thr, nullptr, render_thr_func, &render_thr_args);
