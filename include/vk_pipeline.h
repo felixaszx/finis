@@ -56,4 +56,16 @@ struct vk_comp_pl_desc
 DEFINE_OBJ(vk_comp_pl_desc, vk_comp_pl_configurator configurator, vk_comp_pl_cleaner cleaner);
 VkPipeline vk_comp_pl_desc_build(vk_comp_pl_desc* this, vk_ctx* ctx, VkPipelineLayout* layout);
 
+typedef struct vk_atchm_pkg
+{
+    VkImage image_;
+    VkImageView view_;
+    VmaAllocation alloc_;
+    VkImageUsageFlags extra_usage_;
+    VkImageLayout curr_layout_;
+    VkRenderingAttachmentInfo info_;
+}vk_atchm_pkg;
+
+void vk_atchm_pkg_build_color(VkExtent3D extent);
+
 #endif // INCLUDE_VK_PIPELINE_H
