@@ -27,13 +27,12 @@ DLL_EXPORT VkPipelineLayout configurator(vk_ctx* ctx, vk_gfx_pl_desc* pl_desc)
     pl_desc->dynamic_state_.dynamicStateCount = 2;
     pl_desc->dynamic_state_.pDynamicStates = dynamic_states;
 
-    VkPipelineLayoutCreateInfo layout_cinfo = {VK_STRUCTURE_TYPE_PIPELINE_LAYOUT_CREATE_INFO};
     VkPipelineLayout pl_layout = {};
-    VkPushConstantRange push_range = {};
-    push_range.stageFlags = VK_SHADER_STAGE_VERTEX_BIT;
-    push_range.size = 2 * sizeof(VkDeviceAddress);
-    layout_cinfo.pPushConstantRanges = &push_range;
-    layout_cinfo.pushConstantRangeCount = 1;
+    VkPipelineLayoutCreateInfo layout_cinfo = {VK_STRUCTURE_TYPE_PIPELINE_LAYOUT_CREATE_INFO};
+    layout_cinfo.pushConstantRangeCount = pl_desc->push_range_count_;
+    layout_cinfo.pPushConstantRanges = pl_desc->push_range_;
+    layout_cinfo.setLayoutCount = pl_desc->set_layout_count_;
+    layout_cinfo.pSetLayouts = pl_desc->set_layouts_;
     vkCreatePipelineLayout(ctx->device_, &layout_cinfo, nullptr, &pl_layout);
 
     construct_vk_shader(pl_desc->shaders_ + 0, ctx, "res/shaders/0.vert.spv", VK_SHADER_STAGE_VERTEX_BIT);

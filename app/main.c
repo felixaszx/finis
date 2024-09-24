@@ -71,8 +71,13 @@ T* render_thr_func(T* arg)
     vk_mesh_desc_update(mesh_desc, GLM_MAT4_IDENTITY);
     vk_mesh_desc_flush(mesh_desc);
 
+    VkPushConstantRange range = {};
+    range.size = 16;
     dll_handle test_pl_dll = dlopen("exts/dlls/test_pl.dll", RTLD_NOW);
     vk_gfx_pl_desc* pl_desc = new (vk_gfx_pl_desc, dlsym(test_pl_dll, "configurator"), dlsym(test_pl_dll, "cleaner"));
+    pl_desc->push_range_ = &range;
+    pl_desc->push_range_count_ = 1;
+    pl_desc->push_range_->stageFlags = VK_SHADER_STAGE_VERTEX_BIT;
     VkPipelineLayout pl_layout = {};
     VkPipeline pl = vk_gfx_pl_desc_build(pl_desc, ctx, &pl_layout);
     dlclose(test_pl_dll);
@@ -139,7 +144,6 @@ T* render_thr_func(T* arg)
     rendering_info.layerCount = 1;
 
     clock_t start = clock();
-
     while (atomic_load_explicit(rendering, memory_order_relaxed))
     {
         uint32_t image_idx = -1;

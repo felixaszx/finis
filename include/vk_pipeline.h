@@ -33,6 +33,12 @@ struct vk_gfx_pl_desc
     VkPipelineColorBlendStateCreateInfo color_blend_;
     VkPipelineDynamicStateCreateInfo dynamic_state_;
 
+    // set before build
+    uint32_t push_range_count_;
+    VkPushConstantRange* push_range_;
+    uint32_t set_layout_count_;
+    VkDescriptorSetLayout* set_layouts_;
+
     vk_gfx_pl_configurator configurator_;
     vk_gfx_pl_cleaner cleaner_;
 };
@@ -64,7 +70,7 @@ typedef struct vk_atchm_pkg
     VkImageUsageFlags extra_usage_;
     VkImageLayout curr_layout_;
     VkRenderingAttachmentInfo info_;
-}vk_atchm_pkg;
+} vk_atchm_pkg;
 
 void vk_atchm_pkg_build_color(VkExtent3D extent);
 
