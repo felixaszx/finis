@@ -380,8 +380,19 @@ bool vk_tex_arr_add_tex(vk_tex_arr* this,
     desc_info->imageView = this->views_[this->tex_count_];
     desc_info->sampler = this->samplers_[sampler_idx];
     vmaDestroyBuffer(this->ctx_->allocator_, staging, staging_alloc);
+
     this->tex_count_++;
     return true;
+}
+
+VkWriteDescriptorSet vk_tex_arr_get_write_info(vk_tex_arr* this, VkDescriptorSet set, uint32_t binding)
+{
+    return (VkWriteDescriptorSet){.sType = VK_STRUCTURE_TYPE_WRITE_DESCRIPTOR_SET,
+                                  .dstSet = set,
+                                  .dstBinding = binding,
+                                  .descriptorCount = this->tex_count_,
+                                  .descriptorType = VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER,
+                                  .pImageInfo = this->desc_infos_};
 }
 
 IMPL_OBJ_NEW(vk_mesh_desc, vk_ctx* ctx, uint32_t node_count)

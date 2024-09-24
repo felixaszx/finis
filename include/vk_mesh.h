@@ -66,6 +66,7 @@ bool vk_tex_arr_add_tex(vk_tex_arr* this,
                         size_t size,
                         const VkExtent3D* extent,
                         const VkImageSubresource* sub_res);
+VkWriteDescriptorSet vk_tex_arr_get_write_info(vk_tex_arr* this, VkDescriptorSet set, uint32_t binding);
 
 typedef struct vk_mesh_desc
 {
