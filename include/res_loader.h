@@ -77,4 +77,29 @@ typedef struct gltf_desc
 
 DEFINE_OBJ(gltf_desc, gltf_file* file);
 
+#define GLTF_FRAME_CHANNEL_COUNT 3
+typedef enum gltf_frame_channel
+{
+    GLTF_T,
+    GLTF_R,
+    GLTF_S
+} gltf_frame_channel;
+
+// time step in ms
+typedef size_t gltf_ms;
+typedef struct gltf_frame
+{
+    gltf_ms step_count_[GLTF_FRAME_CHANNEL_COUNT];
+    gltf_ms* time_steps_[GLTF_FRAME_CHANNEL_COUNT];
+    T* data_[GLTF_FRAME_CHANNEL_COUNT]; // casted before interporlation
+} gltf_frame;
+
+DEFINE_OBJ(gltf_frame, size_t t_count, size_t r_count, size_t s_count);
+void gltf_frame_sample(gltf_frame* frame, gltf_frame_channel channel, gltf_ms time_pt, T* dst);
+
+typedef struct gltf_anim
+{
+
+} gltf_anim;
+
 #endif // INCLUDE_RES_LOADER_H

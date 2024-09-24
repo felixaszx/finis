@@ -86,7 +86,7 @@ typedef struct vk_mesh_node
 {
     uint32_t parent_idx_;
     vec3 translation_;
-    versor rotation;
+    quat rotation;
     vec3 scale_;
     mat4 preset_;
 } vk_mesh_node;

@@ -18,6 +18,8 @@
     func(target, count, ptr)
 #define QUICK_GET(type, func, target, count, ptr) QUICK_ENUMERATE(type, func, target, count, ptr);
 
+typedef versor quat;
+
 typedef struct vk_ctx
 {
     VkInstance instance_;

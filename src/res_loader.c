@@ -410,3 +410,34 @@ VkExtent3D gltf_tex_extent(gltf_tex* this)
 {
     return (VkExtent3D){this->width_, this->height_, 1};
 }
+
+IMPL_OBJ_NEW(gltf_frame, size_t t_count, size_t r_count, size_t s_count)
+{
+    return this;
+}
+
+IMPL_OBJ_DELETE(gltf_frame)
+{
+    for (size_t i = 0; i < GLTF_FRAME_CHANNEL_COUNT; i++)
+    {
+        ffree(this->time_steps_[i]);
+        ffree(this->data_[i]);
+    }
+}
+
+void gltf_frame_sample(gltf_frame* frame, gltf_frame_channel channel, gltf_ms time_pt, T* dst)
+{
+    switch (channel)
+    {
+        case GLTF_T:
+        {
+        }
+        case GLTF_R:
+        {
+        }
+        case GLTF_S:
+        {
+        }
+        break;
+    }
+}
