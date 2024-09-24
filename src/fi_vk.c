@@ -80,8 +80,8 @@ IMPL_OBJ_NEW(vk_ctx, uint32_t width, uint32_t height, bool full_screen)
     feature12.storageBuffer8BitAccess = true;
     feature12.shaderFloat16 = true;
     feature12.uniformAndStorageBuffer8BitAccess = true;
-    feature12.descriptorIndexing = true;
     feature12.runtimeDescriptorArray = true;
+    feature12.descriptorIndexing = true;
     feature12.descriptorBindingVariableDescriptorCount = true;
     feature12.descriptorBindingPartiallyBound = true;
     feature12.descriptorBindingSampledImageUpdateAfterBind = true;
