@@ -24,6 +24,16 @@ T* render_thr_func(T* arg)
     vk_ctx* ctx = ctx_combo->ctx_;
     atomic_bool* rendering = &ctx_combo->rendering_;
 
+    vk_desc_pool desc_pool = {};
+    vk_desc_pool_add_desc_count(&desc_pool, VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER, 40);
+    vk_desc_pool_create(&desc_pool, ctx, 10);
+
+    vk_desc_set_base sss = {};
+    sss.limit_ = 10;
+    sss.type_ = VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER;
+    vk_desc_set_base_create_layout(&sss, ctx);
+    VkDescriptorSet set = vk_desc_set_base_alloc_set(&sss, ctx, desc_pool.pool_, 1);
+
     vk_swapchain* sc = new (vk_swapchain, ctx);
     gltf_file* sparta = new (gltf_file, "res/models/sparta.glb");
     gltf_desc* sparta_desc = new (gltf_desc, sparta);

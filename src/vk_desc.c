@@ -1,9 +1,10 @@
 #include "vk_desc.h"
 
-VkResult vk_desc_set_allocate(vk_desc_set* this, vk_ctx* ctx, VkDescriptorPool pool)
+VkResult vk_desc_set_base_create_layout(vk_desc_set_base* this, vk_ctx* ctx)
 {
     VkDescriptorSetLayoutBinding binding = {};
     binding.binding = 0;
+    binding.descriptorCount = this->limit_;
     binding.stageFlags = VK_SHADER_STAGE_ALL;
     binding.descriptorType = this->type_;
 
@@ -20,12 +21,16 @@ VkResult vk_desc_set_allocate(vk_desc_set* this, vk_ctx* ctx, VkDescriptorPool p
     set_layout_info_.flags = VK_DESCRIPTOR_SET_LAYOUT_CREATE_UPDATE_AFTER_BIND_POOL_BIT;
     set_layout_info_.bindingCount = 1;
     set_layout_info_.pBindings = &binding;
-    vkCreateDescriptorSetLayout(ctx->device_, &set_layout_info_, nullptr, &this->layout_);
 
+    return vkCreateDescriptorSetLayout(ctx->device_, &set_layout_info_, nullptr, &this->layout_);
+}
+
+VkDescriptorSet vk_desc_set_base_alloc_set(vk_desc_set_base* this, vk_ctx* ctx, VkDescriptorPool pool, uint32_t desc_count)
+{
     VkDescriptorSetVariableDescriptorCountAllocateInfo count_info = {
         VK_STRUCTURE_TYPE_DESCRIPTOR_SET_VARIABLE_DESCRIPTOR_COUNT_ALLOCATE_INFO};
     count_info.descriptorSetCount = 1;
-    count_info.pDescriptorCounts = &this->limit_;
+    count_info.pDescriptorCounts = &desc_count;
 
     VkDescriptorSetAllocateInfo alloc_info = {VK_STRUCTURE_TYPE_DESCRIPTOR_SET_ALLOCATE_INFO};
     alloc_info.pNext = &count_info;
@@ -33,18 +38,24 @@ VkResult vk_desc_set_allocate(vk_desc_set* this, vk_ctx* ctx, VkDescriptorPool p
     alloc_info.descriptorSetCount = 1;
     alloc_info.pSetLayouts = &this->layout_;
 
-    return vkAllocateDescriptorSets(ctx->device_, &alloc_info, &this->set_);
+    VkDescriptorSet set = {};
+    vkAllocateDescriptorSets(ctx->device_, &alloc_info, &set);
+    return set;
 }
 
-void vk_desc_set_free_layout(vk_desc_set* this, vk_ctx* ctx)
+void vk_desc_pool_add_desc_count(vk_desc_pool* this, VkDescriptorType type, uint32_t size)
 {
-    vkDestroyDescriptorSetLayout(ctx->device_, this->layout_, nullptr);
-    this->layout_ = nullptr;
+    this->sizes_[this->size_count_].type = type;
+    this->sizes_[this->size_count_].descriptorCount = size;
+    this->size_count_++;
 }
 
-VkResult vk_desc_set_free(vk_desc_set* this, vk_ctx* ctx, VkDescriptorPool pool)
+VkResult vk_desc_pool_create(vk_desc_pool* this, vk_ctx* ctx, uint32_t set_limit)
 {
-    VkDescriptorSet set = this->set_;
-    this->set_ = nullptr;
-    return vkFreeDescriptorSets(ctx->device_, pool, 1, &set);
+    VkDescriptorPoolCreateInfo cinfo = {VK_STRUCTURE_TYPE_DESCRIPTOR_POOL_CREATE_INFO};
+    cinfo.poolSizeCount = this->size_count_;
+    cinfo.pPoolSizes = this->sizes_;
+    cinfo.maxSets = set_limit;
+    cinfo.flags = VK_DESCRIPTOR_POOL_CREATE_UPDATE_AFTER_BIND_BIT;
+    return vkCreateDescriptorPool(ctx->device_, &cinfo, nullptr, &this->pool_);
 }
