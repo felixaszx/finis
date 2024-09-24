@@ -64,15 +64,6 @@ T* render_thr_func(T* arg)
     vk_mesh_add_prim_attrib(mesh, prim, TANGENT, sparta->prims_[0].tangent_, sparta->prims_[0].vtx_count_);
     vk_mesh_alloc_device_mem(mesh, cmd_pool);
 
-    VkImageSubresource subres = {};
-    subres.arrayLayer = 1;
-    subres.aspectMask = VK_IMAGE_ASPECT_COLOR_BIT;
-    subres.mipLevel = sparta->texs_[0].levels_;
-    VkExtent3D ext = gltf_tex_extent(sparta->texs_);
-    vk_tex_arr* tex_arr = new (vk_tex_arr, ctx, 100, 10);
-    vk_tex_arr_add_sampler(tex_arr, sparta->sampler_cinfos_);
-    vk_tex_arr_add_tex(tex_arr, cmd_pool, 0, sparta->texs_[0].data_, gltf_tex_size(sparta->texs_), &ext, &subres);
-
     vk_mesh_desc* mesh_desc = new (vk_mesh_desc, ctx, sparta_desc->node_count_);
     memcpy(mesh_desc->nodes_, sparta_desc->nodes_, mesh_desc->node_count_ * sizeof(*mesh_desc->nodes_));
     vk_mesh_desc_alloc_device_mem(mesh_desc);
@@ -214,7 +205,6 @@ T* render_thr_func(T* arg)
     delete (gltf_file, sparta);
     delete (gltf_desc, sparta_desc);
     delete (vk_swapchain, sc);
-    delete (vk_tex_arr, tex_arr);
     return nullptr;
 }
 
