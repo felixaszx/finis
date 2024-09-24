@@ -44,6 +44,7 @@ bool vk_ctx_update(vk_ctx* ctx);
 
 typedef struct vk_swapchain
 {
+    bool vsync_;
     vk_ctx* ctx_;
     VkSwapchainKHR swapchain_;
     uint32_t image_count_;

@@ -282,7 +282,7 @@ bool vk_swapchain_recreate(vk_swapchain* this, VkCommandPool cmd_pool)
                                  VK_IMAGE_USAGE_TRANSFER_SRC_BIT;
     swapchain_cinfo.preTransform = VK_SURFACE_TRANSFORM_IDENTITY_BIT_KHR;
     swapchain_cinfo.compositeAlpha = VK_COMPOSITE_ALPHA_OPAQUE_BIT_KHR;
-    swapchain_cinfo.presentMode = VK_PRESENT_MODE_FIFO_KHR;
+    swapchain_cinfo.presentMode = this->vsync_ ? VK_PRESENT_MODE_FIFO_KHR : VK_PRESENT_MODE_IMMEDIATE_KHR;
     swapchain_cinfo.clipped = true;
     swapchain_cinfo.oldSwapchain = nullptr;
     vkCreateSwapchainKHR(this->ctx_->device_, &swapchain_cinfo, nullptr, &this->swapchain_);
