@@ -412,19 +412,23 @@ VkExtent3D gltf_tex_extent(gltf_tex* this)
     return (VkExtent3D){this->width_, this->height_, 1};
 }
 
-IMPL_OBJ_NEW(gltf_frame, size_t t_count, size_t r_count, size_t s_count)
+IMPL_OBJ_NEW(gltf_frame, size_t t_count, size_t r_count, size_t s_count, size_t w_count, size_t w_per_morph)
 {
+    this->w_per_morph_ = w_per_morph;
     this->step_count_[GLTF_T] = t_count;
     this->step_count_[GLTF_R] = r_count;
     this->step_count_[GLTF_S] = s_count;
+    this->step_count_[GLTF_W] = w_count;
 
     this->data_[GLTF_T] = t_count ? alloc(vec3, t_count) : nullptr;
     this->data_[GLTF_R] = r_count ? alloc(quat, r_count) : nullptr;
     this->data_[GLTF_S] = s_count ? alloc(vec3, s_count) : nullptr;
+    this->data_[GLTF_W] = w_count ? alloc(float, w_per_morph* w_count) : nullptr;
 
     this->time_stamps_[GLTF_T] = t_count ? alloc(gltf_ms, t_count) : nullptr;
     this->time_stamps_[GLTF_R] = r_count ? alloc(gltf_ms, r_count) : nullptr;
     this->time_stamps_[GLTF_S] = s_count ? alloc(gltf_ms, s_count) : nullptr;
+    this->time_stamps_[GLTF_W] = w_count ? alloc(gltf_ms, w_count) : nullptr;
     return this;
 }
 
@@ -465,6 +469,7 @@ void gltf_frame_sample(gltf_frame* this, gltf_frame_channel channel, gltf_ms tim
     const gltf_ms* time_left = bsearch(&clamped, this->time_stamps_[channel], this->step_count_[channel], //
                                        sizeof(gltf_ms), cmp_gltf_ms);
     const gltf_ms* time_right = time_left + 1;
+    float t = (float)(clamped - *time_left) / (float)(time_right - time_left);
     size_t left_idx = time_left - this->time_stamps_[clamped];
 
     switch (channel)
@@ -473,22 +478,23 @@ void gltf_frame_sample(gltf_frame* this, gltf_frame_channel channel, gltf_ms tim
         case GLTF_T:
         {
             vec3* data_left = ((vec3*)this->data_[channel]) + left_idx;
-            glm_vec3_lerp(*data_left, *(data_left + 1),                                    //
-                          (float)(clamped - *time_left) / (float)(time_right - time_left), //
-                          dst);
+            glm_vec3_lerp(*data_left, *(data_left + 1), t, dst);
             return;
         }
         case GLTF_R:
         {
             quat* data_left = ((quat*)this->data_[channel]) + left_idx;
-            glm_quat_lerpc(*data_left, *(data_left + 1),                                    //
-                           (float)(clamped - *time_left) / (float)(time_right - time_left), //
-                           dst);
+            glm_quat_lerpc(*data_left, *(data_left + 1), t, dst);
             return;
         }
         case GLTF_W:
         {
-            float*data_left;
+            float* data_left = ((float*)this->data_[channel]) + (left_idx * this->w_per_morph_);
+            for (size_t i = 0; i < this->w_per_morph_; i++)
+            {
+                ((float*)dst)[i] = glm_lerp(data_left[i], data_left[i + this->w_per_morph_], t);
+            }
+            return;
         }
     }
 }

@@ -77,7 +77,7 @@ typedef struct gltf_desc
 
 DEFINE_OBJ(gltf_desc, gltf_file* file);
 
-#define GLTF_FRAME_CHANNEL_COUNT 3
+#define GLTF_FRAME_CHANNEL_COUNT 4
 typedef enum gltf_frame_channel
 {
     GLTF_T,
@@ -95,10 +95,10 @@ typedef struct gltf_frame
     T* data_[GLTF_FRAME_CHANNEL_COUNT]; // casted before interporlation
 
     // extra
-    size_t w_per_morph;
+    size_t w_per_morph_;
 } gltf_frame;
 
-DEFINE_OBJ(gltf_frame, size_t t_count, size_t r_count, size_t s_count, size_t w_count);
+DEFINE_OBJ(gltf_frame, size_t t_count, size_t r_count, size_t s_count, size_t w_count, size_t w_per_morph);
 // linear only
 void gltf_frame_sample(gltf_frame* this, gltf_frame_channel channel, gltf_ms time_pt, T* dst);
 
