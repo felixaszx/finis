@@ -143,6 +143,9 @@ T* render_thr_func(T* arg)
     rendering_info.renderArea.extent.height = HEIGHT;
     rendering_info.layerCount = 1;
 
+    delete (gltf_file, sparta);
+    delete (gltf_desc, sparta_desc);
+
     clock_t start = clock();
     while (atomic_load_explicit(rendering, memory_order_relaxed))
     {
@@ -207,8 +210,6 @@ T* render_thr_func(T* arg)
     delete (vk_gfx_pl_desc, pl_desc);
     delete (vk_mesh, mesh);
     delete (vk_mesh_desc, mesh_desc);
-    delete (gltf_file, sparta);
-    delete (gltf_desc, sparta_desc);
     delete (vk_swapchain, sc);
     return nullptr;
 }
