@@ -414,6 +414,17 @@ VkExtent3D gltf_tex_extent(gltf_tex* this)
 
 IMPL_OBJ_NEW(gltf_frame, size_t t_count, size_t r_count, size_t s_count)
 {
+    this->step_count_[GLTF_T] = t_count;
+    this->step_count_[GLTF_R] = r_count;
+    this->step_count_[GLTF_S] = s_count;
+
+    this->data_[GLTF_T] = t_count ? alloc(vec3, t_count) : nullptr;
+    this->data_[GLTF_R] = r_count ? alloc(quat, r_count) : nullptr;
+    this->data_[GLTF_S] = s_count ? alloc(vec3, s_count) : nullptr;
+
+    this->time_stamps_[GLTF_T] = t_count ? alloc(gltf_ms, t_count) : nullptr;
+    this->time_stamps_[GLTF_R] = r_count ? alloc(gltf_ms, r_count) : nullptr;
+    this->time_stamps_[GLTF_S] = s_count ? alloc(gltf_ms, s_count) : nullptr;
     return this;
 }
 
@@ -421,24 +432,59 @@ IMPL_OBJ_DELETE(gltf_frame)
 {
     for (size_t i = 0; i < GLTF_FRAME_CHANNEL_COUNT; i++)
     {
-        ffree(this->time_steps_[i]);
+        ffree(this->time_stamps_[i]);
         ffree(this->data_[i]);
     }
 }
 
-void gltf_frame_sample(gltf_frame* frame, gltf_frame_channel channel, gltf_ms time_pt, T* dst)
+int cmp_gltf_ms(const void* x, const void* y)
 {
+    if (*(const gltf_ms*)x < *(const gltf_ms*)y)
+    {
+        return -1;
+    }
+    else if (*(const gltf_ms*)x > *(const gltf_ms*)y)
+    {
+        return 1;
+    }
+    else
+    {
+        return 0;
+    }
+}
+
+void gltf_frame_sample(gltf_frame* this, gltf_frame_channel channel, gltf_ms time_pt, T* dst)
+{
+    if (!this->time_stamps_[channel])
+    {
+        return;
+    }
+
+    gltf_ms clamped = this->time_stamps_[channel][this->step_count_[channel] - 1] - this->time_stamps_[channel][0];
+    clamped = this->time_stamps_[channel][0] + time_pt % clamped;
+    const gltf_ms* time_left = bsearch(&clamped, this->time_stamps_[channel], this->step_count_[channel], //
+                                       sizeof(gltf_ms), cmp_gltf_ms);
+    const gltf_ms* time_right = time_left + 1;
+    size_t left_idx = time_left - this->time_stamps_[clamped];
+
     switch (channel)
     {
+        case GLTF_S:
         case GLTF_T:
         {
+            vec3* data_left = ((vec3*)this->data_[channel]) + left_idx;
+            glm_vec3_lerp(*data_left, *(data_left + 1),                                    //
+                          (float)(clamped - *time_left) / (float)(time_right - time_left), //
+                          dst);
+            return;
         }
         case GLTF_R:
         {
+            quat* data_left = ((quat*)this->data_[channel]) + left_idx;
+            glm_quat_lerpc(*data_left, *(data_left + 1),                                    //
+                           (float)(clamped - *time_left) / (float)(time_right - time_left), //
+                           dst);
+            return;
         }
-        case GLTF_S:
-        {
-        }
-        break;
     }
 }
