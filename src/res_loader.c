@@ -486,5 +486,9 @@ void gltf_frame_sample(gltf_frame* this, gltf_frame_channel channel, gltf_ms tim
                            dst);
             return;
         }
+        case GLTF_W:
+        {
+            float*data_left;
+        }
     }
 }

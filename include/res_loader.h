@@ -82,7 +82,8 @@ typedef enum gltf_frame_channel
 {
     GLTF_T,
     GLTF_R,
-    GLTF_S
+    GLTF_S,
+    GLTF_W,
 } gltf_frame_channel;
 
 // time step in ms
@@ -92,9 +93,12 @@ typedef struct gltf_frame
     gltf_ms step_count_[GLTF_FRAME_CHANNEL_COUNT];
     gltf_ms* time_stamps_[GLTF_FRAME_CHANNEL_COUNT];
     T* data_[GLTF_FRAME_CHANNEL_COUNT]; // casted before interporlation
+
+    // extra
+    size_t w_per_morph;
 } gltf_frame;
 
-DEFINE_OBJ(gltf_frame, size_t t_count, size_t r_count, size_t s_count);
+DEFINE_OBJ(gltf_frame, size_t t_count, size_t r_count, size_t s_count, size_t w_count);
 // linear only
 void gltf_frame_sample(gltf_frame* this, gltf_frame_channel channel, gltf_ms time_pt, T* dst);
 
