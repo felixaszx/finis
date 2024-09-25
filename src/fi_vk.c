@@ -41,7 +41,7 @@ IMPL_OBJ_NEW(vk_ctx, uint32_t width, uint32_t height, bool full_screen)
     app_info.engineVersion = VK_MAKE_VERSION(1, 0, 0);
     app_info.apiVersion = VK_API_VERSION_1_3;
 
-    VkInstanceCreateInfo instance_create_info = {VK_STRUCTURE_TYPE_INSTANCE_CREATE_INFO};
+    VkInstanceCreateInfo instance_create_info = {.sType = VK_STRUCTURE_TYPE_INSTANCE_CREATE_INFO};
     instance_create_info.pApplicationInfo = &app_info;
     instance_create_info.ppEnabledExtensionNames = glfw_exts;
     instance_create_info.enabledExtensionCount = glfw_ext_count;
@@ -62,18 +62,18 @@ IMPL_OBJ_NEW(vk_ctx, uint32_t width, uint32_t height, bool full_screen)
 
     this->queue_idx_ = 0;
     float queue_priority = 1.0f;
-    VkDeviceQueueCreateInfo queue_info = {VK_STRUCTURE_TYPE_DEVICE_QUEUE_CREATE_INFO};
+    VkDeviceQueueCreateInfo queue_info = {.sType = VK_STRUCTURE_TYPE_DEVICE_QUEUE_CREATE_INFO};
     queue_info.queueFamilyIndex = 0;
     queue_info.queueCount = 1;
     queue_info.pQueuePriorities = &queue_priority;
 
-    VkPhysicalDeviceVulkan11Features feature11 = {VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_VULKAN_1_1_FEATURES};
+    VkPhysicalDeviceVulkan11Features feature11 = {.sType = VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_VULKAN_1_1_FEATURES};
     feature11.multiview = true;
     feature11.variablePointersStorageBuffer = true;
     feature11.uniformAndStorageBuffer16BitAccess = true;
     feature11.variablePointers = true;
     feature11.shaderDrawParameters = true;
-    VkPhysicalDeviceVulkan12Features feature12 = {VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_VULKAN_1_2_FEATURES};
+    VkPhysicalDeviceVulkan12Features feature12 = {.sType = VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_VULKAN_1_2_FEATURES};
     feature12.bufferDeviceAddress = true;
     feature12.scalarBlockLayout = true;
     feature12.shaderInt8 = true;
@@ -89,11 +89,11 @@ IMPL_OBJ_NEW(vk_ctx, uint32_t width, uint32_t height, bool full_screen)
     feature12.descriptorBindingStorageImageUpdateAfterBind = true;
     feature12.descriptorBindingStorageTexelBufferUpdateAfterBind = true;
     feature12.descriptorBindingUniformBufferUpdateAfterBind = true;
-    VkPhysicalDeviceVulkan13Features feature13 = {VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_VULKAN_1_3_FEATURES};
+    VkPhysicalDeviceVulkan13Features feature13 = {.sType = VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_VULKAN_1_3_FEATURES};
     feature13.dynamicRendering = true;
     feature13.synchronization2 = true;
 
-    VkPhysicalDeviceFeatures2 feature2 = {VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_FEATURES_2};
+    VkPhysicalDeviceFeatures2 feature2 = {.sType = VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_FEATURES_2};
     feature2.features.samplerAnisotropy = true;
     feature2.features.fillModeNonSolid = true;
     feature2.features.geometryShader = true;
@@ -107,7 +107,7 @@ IMPL_OBJ_NEW(vk_ctx, uint32_t width, uint32_t height, bool full_screen)
     feature12.pNext = &feature13;
 
     const char* device_ext_names[1] = {VK_KHR_SWAPCHAIN_EXTENSION_NAME};
-    VkDeviceCreateInfo device_create_info = {VK_STRUCTURE_TYPE_DEVICE_CREATE_INFO};
+    VkDeviceCreateInfo device_create_info = {.sType = VK_STRUCTURE_TYPE_DEVICE_CREATE_INFO};
     device_create_info.pNext = &feature2;
     device_create_info.pQueueCreateInfos = &queue_info;
     device_create_info.queueCreateInfoCount = 1;
@@ -118,7 +118,7 @@ IMPL_OBJ_NEW(vk_ctx, uint32_t width, uint32_t height, bool full_screen)
     vkGetDeviceQueue(this->device_, this->queue_idx_, 0, &this->queue_);
     volkLoadDevice(this->device_);
 
-    VkPipelineCacheCreateInfo pl_cache = {VK_STRUCTURE_TYPE_PIPELINE_CACHE_CREATE_INFO};
+    VkPipelineCacheCreateInfo pl_cache = {.sType = VK_STRUCTURE_TYPE_PIPELINE_CACHE_CREATE_INFO};
     vkCreatePipelineCache(this->device_, &pl_cache, nullptr, &this->pipeline_cache_);
 
     VmaVulkanFunctions vma_funcs = {};
@@ -185,14 +185,14 @@ IMPL_OBJ_NEW(vk_swapchain, vk_ctx* ctx)
     this->ctx_ = ctx;
     this->vsync_ = false;
 
-    VkFenceCreateInfo fence_cinfo = {VK_STRUCTURE_TYPE_FENCE_CREATE_INFO};
+    VkFenceCreateInfo fence_cinfo = {.sType = VK_STRUCTURE_TYPE_FENCE_CREATE_INFO};
     fence_cinfo.flags = 0;
     vkCreateFence(ctx->device_, &fence_cinfo, nullptr, &this->recreate_fence_);
 
     VkSurfaceCapabilitiesKHR capabilities = {};
     vkGetPhysicalDeviceSurfaceCapabilitiesKHR(ctx->physical_, ctx->surface_, &capabilities);
 
-    VkSwapchainCreateInfoKHR swapchain_cinfo = {VK_STRUCTURE_TYPE_SWAPCHAIN_CREATE_INFO_KHR};
+    VkSwapchainCreateInfoKHR swapchain_cinfo = {.sType = VK_STRUCTURE_TYPE_SWAPCHAIN_CREATE_INFO_KHR};
     swapchain_cinfo.surface = ctx->surface_;
     swapchain_cinfo.minImageCount = 3;
     swapchain_cinfo.imageFormat = VK_FORMAT_R8G8B8A8_SRGB;
@@ -214,22 +214,22 @@ IMPL_OBJ_NEW(vk_swapchain, vk_ctx* ctx)
     vkGetSwapchainImagesKHR(ctx->device_, this->swapchain_, &this->image_count_, this->images_);
 
     VkCommandPool cmd_pool = {};
-    VkCommandPoolCreateInfo pool_cinfo = {VK_STRUCTURE_TYPE_COMMAND_POOL_CREATE_INFO};
+    VkCommandPoolCreateInfo pool_cinfo = {.sType = VK_STRUCTURE_TYPE_COMMAND_POOL_CREATE_INFO};
     pool_cinfo.queueFamilyIndex = ctx->queue_idx_;
     vkCreateCommandPool(ctx->device_, &pool_cinfo, nullptr, &cmd_pool);
 
     VkCommandBuffer cmd = {};
-    VkCommandBufferAllocateInfo alloc_info = {VK_STRUCTURE_TYPE_COMMAND_BUFFER_ALLOCATE_INFO};
+    VkCommandBufferAllocateInfo alloc_info = {.sType = VK_STRUCTURE_TYPE_COMMAND_BUFFER_ALLOCATE_INFO};
     alloc_info.commandPool = cmd_pool;
     alloc_info.commandBufferCount = 1;
     vkAllocateCommandBuffers(ctx->device_, &alloc_info, &cmd);
 
-    VkCommandBufferBeginInfo begin = {VK_STRUCTURE_TYPE_COMMAND_BUFFER_BEGIN_INFO};
+    VkCommandBufferBeginInfo begin = {.sType = VK_STRUCTURE_TYPE_COMMAND_BUFFER_BEGIN_INFO};
     begin.flags = VK_COMMAND_BUFFER_USAGE_ONE_TIME_SUBMIT_BIT;
     vkBeginCommandBuffer(cmd, &begin);
     for (size_t i = 0; i < this->image_count_; i++)
     {
-        VkImageMemoryBarrier barrier = {VK_STRUCTURE_TYPE_IMAGE_MEMORY_BARRIER};
+        VkImageMemoryBarrier barrier = {.sType = VK_STRUCTURE_TYPE_IMAGE_MEMORY_BARRIER};
         barrier.image = this->images_[i];
         barrier.newLayout = VK_IMAGE_LAYOUT_PRESENT_SRC_KHR;
         barrier.subresourceRange.aspectMask = VK_IMAGE_ASPECT_COLOR_BIT;
@@ -242,7 +242,7 @@ IMPL_OBJ_NEW(vk_swapchain, vk_ctx* ctx)
     }
     vkEndCommandBuffer(cmd);
 
-    VkSubmitInfo submit = {VK_STRUCTURE_TYPE_SUBMIT_INFO};
+    VkSubmitInfo submit = {.sType = VK_STRUCTURE_TYPE_SUBMIT_INFO};
     submit.commandBufferCount = 1;
     submit.pCommandBuffers = &cmd;
     vkQueueSubmit(ctx->queue_, 1, &submit, this->recreate_fence_);
@@ -271,7 +271,7 @@ bool vk_swapchain_recreate(vk_swapchain* this, VkCommandPool cmd_pool)
     }
 
     vkDestroySwapchainKHR(this->ctx_->device_, this->swapchain_, nullptr);
-    VkSwapchainCreateInfoKHR swapchain_cinfo = {VK_STRUCTURE_TYPE_SWAPCHAIN_CREATE_INFO_KHR};
+    VkSwapchainCreateInfoKHR swapchain_cinfo = {.sType = VK_STRUCTURE_TYPE_SWAPCHAIN_CREATE_INFO_KHR};
     swapchain_cinfo.surface = this->ctx_->surface_;
     swapchain_cinfo.minImageCount = this->image_count_;
     swapchain_cinfo.imageFormat = VK_FORMAT_R8G8B8A8_SRGB;
@@ -290,17 +290,17 @@ bool vk_swapchain_recreate(vk_swapchain* this, VkCommandPool cmd_pool)
     vkGetSwapchainImagesKHR(this->ctx_->device_, this->swapchain_, &this->image_count_, this->images_);
 
     VkCommandBuffer cmd = {};
-    VkCommandBufferAllocateInfo alloc_info = {VK_STRUCTURE_TYPE_COMMAND_BUFFER_ALLOCATE_INFO};
+    VkCommandBufferAllocateInfo alloc_info = {.sType = VK_STRUCTURE_TYPE_COMMAND_BUFFER_ALLOCATE_INFO};
     alloc_info.commandPool = cmd_pool;
     alloc_info.commandBufferCount = 1;
     vkAllocateCommandBuffers(this->ctx_->device_, &alloc_info, &cmd);
 
-    VkCommandBufferBeginInfo begin = {VK_STRUCTURE_TYPE_COMMAND_BUFFER_BEGIN_INFO};
+    VkCommandBufferBeginInfo begin = {.sType = VK_STRUCTURE_TYPE_COMMAND_BUFFER_BEGIN_INFO};
     begin.flags = VK_COMMAND_BUFFER_USAGE_ONE_TIME_SUBMIT_BIT;
     vkBeginCommandBuffer(cmd, &begin);
     for (size_t i = 0; i < this->image_count_; i++)
     {
-        VkImageMemoryBarrier barrier = {VK_STRUCTURE_TYPE_IMAGE_MEMORY_BARRIER};
+        VkImageMemoryBarrier barrier = {.sType = VK_STRUCTURE_TYPE_IMAGE_MEMORY_BARRIER};
         barrier.image = this->images_[i];
         barrier.newLayout = VK_IMAGE_LAYOUT_PRESENT_SRC_KHR;
         barrier.subresourceRange.aspectMask = VK_IMAGE_ASPECT_COLOR_BIT;
@@ -313,7 +313,7 @@ bool vk_swapchain_recreate(vk_swapchain* this, VkCommandPool cmd_pool)
     }
     vkEndCommandBuffer(cmd);
 
-    VkSubmitInfo submit = {VK_STRUCTURE_TYPE_SUBMIT_INFO};
+    VkSubmitInfo submit = {.sType = VK_STRUCTURE_TYPE_SUBMIT_INFO};
     submit.commandBufferCount = 1;
     submit.pCommandBuffers = &cmd;
     vkQueueSubmit(this->ctx_->queue_, 1, &submit, this->recreate_fence_);
@@ -354,7 +354,7 @@ VkResult vk_swapchain_process(vk_swapchain* this,
         case VK_SUBOPTIMAL_KHR:
         {
             static const VkPipelineStageFlags stage = VK_PIPELINE_STAGE_BOTTOM_OF_PIPE_BIT;
-            VkSubmitInfo submit = {VK_STRUCTURE_TYPE_SUBMIT_INFO};
+            VkSubmitInfo submit = {.sType = VK_STRUCTURE_TYPE_SUBMIT_INFO};
             submit.waitSemaphoreCount = 1;
             submit.pWaitSemaphores = &signal;
             submit.pWaitDstStageMask = &stage;
@@ -376,7 +376,7 @@ VkResult vk_swapchain_process(vk_swapchain* this,
 
 VkSemaphoreSubmitInfo vk_get_sem_info(VkSemaphore sem, VkPipelineStageFlags2 stage)
 {
-    VkSemaphoreSubmitInfo info = {VK_STRUCTURE_TYPE_SEMAPHORE_SUBMIT_INFO};
+    VkSemaphoreSubmitInfo info = {.sType = VK_STRUCTURE_TYPE_SEMAPHORE_SUBMIT_INFO};
     info.semaphore = sem;
     info.stageMask = stage;
     return info;

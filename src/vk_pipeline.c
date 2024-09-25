@@ -17,7 +17,7 @@ IMPL_OBJ_NEW(vk_shader, vk_ctx* ctx, const char* file_path, VkShaderStageFlags s
     fread(spv, sizeof(*spv), size, f);
     fclose(f);
 
-    VkShaderModuleCreateInfo module_info = {VK_STRUCTURE_TYPE_SHADER_MODULE_CREATE_INFO};
+    VkShaderModuleCreateInfo module_info = {.sType = VK_STRUCTURE_TYPE_SHADER_MODULE_CREATE_INFO};
     module_info.codeSize = size;
     module_info.pCode = (uint32_t*)spv;
     vkCreateShaderModule(ctx->device_, &module_info, nullptr, &this->module_);

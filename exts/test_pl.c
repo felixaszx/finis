@@ -28,7 +28,7 @@ DLL_EXPORT VkPipelineLayout configurator(vk_ctx* ctx, vk_gfx_pl_desc* pl_desc)
     pl_desc->dynamic_state_.pDynamicStates = dynamic_states;
 
     VkPipelineLayout pl_layout = {};
-    VkPipelineLayoutCreateInfo layout_cinfo = {VK_STRUCTURE_TYPE_PIPELINE_LAYOUT_CREATE_INFO};
+    VkPipelineLayoutCreateInfo layout_cinfo = {.sType = VK_STRUCTURE_TYPE_PIPELINE_LAYOUT_CREATE_INFO};
     layout_cinfo.pushConstantRangeCount = pl_desc->push_range_count_;
     layout_cinfo.pPushConstantRanges = pl_desc->push_range_;
     layout_cinfo.setLayoutCount = pl_desc->set_layout_count_;

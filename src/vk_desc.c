@@ -9,14 +9,14 @@ VkResult vk_desc_set_base_create_layout(vk_desc_set_base* this, vk_ctx* ctx)
     binding.descriptorType = this->type_;
 
     VkDescriptorSetLayoutBindingFlagsCreateInfo flag_info //
-        = {VK_STRUCTURE_TYPE_DESCRIPTOR_SET_LAYOUT_BINDING_FLAGS_CREATE_INFO};
+        = {.sType = VK_STRUCTURE_TYPE_DESCRIPTOR_SET_LAYOUT_BINDING_FLAGS_CREATE_INFO};
     static const VkDescriptorBindingFlagsEXT flags = VK_DESCRIPTOR_BINDING_VARIABLE_DESCRIPTOR_COUNT_BIT |
                                                      VK_DESCRIPTOR_BINDING_PARTIALLY_BOUND_BIT |
                                                      VK_DESCRIPTOR_BINDING_UPDATE_AFTER_BIND_BIT;
     flag_info.bindingCount = 1;
     flag_info.pBindingFlags = &flags;
 
-    VkDescriptorSetLayoutCreateInfo set_layout_info_ = {VK_STRUCTURE_TYPE_DESCRIPTOR_SET_LAYOUT_CREATE_INFO};
+    VkDescriptorSetLayoutCreateInfo set_layout_info_ = {.sType = VK_STRUCTURE_TYPE_DESCRIPTOR_SET_LAYOUT_CREATE_INFO};
     set_layout_info_.pNext = &flag_info;
     set_layout_info_.flags = VK_DESCRIPTOR_SET_LAYOUT_CREATE_UPDATE_AFTER_BIND_POOL_BIT;
     set_layout_info_.bindingCount = 1;
@@ -32,7 +32,7 @@ VkDescriptorSet vk_desc_set_base_alloc_set(vk_desc_set_base* this, vk_ctx* ctx, 
     count_info.descriptorSetCount = 1;
     count_info.pDescriptorCounts = &desc_count;
 
-    VkDescriptorSetAllocateInfo alloc_info = {VK_STRUCTURE_TYPE_DESCRIPTOR_SET_ALLOCATE_INFO};
+    VkDescriptorSetAllocateInfo alloc_info = {.sType = VK_STRUCTURE_TYPE_DESCRIPTOR_SET_ALLOCATE_INFO};
     alloc_info.pNext = &count_info;
     alloc_info.descriptorPool = pool;
     alloc_info.descriptorSetCount = 1;
@@ -52,7 +52,7 @@ void vk_desc_pool_add_desc_count(vk_desc_pool* this, VkDescriptorType type, uint
 
 VkResult vk_desc_pool_create(vk_desc_pool* this, vk_ctx* ctx, uint32_t set_limit)
 {
-    VkDescriptorPoolCreateInfo cinfo = {VK_STRUCTURE_TYPE_DESCRIPTOR_POOL_CREATE_INFO};
+    VkDescriptorPoolCreateInfo cinfo = {.sType = VK_STRUCTURE_TYPE_DESCRIPTOR_POOL_CREATE_INFO};
     cinfo.poolSizeCount = this->size_count_;
     cinfo.pPoolSizes = this->sizes_;
     cinfo.maxSets = set_limit;

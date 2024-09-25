@@ -9,7 +9,7 @@ IMPL_OBJ_NEW(vk_mesh, vk_ctx* ctx, const char* name, VkDeviceSize mem_limit, uin
 
     this->prims_ = alloc(vk_prim, prim_limit);
     this->draw_calls_ = alloc(VkDrawIndirectCommand, prim_limit);
-    VkBufferCreateInfo buffer_info = {VK_STRUCTURE_TYPE_BUFFER_CREATE_INFO};
+    VkBufferCreateInfo buffer_info = {.sType = VK_STRUCTURE_TYPE_BUFFER_CREATE_INFO};
     buffer_info.size = mem_limit;
     buffer_info.usage = VK_BUFFER_USAGE_VERTEX_BUFFER_BIT | //
                         VK_BUFFER_USAGE_TRANSFER_SRC_BIT;
@@ -53,7 +53,7 @@ void vk_mesh_alloc_device_mem(vk_mesh* this, VkCommandPool pool)
         return;
     }
 
-    VkBufferCreateInfo buffer_info = {VK_STRUCTURE_TYPE_BUFFER_CREATE_INFO};
+    VkBufferCreateInfo buffer_info = {.sType = VK_STRUCTURE_TYPE_BUFFER_CREATE_INFO};
     buffer_info.size = this->mem_size_ + this->prim_count_ * (sizeof(*this->draw_calls_) + sizeof(*this->prims_));
     buffer_info.usage = VK_BUFFER_USAGE_STORAGE_BUFFER_BIT |        //
                         VK_BUFFER_USAGE_SHADER_DEVICE_ADDRESS_BIT | //
@@ -64,7 +64,7 @@ void vk_mesh_alloc_device_mem(vk_mesh* this, VkCommandPool pool)
 
     vmaCreateBuffer(this->ctx_->allocator_, &buffer_info, &alloc_info, &this->buffer_, &this->alloc_, nullptr);
 
-    VkBufferDeviceAddressInfo address_info = {VK_STRUCTURE_TYPE_BUFFER_DEVICE_ADDRESS_INFO};
+    VkBufferDeviceAddressInfo address_info = {.sType = VK_STRUCTURE_TYPE_BUFFER_DEVICE_ADDRESS_INFO};
     address_info.buffer = this->buffer_;
     this->address_ = vkGetBufferDeviceAddress(this->ctx_->device_, &address_info);
 
@@ -91,24 +91,24 @@ void vk_mesh_alloc_device_mem(vk_mesh* this, VkCommandPool pool)
     vmaFlushAllocation(this->ctx_->allocator_, this->staging_alloc_, 0, this->mem_size_);
 
     VkFence fence = {};
-    VkFenceCreateInfo fence_cinfo = {VK_STRUCTURE_TYPE_FENCE_CREATE_INFO};
+    VkFenceCreateInfo fence_cinfo = {.sType = VK_STRUCTURE_TYPE_FENCE_CREATE_INFO};
     vkCreateFence(this->ctx_->device_, &fence_cinfo, nullptr, &fence);
     vkResetFences(this->ctx_->device_, 1, &fence);
 
     VkCommandBuffer cmd = {};
-    VkCommandBufferAllocateInfo cmd_alloc = {VK_STRUCTURE_TYPE_COMMAND_BUFFER_ALLOCATE_INFO};
+    VkCommandBufferAllocateInfo cmd_alloc = {.sType = VK_STRUCTURE_TYPE_COMMAND_BUFFER_ALLOCATE_INFO};
     cmd_alloc.commandPool = pool;
     cmd_alloc.commandBufferCount = 1;
     vkAllocateCommandBuffers(this->ctx_->device_, &cmd_alloc, &cmd);
 
-    VkCommandBufferBeginInfo begin = {VK_STRUCTURE_TYPE_COMMAND_BUFFER_BEGIN_INFO};
+    VkCommandBufferBeginInfo begin = {.sType = VK_STRUCTURE_TYPE_COMMAND_BUFFER_BEGIN_INFO};
     begin.flags = VK_COMMAND_BUFFER_USAGE_ONE_TIME_SUBMIT_BIT;
     vkBeginCommandBuffer(cmd, &begin);
     VkBufferCopy region = {0, 0, this->mem_size_};
     vkCmdCopyBuffer(cmd, this->staging_, this->buffer_, 1, &region);
     vkEndCommandBuffer(cmd);
 
-    VkSubmitInfo submit = {VK_STRUCTURE_TYPE_SUBMIT_INFO};
+    VkSubmitInfo submit = {.sType = VK_STRUCTURE_TYPE_SUBMIT_INFO};
     submit.commandBufferCount = 1;
     submit.pCommandBuffers = &cmd;
     vkQueueSubmit(this->ctx_->queue_, 1, &submit, fence);
@@ -242,7 +242,7 @@ bool vk_tex_arr_add_tex(vk_tex_arr* this,
         return false;
     }
 
-    VkImageCreateInfo tex_info = {VK_STRUCTURE_TYPE_IMAGE_CREATE_INFO};
+    VkImageCreateInfo tex_info = {.sType = VK_STRUCTURE_TYPE_IMAGE_CREATE_INFO};
     tex_info.imageType = VK_IMAGE_TYPE_2D;
     tex_info.arrayLayers = sub_res->arrayLayer;
     tex_info.mipLevels = sub_res->mipLevel;
@@ -255,7 +255,7 @@ bool vk_tex_arr_add_tex(vk_tex_arr* this,
     vmaCreateImage(this->ctx_->allocator_, &tex_info, &alloc_info, //
                    this->texs_ + this->tex_count_, this->allocs_ + this->tex_count_, nullptr);
 
-    VkImageViewCreateInfo view_info = {VK_STRUCTURE_TYPE_IMAGE_VIEW_CREATE_INFO};
+    VkImageViewCreateInfo view_info = {.sType = VK_STRUCTURE_TYPE_IMAGE_VIEW_CREATE_INFO};
     view_info.viewType = VK_IMAGE_VIEW_TYPE_2D;
     view_info.image = this->texs_[this->tex_count_];
     view_info.format = tex_info.format;
@@ -264,7 +264,7 @@ bool vk_tex_arr_add_tex(vk_tex_arr* this,
     view_info.subresourceRange.levelCount = tex_info.mipLevels;
     vkCreateImageView(this->ctx_->device_, &view_info, nullptr, this->views_ + this->tex_count_);
 
-    VkBufferCreateInfo buffer_info = {VK_STRUCTURE_TYPE_BUFFER_CREATE_INFO};
+    VkBufferCreateInfo buffer_info = {.sType = VK_STRUCTURE_TYPE_BUFFER_CREATE_INFO};
     buffer_info.size = size;
     buffer_info.usage = VK_BUFFER_USAGE_TRANSFER_SRC_BIT | VK_BUFFER_USAGE_VERTEX_BUFFER_BIT;
     VmaAllocationInfo allocated = {};
@@ -279,17 +279,17 @@ bool vk_tex_arr_add_tex(vk_tex_arr* this,
 
     // manipulate the imageVkFence fence = {};
     VkFence fence = {};
-    VkFenceCreateInfo fence_cinfo = {VK_STRUCTURE_TYPE_FENCE_CREATE_INFO};
+    VkFenceCreateInfo fence_cinfo = {.sType = VK_STRUCTURE_TYPE_FENCE_CREATE_INFO};
     vkCreateFence(this->ctx_->device_, &fence_cinfo, nullptr, &fence);
     vkResetFences(this->ctx_->device_, 1, &fence);
 
     VkCommandBuffer cmd = {};
-    VkCommandBufferAllocateInfo cmd_alloc = {VK_STRUCTURE_TYPE_COMMAND_BUFFER_ALLOCATE_INFO};
+    VkCommandBufferAllocateInfo cmd_alloc = {.sType = VK_STRUCTURE_TYPE_COMMAND_BUFFER_ALLOCATE_INFO};
     cmd_alloc.commandPool = cmd_pool;
     cmd_alloc.commandBufferCount = 1;
     vkAllocateCommandBuffers(this->ctx_->device_, &cmd_alloc, &cmd);
 
-    VkImageMemoryBarrier barrier = {VK_STRUCTURE_TYPE_IMAGE_MEMORY_BARRIER};
+    VkImageMemoryBarrier barrier = {.sType = VK_STRUCTURE_TYPE_IMAGE_MEMORY_BARRIER};
     barrier.newLayout = VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL;
     barrier.srcQueueFamilyIndex = VK_QUEUE_FAMILY_IGNORED;
     barrier.dstQueueFamilyIndex = VK_QUEUE_FAMILY_IGNORED;
@@ -308,7 +308,7 @@ bool vk_tex_arr_add_tex(vk_tex_arr* this,
     region.imageSubresource.layerCount = 1;
     region.imageExtent = *extent;
 
-    VkCommandBufferBeginInfo begin = {VK_STRUCTURE_TYPE_COMMAND_BUFFER_BEGIN_INFO};
+    VkCommandBufferBeginInfo begin = {.sType = VK_STRUCTURE_TYPE_COMMAND_BUFFER_BEGIN_INFO};
     begin.flags = VK_COMMAND_BUFFER_USAGE_ONE_TIME_SUBMIT_BIT;
     vkBeginCommandBuffer(cmd, &begin);
     vkCmdPipelineBarrier(cmd, VK_PIPELINE_STAGE_TOP_OF_PIPE_BIT, VK_PIPELINE_STAGE_TRANSFER_BIT, //
@@ -366,7 +366,7 @@ bool vk_tex_arr_add_tex(vk_tex_arr* this,
                          0, 0, nullptr, 0, nullptr, 1, &barrier);
     vkEndCommandBuffer(cmd);
 
-    VkSubmitInfo submit = {VK_STRUCTURE_TYPE_SUBMIT_INFO};
+    VkSubmitInfo submit = {.sType = VK_STRUCTURE_TYPE_SUBMIT_INFO};
     submit.commandBufferCount = 1;
     submit.pCommandBuffers = &cmd;
     vkQueueSubmit(this->ctx_->queue_, 1, &submit, fence);
@@ -457,7 +457,7 @@ void vk_mesh_desc_update(vk_mesh_desc* this, mat4 root_trans)
 
 void vk_mesh_desc_alloc_device_mem(vk_mesh_desc* this)
 {
-    VkBufferCreateInfo buffer_info = {VK_STRUCTURE_TYPE_BUFFER_CREATE_INFO};
+    VkBufferCreateInfo buffer_info = {.sType = VK_STRUCTURE_TYPE_BUFFER_CREATE_INFO};
     buffer_info.size = this->node_count_ * sizeof(*this->output_);
     buffer_info.usage = VK_BUFFER_USAGE_STORAGE_BUFFER_BIT | //
                         VK_BUFFER_USAGE_SHADER_DEVICE_ADDRESS_BIT;
@@ -471,7 +471,7 @@ void vk_mesh_desc_alloc_device_mem(vk_mesh_desc* this)
     vmaCreateBuffer(this->ctx_->allocator_, &buffer_info, &alloc_info, &this->buffer_, &this->alloc_, &allocated);
     this->mapping_ = allocated.pMappedData;
 
-    VkBufferDeviceAddressInfo address_info = {VK_STRUCTURE_TYPE_BUFFER_DEVICE_ADDRESS_INFO};
+    VkBufferDeviceAddressInfo address_info = {.sType = VK_STRUCTURE_TYPE_BUFFER_DEVICE_ADDRESS_INFO};
     address_info.buffer = this->buffer_;
     this->address_ = vkGetBufferDeviceAddress(this->ctx_->device_, &address_info);
 }
@@ -506,7 +506,7 @@ void vk_mesh_skin_alloc_device_mem(vk_mesh_skin* this, VkCommandPool cmd_pool)
 {
     VkBuffer staging = {};
     VmaAllocation staging_alloc = {};
-    VkBufferCreateInfo buffer_info = {VK_STRUCTURE_TYPE_BUFFER_CREATE_INFO};
+    VkBufferCreateInfo buffer_info = {.sType = VK_STRUCTURE_TYPE_BUFFER_CREATE_INFO};
     buffer_info.size = this->joint_count_ * sizeof(*this->joints_);
     buffer_info.usage = VK_BUFFER_USAGE_VERTEX_BUFFER_BIT | //
                         VK_BUFFER_USAGE_TRANSFER_SRC_BIT;
@@ -528,29 +528,29 @@ void vk_mesh_skin_alloc_device_mem(vk_mesh_skin* this, VkCommandPool cmd_pool)
     alloc_info.requiredFlags = 0;
     vmaCreateBuffer(this->ctx_->allocator_, &buffer_info, &alloc_info, &this->buffer_, &this->alloc_, nullptr);
 
-    VkBufferDeviceAddressInfo address_info = {VK_STRUCTURE_TYPE_BUFFER_DEVICE_ADDRESS_INFO};
+    VkBufferDeviceAddressInfo address_info = {.sType = VK_STRUCTURE_TYPE_BUFFER_DEVICE_ADDRESS_INFO};
     address_info.buffer = this->buffer_;
     this->address_ = vkGetBufferDeviceAddress(this->ctx_->device_, &address_info);
 
     VkFence fence = {};
-    VkFenceCreateInfo fence_cinfo = {VK_STRUCTURE_TYPE_FENCE_CREATE_INFO};
+    VkFenceCreateInfo fence_cinfo = {.sType = VK_STRUCTURE_TYPE_FENCE_CREATE_INFO};
     vkCreateFence(this->ctx_->device_, &fence_cinfo, nullptr, &fence);
     vkResetFences(this->ctx_->device_, 1, &fence);
 
     VkCommandBuffer cmd = {};
-    VkCommandBufferAllocateInfo cmd_alloc = {VK_STRUCTURE_TYPE_COMMAND_BUFFER_ALLOCATE_INFO};
+    VkCommandBufferAllocateInfo cmd_alloc = {.sType = VK_STRUCTURE_TYPE_COMMAND_BUFFER_ALLOCATE_INFO};
     cmd_alloc.commandPool = cmd_pool;
     cmd_alloc.commandBufferCount = 1;
     vkAllocateCommandBuffers(this->ctx_->device_, &cmd_alloc, &cmd);
 
-    VkCommandBufferBeginInfo begin = {VK_STRUCTURE_TYPE_COMMAND_BUFFER_BEGIN_INFO};
+    VkCommandBufferBeginInfo begin = {.sType = VK_STRUCTURE_TYPE_COMMAND_BUFFER_BEGIN_INFO};
     begin.flags = VK_COMMAND_BUFFER_USAGE_ONE_TIME_SUBMIT_BIT;
     vkBeginCommandBuffer(cmd, &begin);
     VkBufferCopy region = {0, 0, buffer_info.size};
     vkCmdCopyBuffer(cmd, staging, this->buffer_, 1, &region);
     vkEndCommandBuffer(cmd);
 
-    VkSubmitInfo submit = {VK_STRUCTURE_TYPE_SUBMIT_INFO};
+    VkSubmitInfo submit = {.sType = VK_STRUCTURE_TYPE_SUBMIT_INFO};
     submit.commandBufferCount = 1;
     submit.pCommandBuffers = &cmd;
     vkQueueSubmit(this->ctx_->queue_, 1, &submit, fence);

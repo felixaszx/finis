@@ -29,26 +29,26 @@ T* render_thr_func(T* arg)
     gltf_desc* sparta_desc = new (gltf_desc, sparta);
 
     VkFence frame_fence = {};
-    VkFenceCreateInfo fence_cinfo = {VK_STRUCTURE_TYPE_FENCE_CREATE_INFO};
+    VkFenceCreateInfo fence_cinfo = {.sType = VK_STRUCTURE_TYPE_FENCE_CREATE_INFO};
     fence_cinfo.flags = VK_FENCE_CREATE_SIGNALED_BIT;
     vkCreateFence(ctx->device_, &fence_cinfo, nullptr, &frame_fence);
 
     VkSemaphore acquired = {};
     VkSemaphore submitted = {};
-    VkSemaphoreCreateInfo sem_cinfo = {VK_STRUCTURE_TYPE_SEMAPHORE_CREATE_INFO};
+    VkSemaphoreCreateInfo sem_cinfo = {.sType = VK_STRUCTURE_TYPE_SEMAPHORE_CREATE_INFO};
     vkCreateSemaphore(ctx->device_, &sem_cinfo, nullptr, &acquired);
     vkCreateSemaphore(ctx->device_, &sem_cinfo, nullptr, &submitted);
     VkSemaphoreSubmitInfo waits[1] = {vk_get_sem_info(acquired, VK_PIPELINE_STAGE_2_BOTTOM_OF_PIPE_BIT)};
     VkSemaphoreSubmitInfo signals[1] = {vk_get_sem_info(submitted, VK_PIPELINE_STAGE_2_BOTTOM_OF_PIPE_BIT)};
 
     VkCommandPool cmd_pool = {};
-    VkCommandPoolCreateInfo pool_cinfo = {VK_STRUCTURE_TYPE_COMMAND_POOL_CREATE_INFO};
+    VkCommandPoolCreateInfo pool_cinfo = {.sType = VK_STRUCTURE_TYPE_COMMAND_POOL_CREATE_INFO};
     pool_cinfo.flags = VK_COMMAND_POOL_CREATE_RESET_COMMAND_BUFFER_BIT;
     pool_cinfo.queueFamilyIndex = ctx->queue_idx_;
     vkCreateCommandPool(ctx->device_, &pool_cinfo, nullptr, &cmd_pool);
 
     VkCommandBuffer cmd = {};
-    VkCommandBufferAllocateInfo cmd_alloc = {VK_STRUCTURE_TYPE_COMMAND_BUFFER_ALLOCATE_INFO};
+    VkCommandBufferAllocateInfo cmd_alloc = {.sType = VK_STRUCTURE_TYPE_COMMAND_BUFFER_ALLOCATE_INFO};
     cmd_alloc.commandPool = cmd_pool;
     cmd_alloc.commandBufferCount = 1;
     vkAllocateCommandBuffers(ctx->device_, &cmd_alloc, &cmd);
@@ -85,7 +85,7 @@ T* render_thr_func(T* arg)
     VkImage atchm = {};
     VmaAllocation atchm_alloc = {};
     VkImageView atchm_view = {};
-    VkImageCreateInfo atchm_cinfo = {VK_STRUCTURE_TYPE_IMAGE_CREATE_INFO};
+    VkImageCreateInfo atchm_cinfo = {.sType = VK_STRUCTURE_TYPE_IMAGE_CREATE_INFO};
     atchm_cinfo.imageType = VK_IMAGE_TYPE_2D;
     atchm_cinfo.arrayLayers = 1;
     atchm_cinfo.mipLevels = 1;
@@ -98,7 +98,7 @@ T* render_thr_func(T* arg)
     vmaCreateImage(ctx->allocator_, &atchm_cinfo, &alloc_info, //
                    &atchm, &atchm_alloc, nullptr);
 
-    VkImageViewCreateInfo view_info = {VK_STRUCTURE_TYPE_IMAGE_VIEW_CREATE_INFO};
+    VkImageViewCreateInfo view_info = {.sType = VK_STRUCTURE_TYPE_IMAGE_VIEW_CREATE_INFO};
     view_info.viewType = VK_IMAGE_VIEW_TYPE_2D;
     view_info.image = atchm;
     view_info.format = atchm_cinfo.format;
@@ -107,7 +107,7 @@ T* render_thr_func(T* arg)
     view_info.subresourceRange.levelCount = atchm_cinfo.mipLevels;
     vkCreateImageView(ctx->device_, &view_info, nullptr, &atchm_view);
 
-    VkImageMemoryBarrier barrier = {VK_STRUCTURE_TYPE_IMAGE_MEMORY_BARRIER};
+    VkImageMemoryBarrier barrier = {.sType = VK_STRUCTURE_TYPE_IMAGE_MEMORY_BARRIER};
     barrier.newLayout = VK_IMAGE_LAYOUT_COLOR_ATTACHMENT_OPTIMAL;
     barrier.srcQueueFamilyIndex = VK_QUEUE_FAMILY_IGNORED;
     barrier.dstQueueFamilyIndex = VK_QUEUE_FAMILY_IGNORED;
@@ -119,24 +119,24 @@ T* render_thr_func(T* arg)
     barrier.subresourceRange.layerCount = atchm_cinfo.arrayLayers;
     barrier.dstAccessMask = VK_ACCESS_TRANSFER_WRITE_BIT;
 
-    VkCommandBufferBeginInfo begin = {VK_STRUCTURE_TYPE_COMMAND_BUFFER_BEGIN_INFO};
+    VkCommandBufferBeginInfo begin = {.sType = VK_STRUCTURE_TYPE_COMMAND_BUFFER_BEGIN_INFO};
     vkBeginCommandBuffer(cmd, &begin);
     vkCmdPipelineBarrier(cmd, VK_PIPELINE_STAGE_TOP_OF_PIPE_BIT, VK_PIPELINE_STAGE_TRANSFER_BIT, //
                          0, 0, nullptr, 0, nullptr, 1, &barrier);
     vkEndCommandBuffer(cmd);
-    VkSubmitInfo submit = {VK_STRUCTURE_TYPE_SUBMIT_INFO};
+    VkSubmitInfo submit = {.sType = VK_STRUCTURE_TYPE_SUBMIT_INFO};
     submit.commandBufferCount = 1;
     submit.pCommandBuffers = &cmd;
     vkResetFences(ctx->device_, 1, &frame_fence);
     vkQueueSubmit(ctx->queue_, 1, &submit, frame_fence);
 
-    VkRenderingAttachmentInfo atchm_info = {VK_STRUCTURE_TYPE_RENDERING_ATTACHMENT_INFO};
-    atchm_info.clearValue.color = (VkClearColorValue){0, 0, 0, 1};
+    VkRenderingAttachmentInfo atchm_info = {.sType = VK_STRUCTURE_TYPE_RENDERING_ATTACHMENT_INFO};
+    atchm_info.clearValue.color = (VkClearColorValue){{0, 0, 0, 1}};
     atchm_info.imageLayout = barrier.newLayout;
     atchm_info.imageView = atchm_view;
     atchm_info.loadOp = VK_ATTACHMENT_LOAD_OP_CLEAR;
     atchm_info.storeOp = VK_ATTACHMENT_STORE_OP_STORE;
-    VkRenderingInfo rendering_info = {VK_STRUCTURE_TYPE_RENDERING_INFO};
+    VkRenderingInfo rendering_info = {.sType = VK_STRUCTURE_TYPE_RENDERING_INFO};
     rendering_info.pColorAttachments = &atchm_info;
     rendering_info.colorAttachmentCount = 1;
     rendering_info.renderArea.extent.width = WIDTH;
@@ -178,16 +178,16 @@ T* render_thr_func(T* arg)
         vkCmdEndRendering(cmd);
         vkEndCommandBuffer(cmd);
 
-        VkSubmitInfo2 submit = {VK_STRUCTURE_TYPE_SUBMIT_INFO_2};
+        VkSubmitInfo2 submit = {.sType = VK_STRUCTURE_TYPE_SUBMIT_INFO_2};
         submit.waitSemaphoreInfoCount = 1;
         submit.pWaitSemaphoreInfos = waits;
         submit.signalSemaphoreInfoCount = 1;
         submit.pSignalSemaphoreInfos = signals;
         submit.commandBufferInfoCount = 1;
         submit.pCommandBufferInfos = cmd_submits;
-        VkResult result = vkQueueSubmit2(ctx->queue_, 1, &submit, frame_fence);
+        vkQueueSubmit2(ctx->queue_, 1, &submit, frame_fence);
 
-        VkPresentInfoKHR present_info = {VK_STRUCTURE_TYPE_PRESENT_INFO_KHR};
+        VkPresentInfoKHR present_info = {.sType = VK_STRUCTURE_TYPE_PRESENT_INFO_KHR};
         present_info.waitSemaphoreCount = 1;
         present_info.pWaitSemaphores = &submitted;
         present_info.swapchainCount = 1;
