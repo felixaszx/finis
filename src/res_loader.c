@@ -58,6 +58,7 @@ IMPL_OBJ_NEW(gltf_file, const char* file_path)
         cgltf_free(this->data_);
         this->data_ = nullptr;
         fprintf(stderr, "Fail to parse gltf file %s", file_path);
+        return this;
     }
     cgltf_load_buffers(&options, this->data_, file_path);
 
