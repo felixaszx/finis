@@ -58,11 +58,14 @@ T* render_thr_func(T* arg)
 
     vk_mesh* mesh = new (vk_mesh, ctx, "test_mesh", to_mb(10), 100);
     vk_prim* prim = vk_mesh_add_prim(mesh);
-    vk_mesh_add_prim_attrib(mesh, prim, INDEX, sparta->prims_[0].idx_, sparta->prims_[0].idx_count_);
-    vk_mesh_add_prim_attrib(mesh, prim, POSITION, sparta->prims_[0].position, sparta->prims_[0].vtx_count_);
-    vk_mesh_add_prim_attrib(mesh, prim, TEXCOORD, sparta->prims_[0].texcoord_, sparta->prims_[0].vtx_count_);
-    vk_mesh_add_prim_attrib(mesh, prim, NORMAL, sparta->prims_[0].normal_, sparta->prims_[0].vtx_count_);
-    vk_mesh_add_prim_attrib(mesh, prim, TANGENT, sparta->prims_[0].tangent_, sparta->prims_[0].vtx_count_);
+    vk_mesh_add_prim_attrib(mesh, prim, VK_PRIM_ATTRIB_INDEX, sparta->prims_[0].idx_, sparta->prims_[0].idx_count_);
+    vk_mesh_add_prim_attrib(mesh, prim, VK_PRIM_ATTRIB_POSITION, sparta->prims_[0].position,
+                            sparta->prims_[0].vtx_count_);
+    vk_mesh_add_prim_attrib(mesh, prim, VK_PRIM_ATTRIB_TEXCOORD, sparta->prims_[0].texcoord_,
+                            sparta->prims_[0].vtx_count_);
+    vk_mesh_add_prim_attrib(mesh, prim, VK_PRIM_ATTRIB_NORMAL, sparta->prims_[0].normal_, sparta->prims_[0].vtx_count_);
+    vk_mesh_add_prim_attrib(mesh, prim, VK_PRIM_ATTRIB_TANGENT, sparta->prims_[0].tangent_,
+                            sparta->prims_[0].vtx_count_);
     vk_mesh_alloc_device_mem(mesh, cmd_pool);
 
     vk_mesh_desc* mesh_desc = new (vk_mesh_desc, ctx, sparta_desc->node_count_);

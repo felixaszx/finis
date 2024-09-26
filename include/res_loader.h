@@ -80,10 +80,10 @@ DEFINE_OBJ(gltf_desc, gltf_file* file);
 #define GLTF_FRAME_CHANNEL_COUNT 4
 typedef enum gltf_frame_channel
 {
-    GLTF_T,
-    GLTF_R,
-    GLTF_S,
-    GLTF_W,
+    GLTF_FRAME_CHANNEL_T,
+    GLTF_FRAME_CHANNEL_R,
+    GLTF_FRAME_CHANNEL_S,
+    GLTF_FRAME_CHANNEL_W,
 } gltf_frame_channel;
 
 // time step in ms

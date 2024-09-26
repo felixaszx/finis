@@ -72,7 +72,7 @@ void vk_mesh_alloc_device_mem(vk_mesh* this, VkCommandPool pool)
     for (size_t p = 0; p < this->prim_count_; p++)
     {
         this->draw_calls_[p].instanceCount = 1;
-        this->draw_calls_[p].vertexCount = this->prims_[p].attrib_counts_[INDEX];
+        this->draw_calls_[p].vertexCount = this->prims_[p].attrib_counts_[VK_PRIM_ATTRIB_INDEX];
         memcpy(this->mapping_ + this->mem_size_, this->draw_calls_ + p, sizeof(*this->draw_calls_));
         this->mem_size_ += sizeof(*this->draw_calls_);
 

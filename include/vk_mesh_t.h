@@ -36,9 +36,9 @@ DEFINE_OBJ_DEFAULT(vk_material);
 #define VK_MORPH_ATTRIB_COUNT 3
 typedef enum vk_morph_attrib
 {
-    MORPH_POSITION,
-    MORPH_NORMAL,
-    MORPH_TANGENT
+    VK_MORPH_ATTRIB_POSITION,
+    VK_MORPH_ATTRIB_NORMAL,
+    VK_MORPH_ATTRIB_TANGENT
 } vk_morph_attrib;
 
 typedef struct vk_morph
@@ -52,17 +52,17 @@ size_t vk_morph_get_attrib_size(vk_morph* morph, vk_morph_attrib attrib_type);
 #define VK_PRIM_ATTRIB_COUNT 11
 typedef enum vk_prim_attrib
 {
-    INDEX,
-    POSITION,
-    NORMAL,
-    TANGENT,
-    TEXCOORD,
-    COLOR,
-    JOINTS,
-    WEIGHTS,
-    MATERIAL,
-    MORPH,
-    TRANSFORM,
+    VK_PRIM_ATTRIB_INDEX,
+    VK_PRIM_ATTRIB_POSITION,
+    VK_PRIM_ATTRIB_NORMAL,
+    VK_PRIM_ATTRIB_TANGENT,
+    VK_PRIM_ATTRIB_TEXCOORD,
+    VK_PRIM_ATTRIB_COLOR,
+    VK_PRIM_ATTRIB_JOINTS,
+    VK_PRIM_ATTRIB_WEIGHTS,
+    VK_PRIM_ATTRIB_MATERIAL,
+    VK_PRIM_ATTRIB_MORPH,
+    VK_PRIM_ATTRIB_TRANSFORM,
 } vk_prim_attrib;
 
 typedef struct vk_prim
