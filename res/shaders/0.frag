@@ -7,7 +7,10 @@
 
 #include "define.glslh"
 
-layout(location = 0) out vec4 COLOR;
+layout(location = 0) out vec4 POSITION;
+layout(location = 1) out vec4 NORMAL;
+layout(location = 2) out vec4 COLOR;
+layout(location = 3) out vec4 SPEC;
 
 void main()
 {

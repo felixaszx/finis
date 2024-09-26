@@ -49,10 +49,8 @@ PUSHED;
 
 void main()
 {
-    prim_combo prim = PUSHED.PRIM_COMBO_ARR.val_[gl_DrawID];
-    uint32_t idx = uint32_t_arr_t(prim.prim.attrib_address_[INDEX]).val_[gl_VertexIndex];
-    vec3 position = vec3_arr_t(prim.prim.attrib_address_[POSITION]).val_[idx];
+    vec3 vtxs[3] = {{0.5, 0.5, 0.5}, {-0.5, 0.5, 0.5}, {0.5, -0.5, 0.5}};
 
-    gl_Position.xyz = position;
+    gl_Position.xyz = vtxs[gl_VertexIndex];
     gl_Position.w = 1;
 }
