@@ -15,14 +15,11 @@ typedef struct vk_desc_pool
 void vk_desc_pool_add_desc_count(vk_desc_pool* this, VkDescriptorType type, uint32_t size);
 VkResult vk_desc_pool_create(vk_desc_pool* this, vk_ctx* ctx, uint32_t set_limit);
 
-// only variable size will be used in this system
-// only 1 binding will be used in this system
-// so each set will only have 1 type of dewcriptor
 typedef struct vk_desc_set_base
 {
-    uint32_t limit_;
-    VkDescriptorType type_;
-    VkDescriptorSetLayout layout_; // free externally
+    uint32_t binding_count_;
+    VkDescriptorSetLayoutBinding* bindings_; // the last one has variable descriptor set
+    VkDescriptorSetLayout layout_;           // free externally
 } vk_desc_set_base;
 
 VkResult vk_desc_set_base_create_layout(vk_desc_set_base* this, vk_ctx* ctx);
