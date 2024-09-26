@@ -230,9 +230,12 @@ void default_renderer_render(default_renderer* this, T* data)
         this->frame_draw_cb_(this, data);
     }
 
-    vkCmdDraw(this->main_cmd_, 3, 1, 0, 0);
-
     vkCmdEndRendering(this->main_cmd_);
+
+    if (this->frame_end_cb_)
+    {
+        this->frame_begin_cb_(this, data);
+    }
     vkEndCommandBuffer(this->main_cmd_);
 
     VkSubmitInfo2 submit = {.sType = VK_STRUCTURE_TYPE_SUBMIT_INFO_2};
@@ -243,11 +246,6 @@ void default_renderer_render(default_renderer* this, T* data)
     submit.commandBufferInfoCount = 1;
     submit.pCommandBufferInfos = this->cmd_submits_;
     vkQueueSubmit2(this->ctx_->queue_, 1, &submit, this->frame_fences_[0]);
-
-    if (this->frame_end_cb_)
-    {
-        this->frame_begin_cb_(this, data);
-    }
 }
 
 void default_renderer_wait_idle(default_renderer* this)
