@@ -25,7 +25,7 @@ T* render_thr_func(T* arg)
     atomic_bool* rendering = &ctx_combo->rendering_;
 
     vk_swapchain* sc = new (vk_swapchain, ctx);
-    gltf_file* sparta = new (gltf_file, "res/models/sparta.glb");
+    gltf_file* sparta = new (gltf_file, "./res/models/sparta.glb");
     gltf_desc* sparta_desc = new (gltf_desc, sparta);
 
     VkFence frame_fence = {};
@@ -73,7 +73,7 @@ T* render_thr_func(T* arg)
 
     VkPushConstantRange range = {};
     range.size = 16;
-    dll_handle test_pl_dll = dlopen("exts/dlls/test_pl.dll", RTLD_NOW);
+    dll_handle test_pl_dll = dlopen("./exts/dlls/test_pl.dll", RTLD_NOW);
     vk_gfx_pl_desc* pl_desc = new (vk_gfx_pl_desc, dlsym(test_pl_dll, "configurator"), dlsym(test_pl_dll, "cleaner"));
     pl_desc->push_range_ = &range;
     pl_desc->push_range_count_ = 1;
