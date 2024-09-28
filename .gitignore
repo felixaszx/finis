@@ -31,11 +31,8 @@ build/*.obj
 *.out
 *.app
 
-
 # folder
-exe/
-build/
-.cache/
-res/models/
 .vs/
-exts/dlls
+.cache/
+build/
+res/models/
