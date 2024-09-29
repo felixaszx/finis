@@ -1,4 +1,4 @@
-#include "renderer/default.h"
+#include "renderer/gbuffer.h"
 
 typedef enum default_renderer_atchm_usage
 {

@@ -2,8 +2,7 @@
 #define RENDERER_DEFAULT_H
 
 #include "fi_ext.h"
-#include "gfx/fi_vk.h"
-#include "gfx/vk_pipeline.h"
+#include "gfx/gfx.h"
 
 typedef struct default_renderer default_renderer;
 typedef void (*default_renderer_cb)(default_renderer* renderer, T* data);

@@ -1,6 +1,5 @@
 #include "fi_ext.h"
-#include "gfx/vk_pipeline.h"
-#include "gfx/vk_desc.h"
+#include "gfx/gfx.h"
 
 DLL_EXPORT VkPipelineLayout configurator(vk_ctx* ctx, vk_gfx_pl_desc* pl_desc)
 {
