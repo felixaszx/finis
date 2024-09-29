@@ -99,8 +99,7 @@ typedef struct gltf_frame
 } gltf_frame;
 
 DEFINE_OBJ(gltf_frame, size_t t_count, size_t r_count, size_t s_count, size_t w_count, size_t w_per_morph);
-// linear only
-void gltf_frame_sample(gltf_frame* this, gltf_frame_channel channel, gltf_ms time_pt, T* dst);
+void gltf_frame_sample(gltf_frame* this, gltf_frame_channel channel, gltf_ms time_pt, T* dst); // lerp only
 
 typedef struct gltf_anim
 {
