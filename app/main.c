@@ -7,14 +7,6 @@
 const uint32_t WIDTH = 800;
 const uint32_t HEIGHT = 600;
 
-typedef struct default_renderer_arg
-{
-    vk_swapchain* sc_;
-    VkSemaphore acquired_;
-    uint32_t image_idx_;
-} default_renderer_arg;
-
-
 typedef struct render_thr_arg
 {
     vk_ctx* ctx_;
@@ -28,30 +20,10 @@ T* render_thr_func(T* arg)
     vk_ctx* ctx = ctx_combo->ctx_;
     atomic_bool* rendering = &ctx_combo->rendering_;
 
-    vk_swapchain* sc = new (vk_swapchain, ctx);
-
-    VkSemaphore acquired = {};
-    VkSemaphoreCreateInfo sem_cinfo = {.sType = VK_STRUCTURE_TYPE_SEMAPHORE_CREATE_INFO};
-    vkCreateSemaphore(ctx->device_, &sem_cinfo, nullptr, &acquired);
-
-    default_renderer_arg rrr_args = {.sc_ = sc, .acquired_ = acquired};
-
     while (atomic_load_explicit(rendering, memory_order_relaxed))
     {
-
-        VkPresentInfoKHR present_info = {.sType = VK_STRUCTURE_TYPE_PRESENT_INFO_KHR};
-        present_info.waitSemaphoreCount = 1;
-        present_info.pWaitSemaphores = &acquired;
-        present_info.swapchainCount = 1;
-        present_info.pSwapchains = &sc->swapchain_;
-        present_info.pImageIndices = &rrr_args.image_idx_;
-        vkQueuePresentKHR(ctx->queue_, &present_info);
     }
 
-
-    vkDestroySemaphore(ctx->device_, acquired, nullptr);
-
-    delete (vk_swapchain, sc);
     return nullptr;
 }
 
