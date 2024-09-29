@@ -5,8 +5,8 @@
 #include <stb/stb_image.h>
 
 #include "fi_tool.h"
+#include "gltf.h"
 #include "vk_mesh_t.h"
-#include "third_party/gltf.h"
 
 typedef uint32_t uvec4[4];
 

@@ -101,7 +101,7 @@ IMPL_OBJ_NEW(default_renderer, vk_ctx* ctx, dll_handle ext_dll, VkExtent3D atchm
     for (size_t i = 0; i < 4; i++)
     {
         this->atchm_infos_[i] = (VkRenderingAttachmentInfo){.sType = VK_STRUCTURE_TYPE_RENDERING_ATTACHMENT_INFO};
-        this->atchm_infos_[i].clearValue.color = (VkClearColorValue){0, 0, 0, 1};
+        this->atchm_infos_[i].clearValue.color = (VkClearColorValue){{0, 0, 0, 1}};
         this->atchm_infos_[i].imageLayout = VK_IMAGE_LAYOUT_COLOR_ATTACHMENT_OPTIMAL;
         this->atchm_infos_[i].imageView = this->image_views_[i];
         this->atchm_infos_[i].loadOp = VK_ATTACHMENT_LOAD_OP_CLEAR;

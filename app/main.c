@@ -1,12 +1,12 @@
 #include <stdio.h>
 #include <stdlib.h>
 
-#include "fi_vk.h"
 #include "fi_ext.h"
-#include "vk_mesh.h"
-#include "vk_desc.h"
-#include "vk_pipeline.h"
-#include "res_loader.h"
+#include "gfx/res_loader.h"
+#include "gfx/fi_vk.h"
+#include "gfx/vk_mesh.h"
+#include "gfx/vk_desc.h"
+#include "gfx/vk_pipeline.h"
 
 #include "renderer/default.h"
 
