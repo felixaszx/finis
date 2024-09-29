@@ -15,6 +15,7 @@ foreach(SCRIPT_FILE ${DLLS})
     target_include_directories(${DLL_NAME} PUBLIC "${CMAKE_SOURCE_DIR}/include")
     target_link_libraries(${DLL_NAME} PUBLIC finis_gfx)
     target_link_libraries(${DLL_NAME} PUBLIC finis_common)
+    target_link_libraries(${DLL_NAME} PUBLIC finis_renderer)
 
     if(MSVC)
         target_compile_options(${DLL_NAME} PUBLIC /W4)

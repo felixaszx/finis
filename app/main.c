@@ -3,7 +3,6 @@
 
 #include "fi_ext.h"
 #include "gfx/gfx.h"
-#include "renderer/gbuffer.h"
 
 const uint32_t WIDTH = 800;
 const uint32_t HEIGHT = 600;
@@ -15,11 +14,6 @@ typedef struct default_renderer_arg
     uint32_t image_idx_;
 } default_renderer_arg;
 
-void process_sc(default_renderer* renderer, T* data)
-{
-    default_renderer_arg* args = data;
-    vk_swapchain_process(args->sc_, renderer->cmd_pool_, args->acquired_, nullptr, &args->image_idx_);
-}
 
 typedef struct render_thr_arg
 {
@@ -42,30 +36,21 @@ T* render_thr_func(T* arg)
 
     default_renderer_arg rrr_args = {.sc_ = sc, .acquired_ = acquired};
 
-    dll_handle default_pl_dll = dlopen("./exts/dlls/default_pl.dll", RTLD_NOW);
-    default_renderer* rrr = new (default_renderer, ctx, default_pl_dll, (VkExtent3D){WIDTH, HEIGHT, 1});
-    rrr->frame_begin_cb_ = process_sc;
-    rrr->sem_submits_[0] = vk_get_sem_info(acquired, VK_PIPELINE_STAGE_2_BOTTOM_OF_PIPE_BIT);
-    dlclose(default_pl_dll);
-
     while (atomic_load_explicit(rendering, memory_order_relaxed))
     {
-        default_renderer_render(rrr, &rrr_args);
 
         VkPresentInfoKHR present_info = {.sType = VK_STRUCTURE_TYPE_PRESENT_INFO_KHR};
         present_info.waitSemaphoreCount = 1;
-        present_info.pWaitSemaphores = &rrr->submitted_;
+        present_info.pWaitSemaphores = &acquired;
         present_info.swapchainCount = 1;
         present_info.pSwapchains = &sc->swapchain_;
         present_info.pImageIndices = &rrr_args.image_idx_;
         vkQueuePresentKHR(ctx->queue_, &present_info);
     }
 
-    default_renderer_wait_idle(rrr);
 
     vkDestroySemaphore(ctx->device_, acquired, nullptr);
 
-    delete (default_renderer, rrr);
     delete (vk_swapchain, sc);
     return nullptr;
 }
