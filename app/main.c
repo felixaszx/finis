@@ -54,6 +54,11 @@ T* render_thr_func(T* arg)
     gbuffer->sem_submits_[0] = vk_get_sem_info(acquired, VK_PIPELINE_STAGE_2_BOTTOM_OF_PIPE_BIT);
     dlclose(default_pl_dll);
 
+    gltf_file* sparta = new (gltf_file, "res/models/sparta.glb");
+    gltf_anim* sparta_anim = new (gltf_anim, sparta, 0);
+    delete (gltf_anim, sparta_anim);
+    delete (gltf_file, sparta);
+
     while (atomic_load_explicit(rendering, memory_order_relaxed))
     {
         gbuffer_renderer_render(gbuffer, &gbuffer_arg);

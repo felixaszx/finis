@@ -412,35 +412,6 @@ VkExtent3D gltf_tex_extent(gltf_tex* this)
     return (VkExtent3D){this->width_, this->height_, 1};
 }
 
-IMPL_OBJ_NEW(gltf_frame, size_t t_count, size_t r_count, size_t s_count, size_t w_count, size_t w_per_morph)
-{
-    this->w_per_morph_ = w_per_morph;
-    this->step_count_[GLTF_FRAME_CHANNEL_T] = t_count;
-    this->step_count_[GLTF_FRAME_CHANNEL_R] = r_count;
-    this->step_count_[GLTF_FRAME_CHANNEL_S] = s_count;
-    this->step_count_[GLTF_FRAME_CHANNEL_W] = w_count;
-
-    this->data_[GLTF_FRAME_CHANNEL_T] = t_count ? alloc(vec3, t_count) : nullptr;
-    this->data_[GLTF_FRAME_CHANNEL_R] = r_count ? alloc(quat, r_count) : nullptr;
-    this->data_[GLTF_FRAME_CHANNEL_S] = s_count ? alloc(vec3, s_count) : nullptr;
-    this->data_[GLTF_FRAME_CHANNEL_W] = w_count ? alloc(float, w_per_morph* w_count) : nullptr;
-
-    this->time_stamps_[GLTF_FRAME_CHANNEL_T] = t_count ? alloc(gltf_ms, t_count) : nullptr;
-    this->time_stamps_[GLTF_FRAME_CHANNEL_R] = r_count ? alloc(gltf_ms, r_count) : nullptr;
-    this->time_stamps_[GLTF_FRAME_CHANNEL_S] = s_count ? alloc(gltf_ms, s_count) : nullptr;
-    this->time_stamps_[GLTF_FRAME_CHANNEL_W] = w_count ? alloc(gltf_ms, w_count) : nullptr;
-    return this;
-}
-
-IMPL_OBJ_DELETE(gltf_frame)
-{
-    for (size_t i = 0; i < GLTF_FRAME_CHANNEL_COUNT; i++)
-    {
-        ffree(this->time_stamps_[i]);
-        ffree(this->data_[i]);
-    }
-}
-
 int cmp_gltf_ms(const void* x, const void* y)
 {
     if (*(const gltf_ms*)x < *(const gltf_ms*)y)
@@ -457,16 +428,16 @@ int cmp_gltf_ms(const void* x, const void* y)
     }
 }
 
-void gltf_frame_sample(gltf_frame* this, gltf_frame_channel channel, gltf_ms time_pt, T* dst)
+void gltf_frame_sample(gltf_key_frame* this, gltf_key_frame_channel channel, gltf_ms time_pt, T* dst)
 {
     if (!this->time_stamps_[channel])
     {
         return;
     }
 
-    gltf_ms clamped = this->time_stamps_[channel][this->step_count_[channel] - 1] - this->time_stamps_[channel][0];
+    gltf_ms clamped = this->time_stamps_[channel][this->stamp_count_[channel] - 1] - this->time_stamps_[channel][0];
     clamped = this->time_stamps_[channel][0] + time_pt % clamped;
-    const gltf_ms* time_left = bsearch(&clamped, this->time_stamps_[channel], this->step_count_[channel], //
+    const gltf_ms* time_left = bsearch(&clamped, this->time_stamps_[channel], this->stamp_count_[channel], //
                                        sizeof(gltf_ms), cmp_gltf_ms);
     const gltf_ms* time_right = time_left + 1;
     float t = (float)(clamped - *time_left) / (float)(time_right - time_left);
@@ -474,20 +445,20 @@ void gltf_frame_sample(gltf_frame* this, gltf_frame_channel channel, gltf_ms tim
 
     switch (channel)
     {
-        case GLTF_FRAME_CHANNEL_S:
-        case GLTF_FRAME_CHANNEL_T:
+        case GLTF_KEY_FRAME_CHANNEL_S:
+        case GLTF_KEY_FRAME_CHANNEL_T:
         {
             vec3* data_left = ((vec3*)this->data_[channel]) + left_idx;
             glm_vec3_lerp(*data_left, *(data_left + 1), t, dst);
             return;
         }
-        case GLTF_FRAME_CHANNEL_R:
+        case GLTF_KEY_FRAME_CHANNEL_R:
         {
             quat* data_left = ((quat*)this->data_[channel]) + left_idx;
             glm_quat_lerpc(*data_left, *(data_left + 1), t, dst);
             return;
         }
-        case GLTF_FRAME_CHANNEL_W:
+        case GLTF_KEY_FRAME_CHANNEL_W:
         {
             float* data_left = ((float*)this->data_[channel]) + (left_idx * this->w_per_morph_);
             for (size_t i = 0; i < this->w_per_morph_; i++)
@@ -497,4 +468,82 @@ void gltf_frame_sample(gltf_frame* this, gltf_frame_channel channel, gltf_ms tim
             return;
         }
     }
+}
+
+IMPL_OBJ_NEW(gltf_anim, gltf_file* file, uint32_t anim_idx)
+{
+    this->node_count_ = file->data_->nodes_count;
+    this->mapping_ = alloc(gltf_key_frame*, this->node_count_);
+    this->key_frames_ = alloc(gltf_key_frame, this->node_count_);
+    const cgltf_animation* anim = file->data_->animations + anim_idx;
+
+    uint32_t key_frame_count = 0;
+    for (size_t i = 0; i < anim->channels_count; i++)
+    {
+        cgltf_animation_channel* chan = anim->channels + i;
+        cgltf_animation_sampler* sampler = chan->sampler;
+        uint32_t node_idx = GET_IDX(chan->target_node, file->data_->nodes);
+
+        if (this->mapping_[node_idx] == nullptr)
+        {
+            this->mapping_[node_idx] = this->key_frames_ + key_frame_count;
+            key_frame_count++;
+        }
+
+        gltf_key_frame* key_frame = this->mapping_[node_idx];
+        key_frame->stamp_count_[chan->target_path - 1] = sampler->input->count;
+        key_frame->time_stamps_[chan->target_path - 1] = malloc(sizeof(gltf_ms) * sampler->input->count);
+        float* time_stamp_buffer = malloc(sampler->input->count * sizeof(float));
+        cgltf_accessor_unpack_floats(sampler->input, time_stamp_buffer, sampler->input->count);
+        for (size_t k = 0; k < sampler->input->count; k++)
+        {
+            key_frame->time_stamps_[chan->target_path - 1][k] = 1000 * time_stamp_buffer[k];
+        }
+        free(time_stamp_buffer);
+
+        switch (chan->target_path)
+        {
+            case cgltf_animation_path_type_translation:
+                key_frame->data_[GLTF_KEY_FRAME_CHANNEL_T] = malloc(sizeof(vec3) * sampler->output->count);
+                cgltf_accessor_unpack_floats(sampler->output, (float*)key_frame->data_[GLTF_KEY_FRAME_CHANNEL_T],
+                                             sampler->output->count * 3);
+                break;
+            case cgltf_animation_path_type_rotation:
+                key_frame->data_[GLTF_KEY_FRAME_CHANNEL_R] = malloc(sizeof(quat) * sampler->output->count);
+                cgltf_accessor_unpack_floats(sampler->output, (float*)key_frame->data_[GLTF_KEY_FRAME_CHANNEL_R],
+                                             sampler->output->count * 4);
+                break;
+            case cgltf_animation_path_type_scale:
+                key_frame->data_[GLTF_KEY_FRAME_CHANNEL_S] = malloc(sizeof(vec3) * sampler->output->count);
+                cgltf_accessor_unpack_floats(sampler->output, (float*)key_frame->data_[GLTF_KEY_FRAME_CHANNEL_S],
+                                             sampler->output->count * 3);
+                break;
+            case cgltf_animation_path_type_weights:
+                key_frame->w_per_morph_ = chan->target_node->weights_count //
+                                              ? chan->target_node->weights_count
+                                              : chan->target_node->mesh->weights_count;
+                key_frame->data_[GLTF_KEY_FRAME_CHANNEL_W] = malloc(sizeof(float) * sampler->output->count);
+                cgltf_accessor_unpack_floats(sampler->output, (float*)key_frame->data_[GLTF_KEY_FRAME_CHANNEL_W],
+                                             sampler->output->count * key_frame->w_per_morph_);
+                break;
+            default:
+                break;
+        }
+    }
+
+    return this;
+}
+
+IMPL_OBJ_DELETE(gltf_anim)
+{
+    for (uint32_t i = 0; i < this->node_count_; i++)
+    {
+        for (uint32_t c = 0; c < GLTF_FRAME_CHANNEL_COUNT; c++)
+        {
+            free(this->key_frames_[i].time_stamps_[c]);
+            free(this->key_frames_[i].data_[c]);
+        }
+    }
+    ffree(this->mapping_);
+    ffree(this->key_frames_);
 }

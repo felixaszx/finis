@@ -78,32 +78,35 @@ typedef struct gltf_desc
 DEFINE_OBJ(gltf_desc, gltf_file* file);
 
 #define GLTF_FRAME_CHANNEL_COUNT 4
-typedef enum gltf_frame_channel
+typedef enum gltf_key_frame_channel
 {
-    GLTF_FRAME_CHANNEL_T,
-    GLTF_FRAME_CHANNEL_R,
-    GLTF_FRAME_CHANNEL_S,
-    GLTF_FRAME_CHANNEL_W,
-} gltf_frame_channel;
+    GLTF_KEY_FRAME_CHANNEL_T,
+    GLTF_KEY_FRAME_CHANNEL_R,
+    GLTF_KEY_FRAME_CHANNEL_S,
+    GLTF_KEY_FRAME_CHANNEL_W,
+} gltf_key_frame_channel;
 
 // time step in ms
 typedef size_t gltf_ms;
-typedef struct gltf_frame
+typedef struct gltf_key_frame
 {
-    gltf_ms step_count_[GLTF_FRAME_CHANNEL_COUNT];
+    size_t stamp_count_[GLTF_FRAME_CHANNEL_COUNT];
     gltf_ms* time_stamps_[GLTF_FRAME_CHANNEL_COUNT];
     T* data_[GLTF_FRAME_CHANNEL_COUNT]; // casted before interporlation
 
     // extra
     size_t w_per_morph_;
-} gltf_frame;
+} gltf_key_frame;
 
-DEFINE_OBJ(gltf_frame, size_t t_count, size_t r_count, size_t s_count, size_t w_count, size_t w_per_morph);
-void gltf_frame_sample(gltf_frame* this, gltf_frame_channel channel, gltf_ms time_pt, T* dst); // lerp only
+void gltf_key_frame_sample(gltf_key_frame* this, gltf_key_frame_channel channel, gltf_ms time_pt, T* dst); // lerp only
 
 typedef struct gltf_anim
 {
-
+    uint32_t node_count_;
+    gltf_key_frame** mapping_;
+    gltf_key_frame* key_frames_;
 } gltf_anim;
+
+DEFINE_OBJ(gltf_anim, gltf_file* file, uint32_t anim_idx);
 
 #endif // INCLUDE_RES_LOADER_H
