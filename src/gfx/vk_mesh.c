@@ -138,6 +138,26 @@ vk_prim* vk_mesh_add_prim(vk_mesh* this)
     return this->prims_ + this->prim_count_ - 1;
 }
 
+VkDeviceSize vk_mesh_add_prim_transform(vk_mesh* this, vk_prim_transform* transform)
+{
+    if (!transform)
+    {
+        return -1;
+    }
+
+    if (this->mem_size_ + sizeof(vk_prim_transform) >= this->mem_limit_)
+    {
+        return -1;
+    }
+
+    size_t offset = this->mem_size_;
+    memcpy(this->mapping_ + this->mem_size_, transform, sizeof(vk_prim_transform));
+    this->mem_size_ += sizeof(vk_prim_transform);
+    this->padding_size_ += VK_MESH_PAD_MEMORY(this->mem_size_);
+    this->mem_size_ += VK_MESH_PAD_MEMORY(this->mem_size_);
+    return offset;
+}
+
 VkDeviceSize vk_mesh_add_prim_attrib(vk_mesh* this, vk_prim* prim, vk_prim_attrib attrib, T* data, size_t count)
 {
     if (!data)

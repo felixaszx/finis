@@ -62,7 +62,7 @@ typedef enum vk_prim_attrib
     VK_PRIM_ATTRIB_WEIGHTS,
     VK_PRIM_ATTRIB_MATERIAL,
     VK_PRIM_ATTRIB_MORPH,
-    VK_PRIM_ATTRIB_TRANSFORM,
+    VK_PRIM_ATTRIB_TRANSFORM, // Pointer
 } vk_prim_attrib;
 
 typedef struct vk_prim
@@ -78,6 +78,7 @@ typedef struct vk_prim_transform
     uint32_t node_idx_;
     uint32_t first_joint_;
     uint32_t target_count_;
+    uint32_t padding_;
 } vk_prim_transform;
 
 DEFINE_OBJ_DEFAULT(vk_prim_transform);

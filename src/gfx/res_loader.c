@@ -568,7 +568,22 @@ IMPL_OBJ_NEW(gltf_skin, gltf_file* file, gltf_desc* desc)
         for (size_t i = 0; i < skin->joints_count; i++)
         {
             this->joints_[joint_offset + i].joint_ = GET_IDX(skin->joints[i], file->data_->nodes);
-            // working in inv_bound matrices
+            cgltf_accessor_unpack_floats(skin->inverse_bind_matrices + i, this->joints_[joint_offset + i].inv_binding_,
+                                         16);
+        }
+    }
+
+    for (size_t i = 0; i < desc->node_count_; i++)
+    {
+        uint32_t skin_idx = GET_IDX(file->data_->nodes[i].skin, file->data_->skins);
+        if (skin_idx != -1)
+        {
+            if (file->data_->nodes[i].mesh)
+            {
+                vk_prim_transform* transform = desc->transform_ //
+                                               + GET_IDX(file->data_->nodes[i].mesh, file->data_->meshes);
+                transform->first_joint_ = this->skin_offsets_[skin_idx];
+            }
         }
     }
 
