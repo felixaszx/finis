@@ -571,6 +571,8 @@ IMPL_OBJ_NEW(gltf_skin, gltf_file* file, gltf_desc* desc)
             // working in inv_bound matrices
         }
     }
+
+    return this;
 }
 
 IMPL_OBJ_DELETE(gltf_skin)
