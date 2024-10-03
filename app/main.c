@@ -55,9 +55,9 @@ T* render_thr_func(T* arg)
     dlclose(default_pl_dll);
 
     gltf_file* sparta = new (gltf_file, "res/models/sparta.glb");
+    gltf_desc* sparta_desc = new (gltf_desc, sparta);
     gltf_anim* sparta_anim = new (gltf_anim, sparta, 0);
-    delete (gltf_anim, sparta_anim);
-    delete (gltf_file, sparta);
+    gltf_skin* sparta_skin = new (gltf_skin, sparta, sparta_desc);
 
     while (atomic_load_explicit(rendering, memory_order_relaxed))
     {
@@ -74,6 +74,11 @@ T* render_thr_func(T* arg)
     gbuffer_renderer_wait_idle(gbuffer);
 
     vkDestroySemaphore(ctx->device_, acquired, nullptr);
+
+    delete (gltf_skin, sparta_skin);
+    delete (gltf_desc, sparta_desc);
+    delete (gltf_anim, sparta_anim);
+    delete (gltf_file, sparta);
     delete (gbuffer_renderer, gbuffer);
     delete (vk_swapchain, sc);
     return nullptr;

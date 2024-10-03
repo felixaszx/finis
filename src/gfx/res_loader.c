@@ -364,6 +364,7 @@ IMPL_OBJ_NEW(gltf_desc, gltf_file* file)
             {
                 vk_prim_transform* transform = this->transform_ + GET_IDX(node_in->mesh, file->data_->meshes);
                 transform->node_idx_ = node_idx;
+                transform->first_joint_ = -1;
 
                 if (node_in->weights)
                 {
@@ -546,4 +547,34 @@ IMPL_OBJ_DELETE(gltf_anim)
     }
     ffree(this->mapping_);
     ffree(this->key_frames_);
+}
+
+IMPL_OBJ_NEW(gltf_skin, gltf_file* file, gltf_desc* desc)
+{
+    this->skin_count_ = file->data_->skins_count;
+    this->skin_offsets_ = alloc(uint32_t, this->skin_count_);
+
+    for (size_t s = 0; s < file->data_->skins_count; s++)
+    {
+        this->skin_offsets_[s] = this->joint_count_;
+        this->joint_count_ += file->data_->skins[s].joints_count;
+    }
+
+    this->joints_ = alloc(vk_mesh_joint, this->joint_count_);
+    for (size_t s = 0; s < file->data_->skins_count; s++)
+    {
+        size_t joint_offset = this->skin_offsets_[s];
+        cgltf_skin* skin = file->data_->skins + s;
+        for (size_t i = 0; i < skin->joints_count; i++)
+        {
+            this->joints_[joint_offset + i].joint_ = GET_IDX(skin->joints[i], file->data_->nodes);
+            // working in inv_bound matrices
+        }
+    }
+}
+
+IMPL_OBJ_DELETE(gltf_skin)
+{
+    ffree(this->skin_offsets_);
+    ffree(this->joints_);
 }

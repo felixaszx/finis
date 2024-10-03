@@ -89,7 +89,7 @@ void vk_mesh_desc_alloc_device_mem(vk_mesh_desc* this);
 
 typedef struct vk_mesh_joint
 {
-    uint32_t joint_;
+    uint32_t joint_; // node idx
     float inv_binding_[16];
 } vk_mesh_joint;
 

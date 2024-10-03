@@ -6,6 +6,7 @@
 
 #include "fi_tool.h"
 #include "gltf.h"
+#include "vk_mesh.h"
 #include "vk_mesh_t.h"
 
 typedef uint32_t uvec4[4];
@@ -108,5 +109,16 @@ typedef struct gltf_anim
 } gltf_anim;
 
 DEFINE_OBJ(gltf_anim, gltf_file* file, uint32_t anim_idx);
+
+typedef struct gltf_skin
+{
+    uint32_t skin_count_;
+    uint32_t* skin_offsets_;
+
+    uint32_t joint_count_;
+    vk_mesh_joint* joints_;
+} gltf_skin;
+
+DEFINE_OBJ(gltf_skin, gltf_file* file, gltf_desc* desc);
 
 #endif // INCLUDE_RES_LOADER_H
