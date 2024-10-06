@@ -7,7 +7,12 @@
 #include <cglm/quat.h>
 #include <volk.h>
 #include <GLFW/glfw3.h>
+
+#ifdef __linux__
+#include <vk_mem_alloc.h>
+#else
 #include <vma/vk_mem_alloc.h>
+#endif
 
 #include "../fi_tool.h"
 
