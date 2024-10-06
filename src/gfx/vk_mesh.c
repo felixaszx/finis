@@ -87,7 +87,7 @@ void vk_mesh_alloc_device_mem(vk_mesh* this, VkCommandPool pool)
         this->mem_size_ += sizeof(*this->prims_);
     }
 
-    // copy buffer`
+    // copy buffer
     vmaFlushAllocation(this->ctx_->allocator_, this->staging_alloc_, 0, this->mem_size_);
 
     VkFence fence = {};
