@@ -1,5 +1,4 @@
 #include "fi_vk.h"
-#include <volk.c>
 
 void resize_callback(GLFWwindow* win, int width, int height)
 {
@@ -35,7 +34,6 @@ IMPL_OBJ_NEW(vk_ctx, uint32_t width, uint32_t height, bool full_screen)
     uint32_t glfw_ext_count = 0;
     const char** glfw_exts = glfwGetRequiredInstanceExtensions(&glfw_ext_count);
 
-    volkInitialize();
     VkApplicationInfo app_info = {};
     app_info.applicationVersion = VK_MAKE_VERSION(1, 0, 0);
     app_info.engineVersion = VK_MAKE_VERSION(1, 0, 0);
@@ -46,7 +44,6 @@ IMPL_OBJ_NEW(vk_ctx, uint32_t width, uint32_t height, bool full_screen)
     instance_create_info.ppEnabledExtensionNames = glfw_exts;
     instance_create_info.enabledExtensionCount = glfw_ext_count;
     vkCreateInstance(&instance_create_info, nullptr, &this->instance_);
-    volkLoadInstance(this->instance_);
     glfwCreateWindowSurface(this->instance_, this->win_, nullptr, &this->surface_);
 
     uint32_t phy_d_count = 0;
@@ -116,7 +113,6 @@ IMPL_OBJ_NEW(vk_ctx, uint32_t width, uint32_t height, bool full_screen)
 
     vkCreateDevice(this->physical_, &device_create_info, nullptr, &this->device_);
     vkGetDeviceQueue(this->device_, this->queue_idx_, 0, &this->queue_);
-    volkLoadDevice(this->device_);
 
     VkPipelineCacheCreateInfo pl_cache = {.sType = VK_STRUCTURE_TYPE_PIPELINE_CACHE_CREATE_INFO};
     vkCreatePipelineCache(this->device_, &pl_cache, nullptr, &this->pipeline_cache_);
@@ -142,7 +138,7 @@ IMPL_OBJ_NEW(vk_ctx, uint32_t width, uint32_t height, bool full_screen)
     vma_funcs.vkGetBufferMemoryRequirements2KHR = vkGetBufferMemoryRequirements2;
     vma_funcs.vkGetImageMemoryRequirements2KHR = vkGetImageMemoryRequirements2;
     vma_funcs.vkBindBufferMemory2KHR = vkBindBufferMemory2;
-    vma_funcs.vkBindImageMemory2KHR = vkBindImageMemory2KHR;
+    vma_funcs.vkBindImageMemory2KHR = vkBindImageMemory2;
     vma_funcs.vkGetPhysicalDeviceMemoryProperties2KHR = vkGetPhysicalDeviceMemoryProperties2;
     vma_funcs.vkGetDeviceBufferMemoryRequirements = vkGetDeviceBufferMemoryRequirements;
     vma_funcs.vkGetDeviceImageMemoryRequirements = vkGetDeviceImageMemoryRequirements;

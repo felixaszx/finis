@@ -5,7 +5,7 @@ IMPL_OBJ_NEW(vk_mesh, vk_ctx* ctx, const char* name, VkDeviceSize mem_limit, uin
     this->ctx_ = ctx;
     this->mem_limit_ = mem_limit - prim_limit * (sizeof(*this->draw_calls_) + sizeof(*this->prims_));
     this->prim_limit_ = prim_limit;
-    strcpy_s(this->name_, sizeof(this->name_), name);
+    strncpy(this->name_, name, sizeof(this->name_));
 
     this->prims_ = alloc(vk_prim, prim_limit);
     this->draw_calls_ = alloc(VkDrawIndirectCommand, prim_limit);

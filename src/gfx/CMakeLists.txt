@@ -3,6 +3,8 @@ set(CMAKE_C_EXTENSIONS off)
 set(CMAKE_CXX_STANDARD 20)
 set(CMAKE_C_STANDARD 17)
 set(CMAKE_RUNTIME_OUTPUT_DIRECTORY "${CMAKE_SOURCE_DIR}")
+set(CMAKE_LIBRARY_OUTPUT_DIRECTORY "${CMAKE_SOURCE_DIR}")
+set(CMAKE_ARCHIVE_OUTPUT_DIRECTORY "${CMAKE_SOURCE_DIR}")
 
 file(GLOB_RECURSE SRC "*.c" "*.cpp")
 add_library(finis_gfx SHARED ${SRC})
@@ -11,6 +13,8 @@ target_include_directories(finis_gfx PRIVATE "${CMAKE_SOURCE_DIR}/include/gfx")
 
 find_package(PkgConfig REQUIRED)
 find_package(glfw3 REQUIRED)
+find_package(Vulkan REQUIRED)
 
 target_link_libraries(finis_gfx PUBLIC glfw)
+target_link_libraries(finis_gfx PUBLIC Vulkan::Vulkan)
 target_link_libraries(finis_gfx PUBLIC finis_common)

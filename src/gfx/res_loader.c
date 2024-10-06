@@ -163,7 +163,7 @@ IMPL_OBJ_NEW(gltf_file, const char* file_path)
 #define MAX(x, y) (x > y ? x : y)
             this->texs_[t].levels_ = floor(log2(MAX(this->texs_[t].width_, this->texs_[t].height_))) + 1;
         }
-        sprintf_s(this->texs_[t].name_, sizeof(this->texs_[t].name_), "%s__[i_%s]", tex->name, tex->image->name);
+        snprintf(this->texs_[t].name_, sizeof(this->texs_[t].name_), "%s__[i_%s]", tex->name, tex->image->name);
     }
 
     for (size_t m = 0; m < this->data_->meshes_count; m++)
@@ -181,7 +181,7 @@ IMPL_OBJ_NEW(gltf_file, const char* file_path)
         {
             cgltf_primitive* prim_in = mesh_in->primitives + pp;
             gltf_prim* prim = this->prims_ + p;
-            sprintf_s(prim->name_, sizeof(prim->name_), "%s__[%zu]", mesh_in->name, pp);
+            snprintf(prim->name_, sizeof(prim->name_), "%s__[%zu]", mesh_in->name, pp);
 
             for (size_t a = 0; a < prim_in->attributes_count; a++)
             {

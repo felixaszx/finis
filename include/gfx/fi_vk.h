@@ -1,12 +1,13 @@
 #ifndef INCLUDE_FI_VK_H
 #define INCLUDE_FI_VK_H
 
+#define GLFW_INCLUDE_VULKAN
 #define CGLM_FORCE_DEPTH_ZERO_TO_ONE
 #define CGLM_FORCE_LEFT_HANDED
 #include <cglm/cglm.h>
 #include <cglm/quat.h>
-#include <volk.h>
 #include <GLFW/glfw3.h>
+#include <vulkan/vulkan.h>
 
 #ifdef __linux__
 #include <vk_mem_alloc.h>

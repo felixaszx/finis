@@ -30,6 +30,7 @@ build/*.obj
 *.exe
 *.out
 *.app
+finis
 
 # folder
 .vs/

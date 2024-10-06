@@ -65,7 +65,7 @@ typedef unsigned char byte;
 typedef size_t byte_offset;
 typedef void T;
 
-struct timespec ms_sleep(size_t ms);
+void ms_sleep(size_t ms);
 
 static inline T* malloc_zero(size_t size)
 {
