@@ -16,7 +16,9 @@ IMPL_OBJ_NEW(vk_ctx, uint32_t width, uint32_t height, bool full_screen)
     this->height_ = height;
     sem_init(&this->resize_done_, 0, 0);
     sem_init(&this->recreate_done_, 0, 1);
-
+#ifdef __linux__
+    glfwInitHint(GLFW_PLATFORM, GLFW_PLATFORM_X11);
+#endif
     glfwInit();
     glfwWindowHint(GLFW_CLIENT_API, GLFW_NO_API);
     glfwWindowHint(GLFW_RESIZABLE, GLFW_TRUE);
@@ -188,11 +190,15 @@ IMPL_OBJ_NEW(vk_swapchain, vk_ctx* ctx)
     VkSurfaceCapabilitiesKHR capabilities = {};
     vkGetPhysicalDeviceSurfaceCapabilitiesKHR(ctx->physical_, ctx->surface_, &capabilities);
 
+    uint32_t format_count = 0;
+    VkSurfaceFormatKHR* formats = nullptr;
+    vkGetPhysicalDeviceSurfaceFormatsKHR(ctx->physical_, ctx->surface_, &format_count, nullptr);
+    formats = malloc(format_count * sizeof(VkSurfaceFormatKHR));
+    vkGetPhysicalDeviceSurfaceFormatsKHR(ctx->physical_, ctx->surface_, &format_count, formats);
+
     VkSwapchainCreateInfoKHR swapchain_cinfo = {.sType = VK_STRUCTURE_TYPE_SWAPCHAIN_CREATE_INFO_KHR};
     swapchain_cinfo.surface = ctx->surface_;
     swapchain_cinfo.minImageCount = 3;
-    swapchain_cinfo.imageFormat = VK_FORMAT_R8G8B8A8_SRGB;
-    swapchain_cinfo.imageColorSpace = VK_COLOR_SPACE_SRGB_NONLINEAR_KHR;
     swapchain_cinfo.imageExtent = capabilities.currentExtent;
     swapchain_cinfo.imageArrayLayers = 1;
     swapchain_cinfo.imageUsage = VK_IMAGE_USAGE_COLOR_ATTACHMENT_BIT | //
@@ -203,7 +209,27 @@ IMPL_OBJ_NEW(vk_swapchain, vk_ctx* ctx)
     swapchain_cinfo.presentMode = VK_PRESENT_MODE_IMMEDIATE_KHR;
     swapchain_cinfo.clipped = true;
     swapchain_cinfo.oldSwapchain = nullptr;
+
+    for (uint32_t i = 0; i < format_count; i++)
+    {
+        if (formats[i].format == VK_FORMAT_R8G8B8A8_SRGB)
+        {
+            swapchain_cinfo.imageFormat = VK_FORMAT_R8G8B8A8_SRGB;
+            swapchain_cinfo.imageColorSpace = formats[i].colorSpace;
+            break;
+        }
+
+        if (i == format_count - 1)
+        {
+            swapchain_cinfo.imageFormat = formats[0].format;
+            swapchain_cinfo.imageColorSpace = formats[0].colorSpace;
+        }
+    }
+    this->surface_format_.format = swapchain_cinfo.imageFormat;
+    this->surface_format_.colorSpace = swapchain_cinfo.imageColorSpace;
     vkCreateSwapchainKHR(ctx->device_, &swapchain_cinfo, nullptr, &this->swapchain_);
+    free(formats);
+    formats = nullptr;
 
     this->image_count_ = swapchain_cinfo.minImageCount;
     this->images_ = alloc(VkImage, this->image_count_);
@@ -270,8 +296,8 @@ bool vk_swapchain_recreate(vk_swapchain* this, VkCommandPool cmd_pool)
     VkSwapchainCreateInfoKHR swapchain_cinfo = {.sType = VK_STRUCTURE_TYPE_SWAPCHAIN_CREATE_INFO_KHR};
     swapchain_cinfo.surface = this->ctx_->surface_;
     swapchain_cinfo.minImageCount = this->image_count_;
-    swapchain_cinfo.imageFormat = VK_FORMAT_R8G8B8A8_SRGB;
-    swapchain_cinfo.imageColorSpace = VK_COLOR_SPACE_SRGB_NONLINEAR_KHR;
+    swapchain_cinfo.imageFormat = this->surface_format_.format;
+    swapchain_cinfo.imageColorSpace = this->surface_format_.colorSpace;
     swapchain_cinfo.imageExtent = capabilities.currentExtent;
     swapchain_cinfo.imageArrayLayers = 1;
     swapchain_cinfo.imageUsage = VK_IMAGE_USAGE_COLOR_ATTACHMENT_BIT | //

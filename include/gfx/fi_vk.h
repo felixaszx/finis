@@ -58,6 +58,7 @@ typedef struct vk_swapchain
     VkFormat format_;
     VkExtent2D extent_;
     VkFence recreate_fence_;
+    VkSurfaceFormatKHR surface_format_;
 } vk_swapchain;
 
 DEFINE_OBJ(vk_swapchain, vk_ctx* ctx);
