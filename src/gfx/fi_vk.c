@@ -16,6 +16,7 @@ IMPL_OBJ_NEW(vk_ctx, uint32_t width, uint32_t height, bool full_screen)
     this->height_ = height;
     sem_init(&this->resize_done_, 0, 0);
     sem_init(&this->recreate_done_, 0, 1);
+
 #ifdef __linux__
     glfwInitHint(GLFW_PLATFORM, GLFW_PLATFORM_X11);
 #endif
@@ -49,15 +50,20 @@ IMPL_OBJ_NEW(vk_ctx, uint32_t width, uint32_t height, bool full_screen)
     glfwCreateWindowSurface(this->instance_, this->win_, nullptr, &this->surface_);
 
     uint32_t phy_d_count = 0;
-    QUICK_GET(VkPhysicalDevice, vkEnumeratePhysicalDevices, this->instance_, &phy_d_count, phy_d);
+    VkPhysicalDevice* phy_d = nullptr;
+    vkEnumeratePhysicalDevices(this->instance_, &phy_d_count, nullptr);
+    phy_d = malloc(phy_d_count * sizeof(VkPhysicalDevice));
+    vkEnumeratePhysicalDevices(this->instance_, &phy_d_count, phy_d);
     this->physical_ = phy_d[0];
+
     for (size_t p = 0; p < phy_d_count; p++)
     {
         VkPhysicalDeviceProperties properties = {};
         vkGetPhysicalDeviceProperties(phy_d[p], &properties);
         this->physical_ = properties.deviceType == VK_PHYSICAL_DEVICE_TYPE_DISCRETE_GPU ? phy_d[p] : this->physical_;
     }
-    ffree(phy_d);
+    free(phy_d);
+    phy_d = nullptr;
 
     this->queue_idx_ = 0;
     float queue_priority = 1.0f;
