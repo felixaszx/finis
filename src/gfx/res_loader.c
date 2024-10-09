@@ -565,12 +565,18 @@ IMPL_OBJ_NEW(gltf_skin, gltf_file* file, gltf_desc* desc)
     {
         size_t joint_offset = this->skin_offsets_[s];
         cgltf_skin* skin = file->data_->skins + s;
+
+        float* matrices = malloc(sizeof(float[16]) * skin->inverse_bind_matrices->count);
+        cgltf_accessor_unpack_floats(skin->inverse_bind_matrices, matrices, 16 * skin->inverse_bind_matrices->count);
+
         for (size_t i = 0; i < skin->joints_count; i++)
         {
-            this->joints_[joint_offset + i].joint_ = GET_IDX(skin->joints[i], file->data_->nodes);
-            cgltf_accessor_unpack_floats(skin->inverse_bind_matrices + i, this->joints_[joint_offset + i].inv_binding_,
-                                         16);
+            this->joints_[joint_offset + i].joint_ =
+                desc->mapping_[GET_IDX(skin->joints[i], file->data_->nodes)]; // using linearized node
+            memcpy(this->joints_[joint_offset + i].inv_binding_, matrices + 16 * i, 16 * sizeof(matrices[0]));
         }
+
+        free(matrices);
     }
 
     for (size_t i = 0; i < desc->node_count_; i++)

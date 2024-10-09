@@ -89,8 +89,18 @@ T* render_thr_func(T* arg)
         vk_mesh_add_prim_attrib(sparta_mesh, sparta_prims[i], VK_PRIM_ATTRIB_MATERIAL, //
                                 sparta->prims_[i].material_, 1);
     }
-
     vk_mesh_alloc_device_mem(sparta_mesh, cmd_pool);
+
+    vk_mesh_desc* sparta_mesh_desc = new (vk_mesh_desc, ctx, sparta_desc->node_count_);
+    memcpy(sparta_mesh_desc->nodes_, sparta_desc->nodes_, sizeof(sparta_desc->nodes_[0]) * sparta_desc->node_count_);
+    vk_mesh_desc_alloc_device_mem(sparta_mesh_desc);
+    vk_mesh_desc_update(sparta_mesh_desc, GLM_MAT4_IDENTITY);
+    vk_mesh_desc_flush(sparta_mesh_desc);
+
+    vk_mesh_skin* sparta_mesh_skin = new (vk_mesh_skin, ctx, sparta_skin->joint_count_);
+    memcpy(sparta_mesh_skin->joints_, sparta_skin->joints_,
+           sizeof(sparta_skin->joints_[0]) * sparta_skin->joint_count_);
+    vk_mesh_skin_alloc_device_mem(sparta_mesh_skin, cmd_pool);
 
     while (atomic_load(rendering))
     {
@@ -110,6 +120,8 @@ T* render_thr_func(T* arg)
     vkDestroyCommandPool(ctx->device_, cmd_pool, nullptr);
 
     ffree(sparta_prims);
+    delete (vk_mesh_skin, sparta_mesh_skin);
+    delete (vk_mesh_desc, sparta_mesh_desc);
     delete (vk_mesh, sparta_mesh);
     delete (gltf_skin, sparta_skin);
     delete (gltf_desc, sparta_desc);
