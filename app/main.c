@@ -53,7 +53,8 @@ T* render_thr_func(T* arg)
 
     gbuffer_renderer_arg gbuffer_arg = {.sc_ = sc, .acquired_ = acquired};
 
-    dll_handle default_pl_dll = dlopen("./exts/dlls/gbuffer_pl.so", RTLD_NOW);
+    char* pl_dll_name = get_shared_lib_name("./exts/dlls/gbuffer_pl");
+    dll_handle default_pl_dll = dlopen(pl_dll_name, RTLD_NOW);
     gbuffer_renderer* gbuffer = new (gbuffer_renderer, ctx, default_pl_dll, (VkExtent3D){WIDTH, HEIGHT, 1});
     gbuffer->cmd_begin_cb_ = process_sc;
     gbuffer->render_cb_ = gbuffer_draw;
