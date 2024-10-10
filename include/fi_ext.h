@@ -24,7 +24,7 @@ inline static char* get_shared_lib_name(const char* lib_name)
 {
     size_t length = strlen(lib_name);
     char* file_name = NULL;
-#ifdef __linux
+#ifdef __linux__
     const char* file_ext = ".so";
     length += 3;
 #else
