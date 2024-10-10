@@ -39,6 +39,12 @@ T* render_thr_func(T* arg)
     vk_ctx* ctx = ctx_combo->ctx_;
     atomic_bool* rendering = &ctx_combo->rendering_;
 
+    VkCommandPool cmd_pool = nullptr;
+    VkCommandPoolCreateInfo pool_cinfo = {.sType = VK_STRUCTURE_TYPE_COMMAND_POOL_CREATE_INFO};
+    pool_cinfo.flags = VK_COMMAND_POOL_CREATE_RESET_COMMAND_BUFFER_BIT;
+    pool_cinfo.queueFamilyIndex = ctx->queue_idx_;
+    vkCreateCommandPool(ctx->device_, &pool_cinfo, nullptr, &cmd_pool);
+
     vk_swapchain* sc = new (vk_swapchain, ctx);
 
     VkSemaphore acquired = {};
@@ -59,6 +65,43 @@ T* render_thr_func(T* arg)
     gltf_anim* sparta_anim = new (gltf_anim, sparta, 0);
     gltf_skin* sparta_skin = new (gltf_skin, sparta, sparta_desc);
 
+    vk_mesh* sparta_mesh = new (vk_mesh, ctx, "sparta", to_mb(10), 20);
+    vk_prim** sparta_prims = alloc(vk_prim*, sparta->prim_count_);
+    for (uint32_t i = 0; i < sparta->prim_count_; i++)
+    {
+        sparta_prims[i] = vk_mesh_add_prim(sparta_mesh);
+        vk_mesh_add_prim_attrib(sparta_mesh, sparta_prims[i], VK_PRIM_ATTRIB_INDEX, //
+                                sparta->prims_[i].idx_, sparta->prims_[i].idx_count_);
+        vk_mesh_add_prim_attrib(sparta_mesh, sparta_prims[i], VK_PRIM_ATTRIB_POSITION, //
+                                sparta->prims_[i].position, sparta->prims_[i].vtx_count_);
+        vk_mesh_add_prim_attrib(sparta_mesh, sparta_prims[i], VK_PRIM_ATTRIB_NORMAL, //
+                                sparta->prims_[i].normal_, sparta->prims_[i].vtx_count_);
+        vk_mesh_add_prim_attrib(sparta_mesh, sparta_prims[i], VK_PRIM_ATTRIB_TANGENT, //
+                                sparta->prims_[i].tangent_, sparta->prims_[i].vtx_count_);
+        vk_mesh_add_prim_attrib(sparta_mesh, sparta_prims[i], VK_PRIM_ATTRIB_TEXCOORD, //
+                                sparta->prims_[i].texcoord_, sparta->prims_[i].vtx_count_);
+        vk_mesh_add_prim_attrib(sparta_mesh, sparta_prims[i], VK_PRIM_ATTRIB_COLOR, //
+                                sparta->prims_[i].color_, sparta->prims_[i].vtx_count_);
+        vk_mesh_add_prim_attrib(sparta_mesh, sparta_prims[i], VK_PRIM_ATTRIB_JOINTS, //
+                                sparta->prims_[i].joint_, sparta->prims_[i].vtx_count_);
+        vk_mesh_add_prim_attrib(sparta_mesh, sparta_prims[i], VK_PRIM_ATTRIB_WEIGHTS, //
+                                sparta->prims_[i].weight_, sparta->prims_[i].vtx_count_);
+        vk_mesh_add_prim_attrib(sparta_mesh, sparta_prims[i], VK_PRIM_ATTRIB_MATERIAL, //
+                                sparta->prims_[i].material_, 1);
+    }
+    vk_mesh_alloc_device_mem(sparta_mesh, cmd_pool);
+
+    vk_mesh_desc* sparta_mesh_desc = new (vk_mesh_desc, ctx, sparta_desc->node_count_);
+    memcpy(sparta_mesh_desc->nodes_, sparta_desc->nodes_, sizeof(sparta_desc->nodes_[0]) * sparta_desc->node_count_);
+    vk_mesh_desc_alloc_device_mem(sparta_mesh_desc);
+    vk_mesh_desc_update(sparta_mesh_desc, GLM_MAT4_IDENTITY);
+    vk_mesh_desc_flush(sparta_mesh_desc);
+
+    vk_mesh_skin* sparta_mesh_skin = new (vk_mesh_skin, ctx, sparta_skin->joint_count_);
+    memcpy(sparta_mesh_skin->joints_, sparta_skin->joints_,
+           sizeof(sparta_skin->joints_[0]) * sparta_skin->joint_count_);
+    vk_mesh_skin_alloc_device_mem(sparta_mesh_skin, cmd_pool);
+
     while (atomic_load(rendering))
     {
         gbuffer_renderer_render(gbuffer, &gbuffer_arg);
@@ -74,7 +117,12 @@ T* render_thr_func(T* arg)
     gbuffer_renderer_wait_idle(gbuffer);
 
     vkDestroySemaphore(ctx->device_, acquired, nullptr);
+    vkDestroyCommandPool(ctx->device_, cmd_pool, nullptr);
 
+    ffree(sparta_prims);
+    delete (vk_mesh_skin, sparta_mesh_skin);
+    delete (vk_mesh_desc, sparta_mesh_desc);
+    delete (vk_mesh, sparta_mesh);
     delete (gltf_skin, sparta_skin);
     delete (gltf_desc, sparta_desc);
     delete (gltf_anim, sparta_anim);

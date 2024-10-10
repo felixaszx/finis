@@ -105,7 +105,7 @@
             "dependsOn": [
                 "compile shaders",
                 "CMake: configure",
-                "CMake: build",
+                "CMake: build"
                 //"copy dlls"
             ],
             "problemMatcher": [],
