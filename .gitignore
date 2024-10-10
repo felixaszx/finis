@@ -1,12 +1,10 @@
 # Prerequisites
 *.d
-.vscode/tasks.json
 
 # Compiled Object files
 *.slo
 *.lo
 *.o
-build/*.obj
 
 # Precompiled Headers
 *.gch
@@ -35,6 +33,7 @@ finis
 
 # folder
 .vs/
+.vscode/
 .cache/
 build/
 res/models/
