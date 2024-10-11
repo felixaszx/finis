@@ -95,8 +95,8 @@ void main()
     vec4 tangent = vec4(0);
     vec2 texcoord = vec2(0);
     vec4 color = vec4(1, 1, 1, 1);
-    uvec4 joints = uvec4(-1, -1, -1, -1);
-    vec4 weights = vec4(1, 1, 1, 1);
+    uvec4 joints = uvec4(0, 0, 0, 0);
+    vec4 weights = vec4(0, 0, 0, 0);
 
     {
         if (prim_combo.prim.attrib_counts_[NORMAL] != 0)

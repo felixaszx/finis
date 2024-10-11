@@ -191,31 +191,31 @@ IMPL_OBJ_NEW(gltf_file, const char* file_path)
                 {
                     case cgltf_attribute_type_position:
                         prim->vtx_count_ = acc->count;
-                        prim->position = malloc(acc->count * sizeof(*prim->position));
+                        prim->position = calloc(acc->count, sizeof(*prim->position));
                         cgltf_accessor_unpack_floats(acc, *prim->position, acc->count * 3);
                         break;
                     case cgltf_attribute_type_normal:
-                        prim->normal_ = malloc(acc->count * sizeof(*prim->normal_));
+                        prim->normal_ = calloc(acc->count, sizeof(*prim->normal_));
                         cgltf_accessor_unpack_floats(acc, *prim->normal_, acc->count * 3);
                         break;
                     case cgltf_attribute_type_tangent:
-                        prim->tangent_ = malloc(acc->count * sizeof(*prim->tangent_));
+                        prim->tangent_ = calloc(acc->count, sizeof(*prim->tangent_));
                         cgltf_accessor_unpack_floats(acc, *prim->tangent_, acc->count * 4);
                         break;
                     case cgltf_attribute_type_texcoord:
-                        prim->texcoord_ = malloc(acc->count * sizeof(*prim->texcoord_));
+                        prim->texcoord_ = calloc(acc->count, sizeof(*prim->texcoord_));
                         cgltf_accessor_unpack_floats(acc, *prim->texcoord_, acc->count * 2);
                         break;
                     case cgltf_attribute_type_color:
-                        prim->color_ = malloc(acc->count * sizeof(*prim->color_));
+                        prim->color_ = calloc(acc->count, sizeof(*prim->color_));
                         cgltf_accessor_unpack_floats(acc, *prim->color_, acc->count * 4);
                         break;
                     case cgltf_attribute_type_joints:
-                        prim->joint_ = malloc(acc->count * sizeof(*prim->joint_));
+                        prim->joint_ = calloc(acc->count, sizeof(*prim->joint_));
                         cgltf_accessor_unpack_indices(acc, *prim->joint_, 4, acc->count);
                         break;
                     case cgltf_attribute_type_weights:
-                        prim->weight_ = malloc(acc->count * sizeof(*prim->weight_));
+                        prim->weight_ = calloc(acc->count, sizeof(*prim->weight_));
                         cgltf_accessor_unpack_floats(acc, *prim->weight_, acc->count * 4);
                         break;
                     case cgltf_attribute_type_custom:
@@ -229,13 +229,13 @@ IMPL_OBJ_NEW(gltf_file, const char* file_path)
             if (idx_acc)
             {
                 prim->idx_count_ = idx_acc->count;
-                prim->idx_ = malloc(prim->idx_count_ * sizeof(uint32_t));
+                prim->idx_ = calloc(prim->idx_count_, sizeof(uint32_t));
                 cgltf_accessor_unpack_indices(idx_acc, prim->idx_, 4, prim->idx_count_);
             }
             else
             {
                 prim->idx_count_ = prim->vtx_count_;
-                prim->idx_ = malloc(prim->idx_count_ * sizeof(uint32_t));
+                prim->idx_ = calloc(prim->idx_count_, sizeof(uint32_t));
                 for (size_t i = 0; i < prim->idx_count_; i++)
                 {
                     prim->idx_[i] = i;
@@ -493,8 +493,8 @@ IMPL_OBJ_NEW(gltf_anim, gltf_file* file, uint32_t anim_idx)
 
         gltf_key_frame* key_frame = this->mapping_[node_idx];
         key_frame->stamp_count_[chan->target_path - 1] = sampler->input->count;
-        key_frame->time_stamps_[chan->target_path - 1] = malloc(sizeof(gltf_ms) * sampler->input->count);
-        float* time_stamp_buffer = malloc(sampler->input->count * sizeof(float));
+        key_frame->time_stamps_[chan->target_path - 1] = calloc(sampler->input->count, sizeof(gltf_ms));
+        float* time_stamp_buffer = calloc(sampler->input->count, sizeof(float));
         cgltf_accessor_unpack_floats(sampler->input, time_stamp_buffer, sampler->input->count);
         for (size_t k = 0; k < sampler->input->count; k++)
         {
@@ -505,17 +505,17 @@ IMPL_OBJ_NEW(gltf_anim, gltf_file* file, uint32_t anim_idx)
         switch (chan->target_path)
         {
             case cgltf_animation_path_type_translation:
-                key_frame->data_[GLTF_KEY_FRAME_CHANNEL_T] = malloc(sizeof(vec3) * sampler->output->count);
+                key_frame->data_[GLTF_KEY_FRAME_CHANNEL_T] = calloc(sampler->output->count, sizeof(vec3));
                 cgltf_accessor_unpack_floats(sampler->output, (float*)key_frame->data_[GLTF_KEY_FRAME_CHANNEL_T],
                                              sampler->output->count * 3);
                 break;
             case cgltf_animation_path_type_rotation:
-                key_frame->data_[GLTF_KEY_FRAME_CHANNEL_R] = malloc(sizeof(quat) * sampler->output->count);
+                key_frame->data_[GLTF_KEY_FRAME_CHANNEL_R] = calloc(sampler->output->count, sizeof(quat));
                 cgltf_accessor_unpack_floats(sampler->output, (float*)key_frame->data_[GLTF_KEY_FRAME_CHANNEL_R],
                                              sampler->output->count * 4);
                 break;
             case cgltf_animation_path_type_scale:
-                key_frame->data_[GLTF_KEY_FRAME_CHANNEL_S] = malloc(sizeof(vec3) * sampler->output->count);
+                key_frame->data_[GLTF_KEY_FRAME_CHANNEL_S] = calloc(sampler->output->count, sizeof(vec3));
                 cgltf_accessor_unpack_floats(sampler->output, (float*)key_frame->data_[GLTF_KEY_FRAME_CHANNEL_S],
                                              sampler->output->count * 3);
                 break;
@@ -523,7 +523,7 @@ IMPL_OBJ_NEW(gltf_anim, gltf_file* file, uint32_t anim_idx)
                 key_frame->w_per_morph_ = chan->target_node->weights_count //
                                               ? chan->target_node->weights_count
                                               : chan->target_node->mesh->weights_count;
-                key_frame->data_[GLTF_KEY_FRAME_CHANNEL_W] = malloc(sizeof(float) * sampler->output->count);
+                key_frame->data_[GLTF_KEY_FRAME_CHANNEL_W] = calloc(sampler->output->count, sizeof(float));
                 cgltf_accessor_unpack_floats(sampler->output, (float*)key_frame->data_[GLTF_KEY_FRAME_CHANNEL_W],
                                              sampler->output->count * key_frame->w_per_morph_);
                 break;
@@ -566,7 +566,7 @@ IMPL_OBJ_NEW(gltf_skin, gltf_file* file, gltf_desc* desc)
         size_t joint_offset = this->skin_offsets_[s];
         cgltf_skin* skin = file->data_->skins + s;
 
-        float* matrices = malloc(sizeof(float[16]) * skin->inverse_bind_matrices->count);
+        float* matrices = calloc(skin->inverse_bind_matrices->count, sizeof(float[16]));
         cgltf_accessor_unpack_floats(skin->inverse_bind_matrices, matrices, 16 * skin->inverse_bind_matrices->count);
 
         for (size_t i = 0; i < skin->joints_count; i++)
