@@ -138,21 +138,21 @@ vk_prim* vk_mesh_add_prim(vk_mesh* this)
     return this->prims_ + this->prim_count_ - 1;
 }
 
-VkDeviceSize vk_mesh_add_prim_transform(vk_mesh* this, vk_prim_transform* transform)
+VkDeviceSize vk_mesh_add_memory(vk_mesh* this, T* src, VkDeviceSize size)
 {
-    if (!transform)
+    if (!src)
     {
         return -1;
     }
 
-    if (this->mem_size_ + sizeof(vk_prim_transform) >= this->mem_limit_)
+    if (this->mem_size_ + size >= this->mem_limit_)
     {
         return -1;
     }
 
     size_t offset = this->mem_size_;
-    memcpy(this->mapping_ + this->mem_size_, transform, sizeof(vk_prim_transform));
-    this->mem_size_ += sizeof(vk_prim_transform);
+    memcpy(this->mapping_ + this->mem_size_, src, size);
+    this->mem_size_ += size;
     this->padding_size_ += VK_MESH_PAD_MEMORY(this->mem_size_);
     this->mem_size_ += VK_MESH_PAD_MEMORY(this->mem_size_);
     return offset;
@@ -160,45 +160,24 @@ VkDeviceSize vk_mesh_add_prim_transform(vk_mesh* this, vk_prim_transform* transf
 
 VkDeviceSize vk_mesh_add_prim_attrib(vk_mesh* this, vk_prim* prim, vk_prim_attrib attrib, T* data, size_t count)
 {
-    if (!data)
-    {
-        return -1;
-    }
-
     prim->attrib_counts_[attrib] = count;
-    size_t data_size = vk_prim_get_attrib_size(prim, attrib);
-    if (this->mem_size_ + data_size >= this->mem_limit_)
+    VkDeviceSize offset = vk_mesh_add_memory(this, data, vk_prim_get_attrib_size(prim, attrib));
+    if (offset != -1)
     {
-        return -1;
+        prim->attrib_address_[attrib] = offset;
+        return offset;
     }
-
-    prim->attrib_address_[attrib] = this->mem_size_;
-    memcpy(this->mapping_ + this->mem_size_, data, data_size);
-    this->mem_size_ += data_size;
-    this->padding_size_ += VK_MESH_PAD_MEMORY(this->mem_size_);
-    this->mem_size_ += VK_MESH_PAD_MEMORY(this->mem_size_);
-    return prim->attrib_address_[attrib];
+    return -1;
 }
 
 void vk_mesh_add_prim_morph_attrib(vk_mesh* this, vk_morph* morph, vk_morph_attrib attrib, T* data, size_t count)
 {
-    if (!data)
-    {
-        return;
-    }
-
     morph->attrib_counts_[attrib] = count;
-    size_t data_size = vk_morph_get_attrib_size(morph, attrib);
-    if (this->mem_size_ + data_size >= this->mem_limit_)
+    VkDeviceSize offset = vk_mesh_add_memory(this, data, vk_morph_get_attrib_size(morph, attrib));
+    if (offset != -1)
     {
-        return;
+        morph->attrib_offsets_[attrib] = offset;
     }
-
-    morph->attrib_offsets_[attrib] = this->mem_size_;
-    memcpy(this->mapping_ + this->mem_size_, data, data_size);
-    this->mem_size_ += data_size;
-    this->padding_size_ += VK_MESH_PAD_MEMORY(this->mem_size_);
-    this->mem_size_ += VK_MESH_PAD_MEMORY(this->mem_size_);
 }
 
 IMPL_OBJ_NEW(vk_tex_arr, vk_ctx* ctx, uint32_t tex_limit, uint32_t sampler_limit)

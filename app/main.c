@@ -20,6 +20,13 @@ typedef struct gbuffer_renderer_arg
     vk_swapchain* sc_;
     VkSemaphore acquired_;
     uint32_t image_idx_;
+
+    gltf_anim* sparta_anim_;
+    gltf_skin* sparta_skin_;
+    vk_mesh* sparta_mesh_;
+    vk_mesh_desc* sparta_mesh_desc_;
+    vk_mesh_skin* sparta_mesh_skin_;
+    vk_tex_arr* sparta_tex_arr_;
 } gbuffer_renderer_arg;
 
 void process_sc(gbuffer_renderer* renderer, T* data)
@@ -30,7 +37,25 @@ void process_sc(gbuffer_renderer* renderer, T* data)
 
 void gbuffer_draw(gbuffer_renderer* renderer, T* data)
 {
-    vkCmdDraw(renderer->main_cmd_, 3, 1, 0, 0);
+    gbuffer_renderer_arg* args = data;
+    struct
+    {
+        VkDeviceAddress PRIM_COMBO_ARR;
+        VkDeviceAddress DATA;
+        VkDeviceAddress NODES;
+        VkDeviceAddress SKIN;
+        mat4 VIEW_MAT;
+        mat4 PROJECTION_MAT;
+    } pushed_data = {.PRIM_COMBO_ARR = args->sparta_mesh_->address_ + args->sparta_mesh_->prim_offset_,
+                     .DATA = args->sparta_mesh_->address_,
+                     .NODES = args->sparta_mesh_desc_->address_,
+                     .SKIN = args->sparta_mesh_skin_->address_};
+    glm_look((vec3){0, 0, -1}, (vec3){0, 0, 1}, (vec3){0, 1, 0}, pushed_data.VIEW_MAT);
+    glm_perspective(45.0f, (float)WIDTH / HEIGHT, 0.1, 100.0f, pushed_data.PROJECTION_MAT);
+
+    vkCmdPushConstants(renderer->main_cmd_, renderer->pl_layouts_[0], VK_SHADER_STAGE_VERTEX_BIT, 0,
+                       sizeof(pushed_data), &pushed_data);
+    vk_mesh_draw_prims(args->sparta_mesh_, renderer->main_cmd_);
 }
 
 T* render_thr_func(T* arg)
@@ -66,9 +91,17 @@ T* render_thr_func(T* arg)
     gltf_desc* sparta_desc = new (gltf_desc, sparta);
     gltf_anim* sparta_anim = new (gltf_anim, sparta, 0);
     gltf_skin* sparta_skin = new (gltf_skin, sparta, sparta_desc);
+    VkDeviceSize* prim_transforms = alloc(VkDeviceSize, sparta_desc->mesh_count_);
 
     vk_mesh* sparta_mesh = new (vk_mesh, ctx, "sparta", to_mb(10), 20);
     vk_prim** sparta_prims = alloc(vk_prim*, sparta->prim_count_);
+
+    for (size_t i = 0; i < sparta_desc->mesh_count_; i++)
+    {
+        prim_transforms[i] =
+            vk_mesh_add_memory(sparta_mesh, sparta_desc->transform_, sizeof(sparta_desc->transform_[0]));
+    }
+
     for (uint32_t i = 0; i < sparta->prim_count_; i++)
     {
         sparta_prims[i] = vk_mesh_add_prim(sparta_mesh);
@@ -90,6 +123,10 @@ T* render_thr_func(T* arg)
                                 sparta->prims_[i].weight_, sparta->prims_[i].vtx_count_);
         vk_mesh_add_prim_attrib(sparta_mesh, sparta_prims[i], VK_PRIM_ATTRIB_MATERIAL, //
                                 sparta->prims_[i].material_, 1);
+
+        uint32_t transform_idx = sparta_desc->prim_transform_[i] - sparta_desc->transform_;
+        sparta_mesh->prims_[i].attrib_counts_[VK_PRIM_ATTRIB_TRANSFORM] = 1;
+        sparta_mesh->prims_[i].attrib_address_[VK_PRIM_ATTRIB_TRANSFORM] = prim_transforms[transform_idx];
     }
     vk_mesh_alloc_device_mem(sparta_mesh, cmd_pool);
 
@@ -104,7 +141,29 @@ T* render_thr_func(T* arg)
            sizeof(sparta_skin->joints_[0]) * sparta_skin->joint_count_);
     vk_mesh_skin_alloc_device_mem(sparta_mesh_skin, cmd_pool);
 
-    fprintf(stdout, "Rendering begin\n");
+    vk_tex_arr* sparta_tex_arr = new (vk_tex_arr, ctx, sparta->tex_count_, sparta->sampler_count_);
+    for (uint32_t i = 0; i < sparta->sampler_count_; i++)
+    {
+        vk_tex_arr_add_sampler(sparta_tex_arr, sparta->sampler_cinfos_ + i);
+    }
+    for (uint32_t i = 0; i < sparta->tex_count_; i++)
+    {
+        VkExtent3D extent = gltf_tex_extent(sparta->texs_ + i);
+        VkImageSubresource sub_res = {.arrayLayer = 1, //
+                                      .aspectMask = VK_IMAGE_ASPECT_COLOR_BIT,
+                                      .mipLevel = sparta->texs_[i].levels_};
+        vk_tex_arr_add_tex(sparta_tex_arr, cmd_pool, sparta->texs_[i].sampler_idx_, sparta->texs_[i].data_,
+                           gltf_tex_size(sparta->texs_ + i), &extent, &sub_res);
+    }
+
+    gbuffer_arg.sparta_mesh_ = sparta_mesh;
+    gbuffer_arg.sparta_mesh_desc_ = sparta_mesh_desc;
+    gbuffer_arg.sparta_anim_ = sparta_anim;
+    gbuffer_arg.sparta_skin_ = sparta_skin;
+    gbuffer_arg.sparta_mesh_skin_ = sparta_mesh_skin;
+    gbuffer_arg.sparta_tex_arr_ = sparta_tex_arr;
+
+    printf("Rendering begin\n");
     while (atomic_load(rendering))
     {
         gbuffer_renderer_render(gbuffer, &gbuffer_arg);
@@ -123,6 +182,8 @@ T* render_thr_func(T* arg)
     vkDestroyCommandPool(ctx->device_, cmd_pool, nullptr);
 
     ffree(sparta_prims);
+    ffree(prim_transforms);
+    delete (vk_tex_arr, sparta_tex_arr);
     delete (vk_mesh_skin, sparta_mesh_skin);
     delete (vk_mesh_desc, sparta_mesh_desc);
     delete (vk_mesh, sparta_mesh);

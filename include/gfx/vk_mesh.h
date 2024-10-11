@@ -35,7 +35,7 @@ typedef struct vk_mesh
 
 DEFINE_OBJ(vk_mesh, vk_ctx* ctx, const char* name, VkDeviceSize mem_limit, uint32_t prim_limit);
 vk_prim* vk_mesh_add_prim(vk_mesh* this);
-VkDeviceSize vk_mesh_add_prim_transform(vk_mesh* this, vk_prim_transform* transform);
+VkDeviceSize vk_mesh_add_memory(vk_mesh* this, T* src, VkDeviceSize size);
 VkDeviceSize vk_mesh_add_prim_attrib(vk_mesh* this, vk_prim* prim, vk_prim_attrib attrib, T* data, size_t count);
 void vk_mesh_add_prim_morph_attrib(vk_mesh* this, vk_morph* morph, vk_morph_attrib attrib, T* data, size_t count);
 void vk_mesh_free_staging(vk_mesh* this);

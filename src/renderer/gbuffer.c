@@ -26,7 +26,7 @@ IMPL_OBJ_NEW(gbuffer_renderer, vk_ctx* ctx, dll_handle ext_dll, VkExtent3D atchm
     this->cmd_submits_[0].commandBuffer = this->main_cmd_;
 
     this->pushed_[0].offset = 0;
-    this->pushed_[0].size = 16;
+    this->pushed_[0].size = 4 * sizeof(VkDeviceAddress) + 2 * sizeof(mat4);
     this->pushed_[0].stageFlags = VK_SHADER_STAGE_VERTEX_BIT;
 
     construct_vk_gfx_pl_desc(this->pl_descs_, dlsym(ext_dll, "configurator"), dlsym(ext_dll, "cleaner"));
