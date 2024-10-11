@@ -99,7 +99,7 @@ T* render_thr_func(T* arg)
     for (size_t i = 0; i < sparta_desc->mesh_count_; i++)
     {
         prim_transforms[i] =
-            vk_mesh_add_memory(sparta_mesh, sparta_desc->transform_, sizeof(sparta_desc->transform_[0]));
+            vk_mesh_add_memory(sparta_mesh, sparta_desc->transform_ + i, sizeof(sparta_desc->transform_[0]));
     }
 
     for (uint32_t i = 0; i < sparta->prim_count_; i++)

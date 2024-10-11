@@ -88,8 +88,6 @@ void main()
     uint32_t_arr_t idxs = uint32_t_arr_t(prim_combo.prim.attrib_address_[INDEX]);
     uint32_t vtx_id = idxs.val_[gl_VertexIndex];
 
-    mat4 node_transform = PUSHED.NODES.val_[prim_transform.node_idx_];
-
     vec3 position = vec3_arr_t(prim_combo.prim.attrib_address_[POSITION]).val_[vtx_id];
     vec3 normal = vec3(0);
     vec4 tangent = vec4(0);
@@ -125,5 +123,17 @@ void main()
         }
     }
 
-    gl_Position = vec4(joints.x, joints.y, joints.z, joints.w);
+    mat4 model = PUSHED.NODES.val_[prim_transform.node_idx_];
+    if (prim_transform.first_joint_ != -1)
+    {
+        model = mat4(0);
+        for (uint j = 0; j < 4; j++)
+        {
+            vk_mesh_joint joint_info = PUSHED.SKIN.val_[prim_transform.first_joint_ + joints[j]];
+            model += weights[j] * PUSHED.NODES.val_[joint_info.joint_] * joint_info.inv_binding_;
+        }
+    }
+
+    vec4 world_position = model * vec4(position, 1);
+    gl_Position = PUSHED.PROJECTION_MAT * PUSHED.VIEW_MAT * world_position;
 }
