@@ -81,8 +81,15 @@ layout(std430, push_constant) uniform _PUSHED
 }
 PUSHED;
 
+layout(location = 0) out flat uint prim_idx_out;
+layout(location = 1) out flat ptr_t prim_combos_out;
+layout(location = 2) out vert_stage vert_out;
+
 void main()
 {
+    prim_idx_out = gl_DrawID;
+    prim_combos_out = ptr_t(PUSHED.PRIM_COMBO_ARR);
+
     prim_combo prim_combo = PUSHED.PRIM_COMBO_ARR.val_[gl_DrawID];
     vk_prim_transform prim_transform = vk_prim_transform_ptr_t(prim_combo.prim.attrib_address_[TRANSFORM]).val_;
     uint32_t_arr_t idxs = uint32_t_arr_t(prim_combo.prim.attrib_address_[INDEX]);
@@ -135,5 +142,11 @@ void main()
     }
 
     vec4 world_position = model * vec4(position, 1);
+
+    vert_out.position_ = world_position.xyz;
+    vert_out.normal_ = normal;
+    vert_out.tangent_ = tangent;
+    vert_out.color_ = color;
+    vert_out.texcoord_ = texcoord;
     gl_Position = PUSHED.PROJECTION_MAT * PUSHED.VIEW_MAT * world_position;
 }

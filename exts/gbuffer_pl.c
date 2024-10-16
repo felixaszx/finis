@@ -17,7 +17,7 @@ DLL_EXPORT VkPipelineLayout configurator(vk_ctx* ctx, vk_gfx_pl_desc* pl_desc)
     pl_desc->multisample_.rasterizationSamples = VK_SAMPLE_COUNT_1_BIT;
     pl_desc->depth_stencil_.depthWriteEnable = true;
     pl_desc->depth_stencil_.depthTestEnable = true;
-    pl_desc->depth_stencil_.depthCompareOp = VK_COMPARE_OP_LESS_OR_EQUAL;
+    pl_desc->depth_stencil_.depthCompareOp = VK_COMPARE_OP_LESS;
 
     static VkPipelineColorBlendAttachmentState blend_state[4] = {};
     for (size_t i = 0; i < 4; i++)

@@ -42,3 +42,12 @@ struct prim_combo
     VkDrawIndirectCommand draw_call_;
     vk_prim prim;
 };
+
+struct vert_stage
+{
+    vec3 position_;
+    vec3 normal_;
+    vec4 tangent_;
+    vec4 color_;
+    vec2 texcoord_;
+};

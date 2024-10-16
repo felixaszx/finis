@@ -1,6 +1,8 @@
 #ifndef INCLUDE_RES_LOADER_H
 #define INCLUDE_RES_LOADER_H
 
+#define CGLM_FORCE_DEPTH_ZERO_TO_ONE
+#define CGLM_FORCE_LEFT_HANDED
 #include <cglm/cglm.h>
 #include <stb/stb_image.h>
 
