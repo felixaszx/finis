@@ -25,6 +25,7 @@ layout(location = 1) in flat ptr_t prim_combos_out;
 layout(location = 2) in vert_stage vert_out;
 
 void main()
-{
+{   
+    prim_combo prim = prim_combo_arr_t(prim_combos_out).val_[prim_idx_out];
     COLOR = vec4(vert_out.position_, 1);
 }
