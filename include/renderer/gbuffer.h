@@ -43,6 +43,9 @@ struct gbuffer_renderer
 
     VkRenderingInfo rendering_infos_[1];
 
+    vk_desc_set_base desc_set_bases_[1];
+    VkDescriptorSetLayout desc_set_layouts_[1];
+
     gbuffer_render_cb cmd_begin_cb_;
     gbuffer_render_cb render_cb_;
     gbuffer_render_cb render_begin_cb_;

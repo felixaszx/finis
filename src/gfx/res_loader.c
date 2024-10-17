@@ -218,10 +218,34 @@ IMPL_OBJ_NEW(gltf_file, const char* file_path)
                         prim->weight_ = calloc(acc->count, sizeof(*prim->weight_));
                         cgltf_accessor_unpack_floats(acc, *prim->weight_, acc->count * 4);
                         break;
-                    case cgltf_attribute_type_custom:
-                    case cgltf_attribute_type_invalid:
-                    case cgltf_attribute_type_max_enum:
+                    default:
                         break;
+                }
+            }
+
+            for (size_t a = 0; a < prim_in->targets_count; a++)
+            {
+                cgltf_morph_target* target = prim_in->targets + a;
+                for (size_t ta = 0; ta < target->attributes_count; ta++)
+                {
+                    cgltf_accessor* acc = target->attributes[ta].data;
+                    switch (target->attributes->type)
+                    {
+                        case cgltf_attribute_type_position:
+                            prim->morph_position = calloc(acc->count, sizeof(*prim->position));
+                            cgltf_accessor_unpack_floats(acc, *prim->position, acc->count * 3);
+                            break;
+                        case cgltf_attribute_type_normal:
+                            prim->morph_normal_ = calloc(acc->count, sizeof(*prim->normal_));
+                            cgltf_accessor_unpack_floats(acc, *prim->normal_, acc->count * 3);
+                            break;
+                        case cgltf_attribute_type_tangent:
+                            prim->morph_tangent_ = calloc(acc->count, sizeof(*prim->tangent_));
+                            cgltf_accessor_unpack_floats(acc, *prim->tangent_, acc->count * 3);
+                            break;
+                        default:
+                            break;
+                    }
                 }
             }
 
@@ -242,6 +266,7 @@ IMPL_OBJ_NEW(gltf_file, const char* file_path)
                 }
             }
 
+            prim->material_ = this->materials_ + GET_IDX(prim_in->material, this->data_->materials);
             p++;
         }
     }
@@ -267,6 +292,9 @@ IMPL_OBJ_DELETE(gltf_file)
         free(prim->joint_);
         free(prim->weight_);
         free(prim->idx_);
+        free(prim->morph_position);
+        free(prim->morph_normal_);
+        free(prim->morph_tangent_);
     }
     ffree(this->prims_);
 

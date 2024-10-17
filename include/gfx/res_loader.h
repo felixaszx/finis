@@ -28,7 +28,10 @@ typedef struct gltf_prim
     uvec4* joint_;
     vec4* weight_;
     vk_material* material_;
-    vk_morph* morph_;
+
+    vec3* morph_position;
+    vec3* morph_normal_;
+    vec4* morph_tangent_;
 } gltf_prim;
 
 typedef struct gltf_tex

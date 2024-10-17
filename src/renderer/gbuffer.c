@@ -29,10 +29,21 @@ IMPL_OBJ_NEW(gbuffer_renderer, vk_ctx* ctx, dll_handle ext_dll, VkExtent3D atchm
     this->pushed_[0].size = 4 * sizeof(VkDeviceAddress) + 2 * sizeof(mat4);
     this->pushed_[0].stageFlags = VK_SHADER_STAGE_VERTEX_BIT;
 
+    this->desc_set_bases_[0].binding_count_ = 1;
+    this->desc_set_bases_[0].bindings_ = alloc(VkDescriptorSetLayoutBinding, 1);
+    this->desc_set_bases_[0].bindings_[0].descriptorCount = 100;
+    this->desc_set_bases_[0].bindings_[0].descriptorType = VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER;
+    this->desc_set_bases_[0].bindings_[0].binding = 0;
+    this->desc_set_bases_[0].bindings_[0].stageFlags = VK_SHADER_STAGE_FRAGMENT_BIT;
+    vk_desc_set_base_create_layout(this->desc_set_bases_, ctx);
+    this->desc_set_layouts_[0] = this->desc_set_bases_->layout_;
+
     construct_vk_gfx_pl_desc(this->pl_descs_, dlsym(ext_dll, "configurator"), dlsym(ext_dll, "cleaner"));
     this->pl_descs_[0].push_range_ = this->pushed_;
     this->pl_descs_[0].push_range_count_ = sizeof(this->pushed_) / sizeof(this->pushed_[0]);
     this->pl_descs_[0].push_range_->stageFlags = VK_SHADER_STAGE_VERTEX_BIT;
+    this->pl_descs_[0].set_layout_count_ = 1;
+    this->pl_descs_[0].set_layouts_ = this->desc_set_layouts_;
     this->pls_[0] = vk_gfx_pl_desc_build(this->pl_descs_, ctx, this->pl_layouts_);
 
     VkImageCreateInfo atchm_cinfo = {.sType = VK_STRUCTURE_TYPE_IMAGE_CREATE_INFO};
@@ -173,6 +184,12 @@ IMPL_OBJ_NEW(gbuffer_renderer, vk_ctx* ctx, dll_handle ext_dll, VkExtent3D atchm
 
 IMPL_OBJ_DELETE(gbuffer_renderer)
 {
+    for (size_t i = 0; i < sizeof(this->desc_set_bases_) / sizeof(this->desc_set_bases_[0]); i++)
+    {
+        vkDestroyDescriptorSetLayout(this->ctx_->device_, this->desc_set_bases_[i].layout_, nullptr);
+        ffree(this->desc_set_bases_[i].bindings_);
+    }
+
     for (size_t i = 0; i < sizeof(this->frame_fences_) / sizeof(this->frame_fences_[0]); i++)
     {
         vkDestroyFence(this->ctx_->device_, this->frame_fences_[i], nullptr);
