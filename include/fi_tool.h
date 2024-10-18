@@ -20,9 +20,10 @@
     free(ptr);     \
     ptr = NULL
 
-#define to_kb(count) (1024 * count)
-#define to_mb(count) (1024 * to_kb(count))
-#define to_gb(count) (1024 * to_mb(count))
+#define to_kb(count)      (1024 * count)
+#define to_mb(count)      (1024 * to_kb(count))
+#define to_gb(count)      (1024 * to_mb(count))
+#define fi_size_of_arr(arr) (sizeof(arr) / sizeof(arr[0]))
 
 // provide new, init and release type
 #define DEFINE_OBJ(type, ...)                        \

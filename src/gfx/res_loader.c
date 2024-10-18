@@ -310,17 +310,17 @@ IMPL_OBJ_DELETE(gltf_file)
 
 void build_layer(cgltf_node**** layers, cgltf_node* curr, uint32_t depth)
 {
-    size_t layer_count = arrlen((*layers));
+    size_t layer_count = stbds_arrlen((*layers));
     if (layer_count <= depth)
     {
-        arrsetlen((*layers), depth + 1);
+        stbds_arrsetlen((*layers), depth + 1);
         for (size_t i = layer_count; i < depth + 1; i++)
         {
             (*layers)[i] = nullptr;
         }
     }
 
-    arrput((*layers)[depth], curr);
+    stbds_arrput((*layers)[depth], curr);
 
     for (size_t i = 0; i < curr->children_count; i++)
     {
@@ -354,9 +354,9 @@ IMPL_OBJ_NEW(gltf_desc, gltf_file* file)
     }
 
     size_t node_idx = 0;
-    for (size_t i = 0; i < arrlen(layers); i++)
+    for (size_t i = 0; i < stbds_arrlen(layers); i++)
     {
-        for (size_t j = 0; j < arrlen(layers[i]); j++)
+        for (size_t j = 0; j < stbds_arrlen(layers[i]); j++)
         {
             this->mapping_[GET_IDX(layers[i][j], file->data_->nodes)] = node_idx;
             cgltf_node* node_in = layers[i][j];
@@ -414,11 +414,11 @@ IMPL_OBJ_NEW(gltf_desc, gltf_file* file)
         }
     }
 
-    for (size_t i = 0; i < arrlen(layers); i++)
+    for (size_t i = 0; i < stbds_arrlen(layers); i++)
     {
-        arrfree(layers[i]);
+        stbds_arrfree(layers[i]);
     }
-    arrfree(layers);
+    stbds_arrfree(layers);
     return this;
 }
 
