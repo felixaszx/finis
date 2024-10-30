@@ -12,10 +12,10 @@ void resize_callback(GLFWwindow* win, int width, int height)
 
 IMPL_OBJ_NEW(vk_ctx, uint32_t width, uint32_t height, bool full_screen)
 {
-    this->width_ = width;
-    this->height_ = height;
-    sem_init(&this->resize_done_, 0, 0);
-    sem_init(&this->recreate_done_, 0, 1);
+    cthis->width_ = width;
+    cthis->height_ = height;
+    sem_init(&cthis->resize_done_, 0, 0);
+    sem_init(&cthis->recreate_done_, 0, 1);
 
 #ifdef __linux__
     glfwInitHint(GLFW_PLATFORM, GLFW_PLATFORM_X11);
@@ -25,14 +25,14 @@ IMPL_OBJ_NEW(vk_ctx, uint32_t width, uint32_t height, bool full_screen)
     glfwWindowHint(GLFW_RESIZABLE, GLFW_TRUE);
     if (full_screen)
     {
-        this->win_ = glfwCreateWindow(width, height, "", glfwGetPrimaryMonitor(), nullptr);
+        cthis->win_ = glfwCreateWindow(width, height, "", glfwGetPrimaryMonitor(), nullptr);
     }
     else
     {
-        this->win_ = glfwCreateWindow(width, height, "", nullptr, nullptr);
+        cthis->win_ = glfwCreateWindow(width, height, "", nullptr, nullptr);
     }
-    glfwSetWindowUserPointer(this->win_, this);
-    glfwSetFramebufferSizeCallback(this->win_, resize_callback);
+    glfwSetWindowUserPointer(cthis->win_, cthis);
+    glfwSetFramebufferSizeCallback(cthis->win_, resize_callback);
 
     uint32_t glfw_ext_count = 0;
     const char** glfw_exts = glfwGetRequiredInstanceExtensions(&glfw_ext_count);
@@ -46,26 +46,26 @@ IMPL_OBJ_NEW(vk_ctx, uint32_t width, uint32_t height, bool full_screen)
     instance_create_info.pApplicationInfo = &app_info;
     instance_create_info.ppEnabledExtensionNames = glfw_exts;
     instance_create_info.enabledExtensionCount = glfw_ext_count;
-    vkCreateInstance(&instance_create_info, nullptr, &this->instance_);
-    glfwCreateWindowSurface(this->instance_, this->win_, nullptr, &this->surface_);
+    vkCreateInstance(&instance_create_info, nullptr, &cthis->instance_);
+    glfwCreateWindowSurface(cthis->instance_, cthis->win_, nullptr, &cthis->surface_);
 
     uint32_t phy_d_count = 0;
     VkPhysicalDevice* phy_d = nullptr;
-    vkEnumeratePhysicalDevices(this->instance_, &phy_d_count, nullptr);
+    vkEnumeratePhysicalDevices(cthis->instance_, &phy_d_count, nullptr);
     phy_d = malloc(phy_d_count * sizeof(VkPhysicalDevice));
-    vkEnumeratePhysicalDevices(this->instance_, &phy_d_count, phy_d);
-    this->physical_ = phy_d[0];
+    vkEnumeratePhysicalDevices(cthis->instance_, &phy_d_count, phy_d);
+    cthis->physical_ = phy_d[0];
 
     for (size_t p = 0; p < phy_d_count; p++)
     {
         VkPhysicalDeviceProperties properties = {};
         vkGetPhysicalDeviceProperties(phy_d[p], &properties);
-        this->physical_ = properties.deviceType == VK_PHYSICAL_DEVICE_TYPE_DISCRETE_GPU ? phy_d[p] : this->physical_;
+        cthis->physical_ = properties.deviceType == VK_PHYSICAL_DEVICE_TYPE_DISCRETE_GPU ? phy_d[p] : cthis->physical_;
     }
     free(phy_d);
     phy_d = nullptr;
 
-    this->queue_idx_ = 0;
+    cthis->queue_idx_ = 0;
     float queue_priority = 1.0f;
     VkDeviceQueueCreateInfo queue_info = {.sType = VK_STRUCTURE_TYPE_DEVICE_QUEUE_CREATE_INFO};
     queue_info.queueFamilyIndex = 0;
@@ -119,11 +119,11 @@ IMPL_OBJ_NEW(vk_ctx, uint32_t width, uint32_t height, bool full_screen)
     device_create_info.ppEnabledExtensionNames = device_ext_names;
     device_create_info.enabledExtensionCount = 1;
 
-    vkCreateDevice(this->physical_, &device_create_info, nullptr, &this->device_);
-    vkGetDeviceQueue(this->device_, this->queue_idx_, 0, &this->queue_);
+    vkCreateDevice(cthis->physical_, &device_create_info, nullptr, &cthis->device_);
+    vkGetDeviceQueue(cthis->device_, cthis->queue_idx_, 0, &cthis->queue_);
 
     VkPipelineCacheCreateInfo pl_cache = {.sType = VK_STRUCTURE_TYPE_PIPELINE_CACHE_CREATE_INFO};
-    vkCreatePipelineCache(this->device_, &pl_cache, nullptr, &this->pipeline_cache_);
+    vkCreatePipelineCache(cthis->device_, &pl_cache, nullptr, &cthis->pipeline_cache_);
 
     VmaVulkanFunctions vma_funcs = {};
     vma_funcs.vkAllocateMemory = vkAllocateMemory;
@@ -155,27 +155,27 @@ IMPL_OBJ_NEW(vk_ctx, uint32_t width, uint32_t height, bool full_screen)
     vma_cinfo.flags = VMA_ALLOCATOR_CREATE_BUFFER_DEVICE_ADDRESS_BIT;
     vma_cinfo.vulkanApiVersion = app_info.apiVersion;
     vma_cinfo.pVulkanFunctions = &vma_funcs;
-    vma_cinfo.instance = this->instance_;
-    vma_cinfo.physicalDevice = this->physical_;
-    vma_cinfo.device = this->device_;
-    vmaCreateAllocator(&vma_cinfo, &this->allocator_);
-    return this;
+    vma_cinfo.instance = cthis->instance_;
+    vma_cinfo.physicalDevice = cthis->physical_;
+    vma_cinfo.device = cthis->device_;
+    vmaCreateAllocator(&vma_cinfo, &cthis->allocator_);
+    return cthis;
 }
 
 IMPL_OBJ_DELETE(vk_ctx)
 {
-    vkDeviceWaitIdle(this->device_);
+    vkDeviceWaitIdle(cthis->device_);
 
-    vmaDestroyAllocator(this->allocator_);
-    vkDestroyPipelineCache(this->device_, this->pipeline_cache_, nullptr);
-    vkDestroyDevice(this->device_, nullptr);
-    vkDestroySurfaceKHR(this->instance_, this->surface_, nullptr);
-    vkDestroyInstance(this->instance_, nullptr);
-    glfwDestroyWindow(this->win_);
+    vmaDestroyAllocator(cthis->allocator_);
+    vkDestroyPipelineCache(cthis->device_, cthis->pipeline_cache_, nullptr);
+    vkDestroyDevice(cthis->device_, nullptr);
+    vkDestroySurfaceKHR(cthis->instance_, cthis->surface_, nullptr);
+    vkDestroyInstance(cthis->instance_, nullptr);
+    glfwDestroyWindow(cthis->win_);
     glfwTerminate();
 
-    sem_destroy(&this->resize_done_);
-    sem_destroy(&this->recreate_done_);
+    sem_destroy(&cthis->resize_done_);
+    sem_destroy(&cthis->recreate_done_);
 }
 
 bool vk_ctx_update(vk_ctx* ctx)
@@ -186,12 +186,12 @@ bool vk_ctx_update(vk_ctx* ctx)
 
 IMPL_OBJ_NEW(vk_swapchain, vk_ctx* ctx)
 {
-    this->ctx_ = ctx;
-    this->vsync_ = false;
+    cthis->ctx_ = ctx;
+    cthis->vsync_ = false;
 
     VkFenceCreateInfo fence_cinfo = {.sType = VK_STRUCTURE_TYPE_FENCE_CREATE_INFO};
     fence_cinfo.flags = 0;
-    vkCreateFence(ctx->device_, &fence_cinfo, nullptr, &this->recreate_fence_);
+    vkCreateFence(ctx->device_, &fence_cinfo, nullptr, &cthis->recreate_fence_);
 
     VkSurfaceCapabilitiesKHR capabilities = {};
     vkGetPhysicalDeviceSurfaceCapabilitiesKHR(ctx->physical_, ctx->surface_, &capabilities);
@@ -231,15 +231,15 @@ IMPL_OBJ_NEW(vk_swapchain, vk_ctx* ctx)
             swapchain_cinfo.imageColorSpace = formats[0].colorSpace;
         }
     }
-    this->surface_format_.format = swapchain_cinfo.imageFormat;
-    this->surface_format_.colorSpace = swapchain_cinfo.imageColorSpace;
-    vkCreateSwapchainKHR(ctx->device_, &swapchain_cinfo, nullptr, &this->swapchain_);
+    cthis->surface_format_.format = swapchain_cinfo.imageFormat;
+    cthis->surface_format_.colorSpace = swapchain_cinfo.imageColorSpace;
+    vkCreateSwapchainKHR(ctx->device_, &swapchain_cinfo, nullptr, &cthis->swapchain_);
     free(formats);
     formats = nullptr;
 
-    this->image_count_ = swapchain_cinfo.minImageCount;
-    this->images_ = alloc(VkImage, this->image_count_);
-    vkGetSwapchainImagesKHR(ctx->device_, this->swapchain_, &this->image_count_, this->images_);
+    cthis->image_count_ = swapchain_cinfo.minImageCount;
+    cthis->images_ = fi_alloc(VkImage, cthis->image_count_);
+    vkGetSwapchainImagesKHR(ctx->device_, cthis->swapchain_, &cthis->image_count_, cthis->images_);
 
     VkCommandPool cmd_pool = {};
     VkCommandPoolCreateInfo pool_cinfo = {.sType = VK_STRUCTURE_TYPE_COMMAND_POOL_CREATE_INFO};
@@ -255,10 +255,10 @@ IMPL_OBJ_NEW(vk_swapchain, vk_ctx* ctx)
     VkCommandBufferBeginInfo begin = {.sType = VK_STRUCTURE_TYPE_COMMAND_BUFFER_BEGIN_INFO};
     begin.flags = VK_COMMAND_BUFFER_USAGE_ONE_TIME_SUBMIT_BIT;
     vkBeginCommandBuffer(cmd, &begin);
-    for (size_t i = 0; i < this->image_count_; i++)
+    for (size_t i = 0; i < cthis->image_count_; i++)
     {
         VkImageMemoryBarrier barrier = {.sType = VK_STRUCTURE_TYPE_IMAGE_MEMORY_BARRIER};
-        barrier.image = this->images_[i];
+        barrier.image = cthis->images_[i];
         barrier.newLayout = VK_IMAGE_LAYOUT_PRESENT_SRC_KHR;
         barrier.subresourceRange.aspectMask = VK_IMAGE_ASPECT_COLOR_BIT;
         barrier.subresourceRange.baseMipLevel = 0;
@@ -273,37 +273,37 @@ IMPL_OBJ_NEW(vk_swapchain, vk_ctx* ctx)
     VkSubmitInfo submit = {.sType = VK_STRUCTURE_TYPE_SUBMIT_INFO};
     submit.commandBufferCount = 1;
     submit.pCommandBuffers = &cmd;
-    vkQueueSubmit(ctx->queue_, 1, &submit, this->recreate_fence_);
-    vkWaitForFences(ctx->device_, 1, &this->recreate_fence_, true, UINT64_MAX);
-    vkResetFences(this->ctx_->device_, 1, &this->recreate_fence_);
+    vkQueueSubmit(ctx->queue_, 1, &submit, cthis->recreate_fence_);
+    vkWaitForFences(ctx->device_, 1, &cthis->recreate_fence_, true, UINT64_MAX);
+    vkResetFences(cthis->ctx_->device_, 1, &cthis->recreate_fence_);
 
     vkDestroyCommandPool(ctx->device_, cmd_pool, nullptr);
-    this->extent_ = swapchain_cinfo.imageExtent;
-    return this;
+    cthis->extent_ = swapchain_cinfo.imageExtent;
+    return cthis;
 }
 
 IMPL_OBJ_DELETE(vk_swapchain)
 {
-    ffree(this->images_);
-    vkDestroySwapchainKHR(this->ctx_->device_, this->swapchain_, nullptr);
-    vkDestroyFence(this->ctx_->device_, this->recreate_fence_, nullptr);
+    fi_free(cthis->images_);
+    vkDestroySwapchainKHR(cthis->ctx_->device_, cthis->swapchain_, nullptr);
+    vkDestroyFence(cthis->ctx_->device_, cthis->recreate_fence_, nullptr);
 }
 
-bool vk_swapchain_recreate(vk_swapchain* this, VkCommandPool cmd_pool)
+bool vk_swapchain_recreate(vk_swapchain* cthis, VkCommandPool cmd_pool)
 {
     VkSurfaceCapabilitiesKHR capabilities = {};
-    vkGetPhysicalDeviceSurfaceCapabilitiesKHR(this->ctx_->physical_, this->ctx_->surface_, &capabilities);
+    vkGetPhysicalDeviceSurfaceCapabilitiesKHR(cthis->ctx_->physical_, cthis->ctx_->surface_, &capabilities);
     if (!capabilities.currentExtent.width || !capabilities.currentExtent.height)
     {
         return false;
     }
 
-    vkDestroySwapchainKHR(this->ctx_->device_, this->swapchain_, nullptr);
+    vkDestroySwapchainKHR(cthis->ctx_->device_, cthis->swapchain_, nullptr);
     VkSwapchainCreateInfoKHR swapchain_cinfo = {.sType = VK_STRUCTURE_TYPE_SWAPCHAIN_CREATE_INFO_KHR};
-    swapchain_cinfo.surface = this->ctx_->surface_;
-    swapchain_cinfo.minImageCount = this->image_count_;
-    swapchain_cinfo.imageFormat = this->surface_format_.format;
-    swapchain_cinfo.imageColorSpace = this->surface_format_.colorSpace;
+    swapchain_cinfo.surface = cthis->ctx_->surface_;
+    swapchain_cinfo.minImageCount = cthis->image_count_;
+    swapchain_cinfo.imageFormat = cthis->surface_format_.format;
+    swapchain_cinfo.imageColorSpace = cthis->surface_format_.colorSpace;
     swapchain_cinfo.imageExtent = capabilities.currentExtent;
     swapchain_cinfo.imageArrayLayers = 1;
     swapchain_cinfo.imageUsage = VK_IMAGE_USAGE_COLOR_ATTACHMENT_BIT | //
@@ -311,25 +311,25 @@ bool vk_swapchain_recreate(vk_swapchain* this, VkCommandPool cmd_pool)
                                  VK_IMAGE_USAGE_TRANSFER_SRC_BIT;
     swapchain_cinfo.preTransform = VK_SURFACE_TRANSFORM_IDENTITY_BIT_KHR;
     swapchain_cinfo.compositeAlpha = VK_COMPOSITE_ALPHA_OPAQUE_BIT_KHR;
-    swapchain_cinfo.presentMode = this->vsync_ ? VK_PRESENT_MODE_FIFO_KHR : VK_PRESENT_MODE_IMMEDIATE_KHR;
+    swapchain_cinfo.presentMode = cthis->vsync_ ? VK_PRESENT_MODE_FIFO_KHR : VK_PRESENT_MODE_IMMEDIATE_KHR;
     swapchain_cinfo.clipped = true;
     swapchain_cinfo.oldSwapchain = nullptr;
-    vkCreateSwapchainKHR(this->ctx_->device_, &swapchain_cinfo, nullptr, &this->swapchain_);
-    vkGetSwapchainImagesKHR(this->ctx_->device_, this->swapchain_, &this->image_count_, this->images_);
+    vkCreateSwapchainKHR(cthis->ctx_->device_, &swapchain_cinfo, nullptr, &cthis->swapchain_);
+    vkGetSwapchainImagesKHR(cthis->ctx_->device_, cthis->swapchain_, &cthis->image_count_, cthis->images_);
 
     VkCommandBuffer cmd = {};
     VkCommandBufferAllocateInfo alloc_info = {.sType = VK_STRUCTURE_TYPE_COMMAND_BUFFER_ALLOCATE_INFO};
     alloc_info.commandPool = cmd_pool;
     alloc_info.commandBufferCount = 1;
-    vkAllocateCommandBuffers(this->ctx_->device_, &alloc_info, &cmd);
+    vkAllocateCommandBuffers(cthis->ctx_->device_, &alloc_info, &cmd);
 
     VkCommandBufferBeginInfo begin = {.sType = VK_STRUCTURE_TYPE_COMMAND_BUFFER_BEGIN_INFO};
     begin.flags = VK_COMMAND_BUFFER_USAGE_ONE_TIME_SUBMIT_BIT;
     vkBeginCommandBuffer(cmd, &begin);
-    for (size_t i = 0; i < this->image_count_; i++)
+    for (size_t i = 0; i < cthis->image_count_; i++)
     {
         VkImageMemoryBarrier barrier = {.sType = VK_STRUCTURE_TYPE_IMAGE_MEMORY_BARRIER};
-        barrier.image = this->images_[i];
+        barrier.image = cthis->images_[i];
         barrier.newLayout = VK_IMAGE_LAYOUT_PRESENT_SRC_KHR;
         barrier.subresourceRange.aspectMask = VK_IMAGE_ASPECT_COLOR_BIT;
         barrier.subresourceRange.baseMipLevel = 0;
@@ -344,21 +344,21 @@ bool vk_swapchain_recreate(vk_swapchain* this, VkCommandPool cmd_pool)
     VkSubmitInfo submit = {.sType = VK_STRUCTURE_TYPE_SUBMIT_INFO};
     submit.commandBufferCount = 1;
     submit.pCommandBuffers = &cmd;
-    vkQueueSubmit(this->ctx_->queue_, 1, &submit, this->recreate_fence_);
-    vkWaitForFences(this->ctx_->device_, 1, &this->recreate_fence_, true, UINT64_MAX);
-    vkResetFences(this->ctx_->device_, 1, &this->recreate_fence_);
+    vkQueueSubmit(cthis->ctx_->queue_, 1, &submit, cthis->recreate_fence_);
+    vkWaitForFences(cthis->ctx_->device_, 1, &cthis->recreate_fence_, true, UINT64_MAX);
+    vkResetFences(cthis->ctx_->device_, 1, &cthis->recreate_fence_);
 
-    this->extent_ = swapchain_cinfo.imageExtent;
+    cthis->extent_ = swapchain_cinfo.imageExtent;
     return true;
 }
 
-VkResult vk_swapchain_process(vk_swapchain* this,
+VkResult vk_swapchain_process(vk_swapchain* cthis,
                               VkCommandPool cmd_pool,
                               VkSemaphore signal,
                               VkFence fence,
                               uint32_t* image_idx)
 {
-    VkResult result = vkAcquireNextImageKHR(this->ctx_->device_, this->swapchain_, UINT64_MAX, //
+    VkResult result = vkAcquireNextImageKHR(cthis->ctx_->device_, cthis->swapchain_, UINT64_MAX, //
                                             signal, fence, image_idx);
 
     switch (result)
@@ -367,15 +367,15 @@ VkResult vk_swapchain_process(vk_swapchain* this,
         {
             while (true)
             {
-                sem_wait(&this->ctx_->resize_done_);
-                if (vk_swapchain_recreate(this, cmd_pool))
+                sem_wait(&cthis->ctx_->resize_done_);
+                if (vk_swapchain_recreate(cthis, cmd_pool))
                 {
-                    result = vkAcquireNextImageKHR(this->ctx_->device_, this->swapchain_, UINT64_MAX, signal, fence,
+                    result = vkAcquireNextImageKHR(cthis->ctx_->device_, cthis->swapchain_, UINT64_MAX, signal, fence,
                                                    image_idx);
-                    sem_post(&this->ctx_->recreate_done_);
+                    sem_post(&cthis->ctx_->recreate_done_);
                     break;
                 }
-                sem_post(&this->ctx_->recreate_done_);
+                sem_post(&cthis->ctx_->recreate_done_);
             }
             break;
         }
@@ -386,14 +386,14 @@ VkResult vk_swapchain_process(vk_swapchain* this,
             submit.waitSemaphoreCount = 1;
             submit.pWaitSemaphores = &signal;
             submit.pWaitDstStageMask = &stage;
-            vkQueueSubmit(this->ctx_->queue_, 1, &submit, this->recreate_fence_);
-            vkWaitForFences(this->ctx_->device_, 1, &this->recreate_fence_, true, UINT64_MAX);
-            vkResetFences(this->ctx_->device_, 1, &this->recreate_fence_);
+            vkQueueSubmit(cthis->ctx_->queue_, 1, &submit, cthis->recreate_fence_);
+            vkWaitForFences(cthis->ctx_->device_, 1, &cthis->recreate_fence_, true, UINT64_MAX);
+            vkResetFences(cthis->ctx_->device_, 1, &cthis->recreate_fence_);
 
-            sem_wait(&this->ctx_->resize_done_);
-            vk_swapchain_recreate(this, cmd_pool);
-            result = vkAcquireNextImageKHR(this->ctx_->device_, this->swapchain_, UINT64_MAX, signal, fence, image_idx);
-            sem_post(&this->ctx_->recreate_done_);
+            sem_wait(&cthis->ctx_->resize_done_);
+            vk_swapchain_recreate(cthis, cmd_pool);
+            result = vkAcquireNextImageKHR(cthis->ctx_->device_, cthis->swapchain_, UINT64_MAX, signal, fence, image_idx);
+            sem_post(&cthis->ctx_->recreate_done_);
             break;
         }
         default:

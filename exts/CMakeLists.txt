@@ -9,7 +9,7 @@ set(CMAKE_ARCHIVE_OUTPUT_DIRECTORY "${CMAKE_SOURCE_DIR}/ext_dlls")
 set(CMAKE_SHARED_LIBRARY_PREFIX "")
 set(CMAKE_STATIC_LIBRARY_PREFIX "")
 
-file(GLOB_RECURSE DLLS "*.c")
+file(GLOB_RECURSE DLLS "*.c" "*.cpp")
 
 foreach(SCRIPT_FILE ${DLLS})
     get_filename_component(DLL_NAME ${SCRIPT_FILE} NAME_WLE)

@@ -71,7 +71,7 @@ typedef struct vk_prim
     VkDeviceAddress attrib_address_[VK_PRIM_ATTRIB_COUNT]; // offset inside vk_mesh::buffer_
 } vk_prim;
 
-size_t vk_prim_get_attrib_size(vk_prim* this, vk_prim_attrib attrib_type);
+size_t vk_prim_get_attrib_size(vk_prim* cthis, vk_prim_attrib attrib_type);
 
 typedef struct vk_prim_transform
 {

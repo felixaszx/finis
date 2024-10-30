@@ -20,7 +20,7 @@
 #define QUICK_ENUMERATE(type, func, target, count, ptr) \
     type* ptr;                                          \
     func(target, count, nullptr);                       \
-    ptr = alloc(type, *count);                          \
+    ptr = fi_alloc(type, *count);                          \
     func(target, count, ptr)
 #define QUICK_GET(type, func, target, count, ptr) QUICK_ENUMERATE(type, func, target, count, ptr);
 
@@ -62,8 +62,8 @@ typedef struct vk_swapchain
 } vk_swapchain;
 
 DEFINE_OBJ(vk_swapchain, vk_ctx* ctx);
-bool vk_swapchain_recreate(vk_swapchain* this, VkCommandPool cmd_pool);
-VkResult vk_swapchain_process(vk_swapchain* this,
+bool vk_swapchain_recreate(vk_swapchain* cthis, VkCommandPool cmd_pool);
+VkResult vk_swapchain_process(vk_swapchain* cthis,
                           VkCommandPool cmd_pool,
                           VkSemaphore signal,
                           VkFence fence,

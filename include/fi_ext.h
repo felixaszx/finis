@@ -31,7 +31,7 @@ inline static char* get_shared_lib_name(const char* lib_name)
     const char* file_ext = ".dll";
     length += 4;
 #endif
-    file_name = calloc(length + 1, sizeof(char));
+    file_name = (char*)calloc(length + 1, sizeof(char));
     strcpy(file_name, lib_name);
     strcat(file_name, file_ext);
 

@@ -12,8 +12,8 @@ typedef struct vk_desc_pool
     VkDescriptorPool pool_; // free externally
 } vk_desc_pool;
 
-void vk_desc_pool_add_desc_count(vk_desc_pool* this, VkDescriptorType type, uint32_t size);
-VkResult vk_desc_pool_create(vk_desc_pool* this, vk_ctx* ctx, uint32_t set_limit);
+void vk_desc_pool_add_desc_count(vk_desc_pool* cthis, VkDescriptorType type, uint32_t size);
+VkResult vk_desc_pool_create(vk_desc_pool* cthis, vk_ctx* ctx, uint32_t set_limit);
 
 typedef struct vk_desc_set_base
 {
@@ -22,8 +22,8 @@ typedef struct vk_desc_set_base
     VkDescriptorSetLayout layout_;           // free externally
 } vk_desc_set_base;
 
-VkResult vk_desc_set_base_create_layout(vk_desc_set_base* this, vk_ctx* ctx);
-VkDescriptorSet vk_desc_set_base_alloc_set(vk_desc_set_base* this,
+VkResult vk_desc_set_base_create_layout(vk_desc_set_base* cthis, vk_ctx* ctx);
+VkDescriptorSet vk_desc_set_base_alloc_set(vk_desc_set_base* cthis,
                                            vk_ctx* ctx,
                                            VkDescriptorPool pool,
                                            uint32_t desc_count);

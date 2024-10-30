@@ -34,13 +34,13 @@ typedef struct vk_mesh
 } vk_mesh;
 
 DEFINE_OBJ(vk_mesh, vk_ctx* ctx, const char* name, VkDeviceSize mem_limit, uint32_t prim_limit);
-vk_prim* vk_mesh_add_prim(vk_mesh* this);
-VkDeviceSize vk_mesh_add_memory(vk_mesh* this, T* src, VkDeviceSize size);
-VkDeviceSize vk_mesh_add_prim_attrib(vk_mesh* this, vk_prim* prim, vk_prim_attrib attrib, T* data, size_t count);
-void vk_mesh_add_prim_morph_attrib(vk_mesh* this, vk_morph* morph, vk_morph_attrib attrib, T* data, size_t count);
-void vk_mesh_free_staging(vk_mesh* this);
-void vk_mesh_alloc_device_mem(vk_mesh* this, VkCommandPool pool);
-void vk_mesh_draw_prims(vk_mesh* this, VkCommandBuffer cmd);
+vk_prim* vk_mesh_add_prim(vk_mesh* cthis);
+VkDeviceSize vk_mesh_add_memory(vk_mesh* cthis, T* src, VkDeviceSize size);
+VkDeviceSize vk_mesh_add_prim_attrib(vk_mesh* cthis, vk_prim* prim, vk_prim_attrib attrib, T* data, size_t count);
+void vk_mesh_add_prim_morph_attrib(vk_mesh* cthis, vk_morph* morph, vk_morph_attrib attrib, T* data, size_t count);
+void vk_mesh_free_staging(vk_mesh* cthis);
+void vk_mesh_alloc_device_mem(vk_mesh* cthis, VkCommandPool pool);
+void vk_mesh_draw_prims(vk_mesh* cthis, VkCommandBuffer cmd);
 
 typedef struct vk_tex_arr
 {
@@ -59,15 +59,15 @@ typedef struct vk_tex_arr
 } vk_tex_arr;
 
 DEFINE_OBJ(vk_tex_arr, vk_ctx* ctx, uint32_t tex_limit, uint32_t sampler_limit);
-bool vk_tex_arr_add_sampler(vk_tex_arr* this, VkSamplerCreateInfo* sampler_info);
-bool vk_tex_arr_add_tex(vk_tex_arr* this,
+bool vk_tex_arr_add_sampler(vk_tex_arr* cthis, VkSamplerCreateInfo* sampler_info);
+bool vk_tex_arr_add_tex(vk_tex_arr* cthis,
                         VkCommandPool cmd_pool,
                         uint32_t sampler_idx,
                         byte* data,
                         size_t size,
                         const VkExtent3D* extent,
                         const VkImageSubresource* sub_res);
-VkWriteDescriptorSet vk_tex_arr_get_write_info(vk_tex_arr* this, VkDescriptorSet set, uint32_t binding);
+VkWriteDescriptorSet vk_tex_arr_get_write_info(vk_tex_arr* cthis, VkDescriptorSet set, uint32_t binding);
 
 typedef struct vk_mesh_desc
 {
@@ -84,9 +84,9 @@ typedef struct vk_mesh_desc
 } vk_mesh_desc;
 
 DEFINE_OBJ(vk_mesh_desc, vk_ctx* ctx, uint32_t node_count_);
-void vk_mesh_desc_flush(vk_mesh_desc* this);
-void vk_mesh_desc_update(vk_mesh_desc* this, mat4 root_trans);
-void vk_mesh_desc_alloc_device_mem(vk_mesh_desc* this);
+void vk_mesh_desc_flush(vk_mesh_desc* cthis);
+void vk_mesh_desc_update(vk_mesh_desc* cthis, mat4 root_trans);
+void vk_mesh_desc_alloc_device_mem(vk_mesh_desc* cthis);
 
 typedef struct vk_mesh_joint
 {
@@ -106,6 +106,6 @@ typedef struct vk_mesh_skin
 } vk_mesh_skin;
 
 DEFINE_OBJ(vk_mesh_skin, vk_ctx* ctx, uint32_t joint_count_);
-void vk_mesh_skin_alloc_device_mem(vk_mesh_skin* this, VkCommandPool cmd_pool);
+void vk_mesh_skin_alloc_device_mem(vk_mesh_skin* cthis, VkCommandPool cmd_pool);
 
 #endif // INCLUDE_VK_MESH_H

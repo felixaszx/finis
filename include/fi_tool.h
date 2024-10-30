@@ -12,11 +12,11 @@
 
 #define nullptr NULL
 
-#define GET_ALLOC(_0, _1, ALLOC, ...) ALLOC
-#define ALLOC_0(type)                 (type*)malloc_zero(sizeof(type))
-#define ALLOC_1(type, count)          (type*)malloc_zero(count * sizeof(type))
-#define alloc(...)                    GET_ALLOC(__VA_ARGS__, ALLOC_1, ALLOC_0)(__VA_ARGS__)
-#define ffree(ptr) \
+#define GET_FI_ALLOC(_0, _1, ALLOC, ...) ALLOC
+#define FI_ALLOC_0(type)                 (type*)malloc_zero(sizeof(type))
+#define FI_ALLOC_1(type, count)          (type*)malloc_zero(count * sizeof(type))
+#define fi_alloc(...)                    GET_FI_ALLOC(__VA_ARGS__, FI_ALLOC_1, FI_ALLOC_0)(__VA_ARGS__)
+#define fi_free(ptr) \
     free(ptr);     \
     ptr = NULL
 
@@ -28,39 +28,38 @@
 // provide new, init and release type
 #define DEFINE_OBJ(type, ...)                        \
     type* new_##type();                              \
-    type* construct_##type(type* this, __VA_ARGS__); \
-    void destroy_##type(type* this)
+    type* construct_##type(type* cthis, __VA_ARGS__); \
+    void destroy_##type(type* cthis)
 #define DEFINE_OBJ_DEFAULT(type)        \
     type* new_##type();                 \
-    type* construct_##type(type* this); \
-    void destroy_##type(type* this)
+    type* construct_##type(type* cthis); \
+    void destroy_##type(type* cthis)
 
 #define IMPL_OBJ_NEW(type, ...) \
     type* new_##type()          \
     {                           \
-        return alloc(type);     \
+        return fi_alloc(type);     \
     }                           \
-    type* construct_##type(type* this, __VA_ARGS__)
+    type* construct_##type(type* cthis, __VA_ARGS__)
 #define IMPL_OBJ_NEW_DEFAULT(type) \
     type* new_##type()             \
     {                              \
-        return alloc(type);        \
+        return fi_alloc(type);        \
     }                              \
-    type* construct_##type(type* this)
-#define IMPL_OBJ_DELETE(type) void destroy_##type(type* this)
+    type* construct_##type(type* cthis)
+#define IMPL_OBJ_DELETE(type) void destroy_##type(type* cthis)
 #define IMPL_OBJ_DELETE_DEFAULT(type) \
-    void destroy_##type(type* this)   \
+    void destroy_##type(type* cthis)   \
     {                                 \
     }
 
-#define new(type, ...) (type*)construct_##type(new_##type(), __VA_ARGS__)
-#define cnew(type)     (type*)construct_##type(new_##type())
-#define delete(type, obj)      \
+#define fi_new(type, ...) (type*)construct_##type(new_##type(), __VA_ARGS__)
+#define fi_delete(type, obj)      \
     {                          \
         type* t_ptr = obj;     \
         destroy_##type(t_ptr); \
     }                          \
-    ffree(obj)
+    fi_free(obj)
 
 typedef unsigned char byte;
 typedef size_t byte_offset;

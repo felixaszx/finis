@@ -11,7 +11,7 @@ typedef struct vk_shader
 } vk_shader;
 
 DEFINE_OBJ(vk_shader, vk_ctx* ctx, const char* file_path, VkShaderStageFlags stage);
-void vk_shader_reflect_symbols(vk_shader* this);
+void vk_shader_reflect_symbols(vk_shader* cthis);
 
 typedef struct vk_gfx_pl_desc vk_gfx_pl_desc;
 typedef VkPipelineLayout (*vk_gfx_pl_configurator)(vk_ctx* ctx, vk_gfx_pl_desc* pl_desc);
@@ -44,7 +44,7 @@ struct vk_gfx_pl_desc
 };
 
 DEFINE_OBJ(vk_gfx_pl_desc, vk_gfx_pl_configurator configurator, vk_gfx_pl_cleaner cleaner);
-VkPipeline vk_gfx_pl_desc_build(vk_gfx_pl_desc* this, vk_ctx* ctx, VkPipelineLayout* layout);
+VkPipeline vk_gfx_pl_desc_build(vk_gfx_pl_desc* cthis, vk_ctx* ctx, VkPipelineLayout* layout);
 
 typedef struct vk_comp_pl_desc vk_comp_pl_desc;
 typedef VkPipelineLayout (*vk_comp_pl_configurator)(vk_ctx* ctx, vk_comp_pl_desc* pl_desc);
@@ -60,7 +60,7 @@ struct vk_comp_pl_desc
 };
 
 DEFINE_OBJ(vk_comp_pl_desc, vk_comp_pl_configurator configurator, vk_comp_pl_cleaner cleaner);
-VkPipeline vk_comp_pl_desc_build(vk_comp_pl_desc* this, vk_ctx* ctx, VkPipelineLayout* layout);
+VkPipeline vk_comp_pl_desc_build(vk_comp_pl_desc* cthis, vk_ctx* ctx, VkPipelineLayout* layout);
 
 typedef struct vk_atchm_pkg
 {

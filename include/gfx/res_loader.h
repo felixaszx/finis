@@ -45,8 +45,8 @@ typedef struct gltf_tex
     byte* data_;
     uint32_t sampler_idx_;
 } gltf_tex;
-size_t gltf_tex_size(gltf_tex* this);
-VkExtent3D gltf_tex_extent(gltf_tex* this);
+size_t gltf_tex_size(gltf_tex* cthis);
+VkExtent3D gltf_tex_extent(gltf_tex* cthis);
 
 // glb only
 typedef struct gltf_file
@@ -103,7 +103,7 @@ typedef struct gltf_key_frame
     size_t w_per_morph_;
 } gltf_key_frame;
 
-void gltf_key_frame_sample(gltf_key_frame* this, gltf_key_frame_channel channel, gltf_ms time_pt, T* dst); // lerp only
+void gltf_key_frame_sample(gltf_key_frame* cthis, gltf_key_frame_channel channel, gltf_ms time_pt, T* dst); // lerp only
 
 typedef struct gltf_anim
 {
