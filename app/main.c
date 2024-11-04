@@ -3,6 +3,7 @@
 
 #include "fi_ext.h"
 #include "gfx/gfx.h"
+#include "proto/render.h"
 #include "renderer/gbuffer.h"
 
 const uint32_t WIDTH = 800;
@@ -34,7 +35,7 @@ typedef struct gbuffer_renderer_arg
 void process_sc(gbuffer_renderer* renderer, T* data)
 {
     gbuffer_renderer_arg* args = data;
-    vk_swapchain_process(args->sc_, renderer->cmd_pool_, args->acquired_, nullptr, &args->image_idx_);
+    vk_swapchain_process(args->sc_, renderer->cmd_pool_, args->acquired_, fi_nullptr, &args->image_idx_);
 }
 
 void gbuffer_draw(gbuffer_renderer* renderer, T* data)
@@ -56,7 +57,7 @@ void gbuffer_draw(gbuffer_renderer* renderer, T* data)
     glm_perspective(45.0f, (float)WIDTH / HEIGHT, 0.1, 100.0f, pushed_data.PROJECTION_MAT);
 
     vkCmdBindDescriptorSets(renderer->main_cmd_, VK_PIPELINE_BIND_POINT_GRAPHICS, renderer->pl_layouts_[0], 0, 1,
-                            &args->tex_arr_set_, 0, nullptr);
+                            &args->tex_arr_set_, 0, fi_nullptr);
     vkCmdPushConstants(renderer->main_cmd_, renderer->pl_layouts_[0], VK_SHADER_STAGE_VERTEX_BIT, 0,
                        sizeof(pushed_data), &pushed_data);
     vk_mesh_draw_prims(args->sparta_mesh_, renderer->main_cmd_);
@@ -68,21 +69,21 @@ T* render_thr_func(T* arg)
     vk_ctx* ctx = ctx_combo->ctx_;
     atomic_bool* rendering = &ctx_combo->rendering_;
 
-    vk_desc_pool desc_pool = {.pool_ = nullptr};
+    vk_desc_pool desc_pool = {.pool_ = fi_nullptr};
     vk_desc_pool_add_desc_count(&desc_pool, VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER, 100);
     vk_desc_pool_create(&desc_pool, ctx, 2);
 
-    VkCommandPool cmd_pool = nullptr;
+    VkCommandPool cmd_pool = fi_nullptr;
     VkCommandPoolCreateInfo pool_cinfo = {.sType = VK_STRUCTURE_TYPE_COMMAND_POOL_CREATE_INFO};
     pool_cinfo.flags = VK_COMMAND_POOL_CREATE_RESET_COMMAND_BUFFER_BIT;
     pool_cinfo.queueFamilyIndex = ctx->queue_idx_;
-    vkCreateCommandPool(ctx->device_, &pool_cinfo, nullptr, &cmd_pool);
+    vkCreateCommandPool(ctx->device_, &pool_cinfo, fi_nullptr, &cmd_pool);
 
     vk_swapchain* sc = fi_new(vk_swapchain, ctx);
 
     VkSemaphore acquired = {};
     VkSemaphoreCreateInfo sem_cinfo = {.sType = VK_STRUCTURE_TYPE_SEMAPHORE_CREATE_INFO};
-    vkCreateSemaphore(ctx->device_, &sem_cinfo, nullptr, &acquired);
+    vkCreateSemaphore(ctx->device_, &sem_cinfo, fi_nullptr, &acquired);
 
     gbuffer_renderer_arg gbuffer_arg = {.sc_ = sc, .acquired_ = acquired};
 
@@ -94,6 +95,12 @@ T* render_thr_func(T* arg)
     gbuffer->render_cb_ = gbuffer_draw;
     gbuffer->sem_submits_[0] = vk_get_sem_info(acquired, VK_PIPELINE_STAGE_2_BOTTOM_OF_PIPE_BIT);
     dlclose(default_pl_dll);
+
+    char* pl_dll_name2 = get_shared_lib_name("./ext_dlls/deffer");
+    default_pl_dll = dlopen(pl_dll_name, RTLD_NOW);
+    fi_free(pl_dll_name2);
+    fi_pass_setup_func_t gbuffer_setup2 = dlsym(default_pl_dll, "setup");
+    gbuffer_setup2(fi_nullptr, ctx, sc, (VkExtent3D){});
 
     gltf_file* sparta = fi_new(gltf_file, "res/models/sparta.glb");
     gltf_desc* sparta_desc = fi_new(gltf_desc, sparta);
@@ -166,7 +173,7 @@ T* render_thr_func(T* arg)
     gbuffer_arg.tex_arr_set_ =
         vk_desc_set_base_alloc_set(gbuffer->desc_set_bases_, ctx, desc_pool.pool_, sparta->tex_count_);
     VkWriteDescriptorSet tex_arr_write = vk_tex_arr_get_write_info(sparta_tex_arr, gbuffer_arg.tex_arr_set_, 0);
-    vkUpdateDescriptorSets(ctx->device_, 1, &tex_arr_write, 0, nullptr);
+    vkUpdateDescriptorSets(ctx->device_, 1, &tex_arr_write, 0, fi_nullptr);
 
     gbuffer_arg.sparta_mesh_ = sparta_mesh;
     gbuffer_arg.sparta_mesh_desc_ = sparta_mesh_desc;
@@ -191,9 +198,9 @@ T* render_thr_func(T* arg)
     gbuffer_renderer_wait_idle(gbuffer);
     vkDeviceWaitIdle(ctx->device_);
 
-    vkDestroySemaphore(ctx->device_, acquired, nullptr);
-    vkDestroyCommandPool(ctx->device_, cmd_pool, nullptr);
-    vkDestroyDescriptorPool(ctx->device_, desc_pool.pool_, nullptr);
+    vkDestroySemaphore(ctx->device_, acquired, fi_nullptr);
+    vkDestroyCommandPool(ctx->device_, cmd_pool, fi_nullptr);
+    vkDestroyDescriptorPool(ctx->device_, desc_pool.pool_, fi_nullptr);
 
     fi_free(sparta_prims);
     fi_free(prim_transforms);
@@ -207,7 +214,7 @@ T* render_thr_func(T* arg)
     fi_delete(gltf_file, sparta);
     fi_delete(gbuffer_renderer, gbuffer);
     fi_delete(vk_swapchain, sc);
-    return nullptr;
+    return fi_nullptr;
 }
 
 int main(int argc, char** argv)
@@ -218,7 +225,7 @@ int main(int argc, char** argv)
     atomic_init(&render_thr_args.frame_time_, 0);
 
     pthread_t render_thr = {};
-    pthread_create(&render_thr, nullptr, render_thr_func, &render_thr_args);
+    pthread_create(&render_thr, fi_nullptr, render_thr_func, &render_thr_args);
 
     while (vk_ctx_update(ctx))
     {
@@ -235,7 +242,7 @@ int main(int argc, char** argv)
     }
 
     atomic_store(&render_thr_args.rendering_, false);
-    pthread_join(render_thr, nullptr);
+    pthread_join(render_thr, fi_nullptr);
 
     fi_delete(vk_ctx, ctx);
     return 0;

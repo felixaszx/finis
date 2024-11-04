@@ -20,7 +20,7 @@ VkResult vk_desc_set_base_create_layout(vk_desc_set_base* cthis, vk_ctx* ctx)
     set_layout_info_.bindingCount = cthis->binding_count_;
     set_layout_info_.pBindings = cthis->bindings_;
 
-    VkResult result = vkCreateDescriptorSetLayout(ctx->device_, &set_layout_info_, nullptr, &cthis->layout_);
+    VkResult result = vkCreateDescriptorSetLayout(ctx->device_, &set_layout_info_, fi_nullptr, &cthis->layout_);
     return result;
 }
 
@@ -59,5 +59,5 @@ VkResult vk_desc_pool_create(vk_desc_pool* cthis, vk_ctx* ctx, uint32_t set_limi
     cinfo.pPoolSizes = cthis->sizes_;
     cinfo.maxSets = set_limit;
     cinfo.flags = VK_DESCRIPTOR_POOL_CREATE_UPDATE_AFTER_BIND_BIT;
-    return vkCreateDescriptorPool(ctx->device_, &cinfo, nullptr, &cthis->pool_);
+    return vkCreateDescriptorPool(ctx->device_, &cinfo, fi_nullptr, &cthis->pool_);
 }

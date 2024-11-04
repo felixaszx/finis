@@ -40,9 +40,9 @@ void vk_mesh_free_staging(vk_mesh* cthis)
     if (cthis->staging_alloc_)
     {
         vmaDestroyBuffer(cthis->ctx_->allocator_, cthis->staging_, cthis->staging_alloc_);
-        cthis->mapping_ = nullptr;
-        cthis->staging_ = nullptr;
-        cthis->staging_alloc_ = nullptr;
+        cthis->mapping_ = fi_nullptr;
+        cthis->staging_ = fi_nullptr;
+        cthis->staging_alloc_ = fi_nullptr;
     }
 }
 
@@ -62,7 +62,7 @@ void vk_mesh_alloc_device_mem(vk_mesh* cthis, VkCommandPool pool)
     VmaAllocationCreateInfo alloc_info = {};
     alloc_info.usage = VMA_MEMORY_USAGE_AUTO_PREFER_DEVICE;
 
-    vmaCreateBuffer(cthis->ctx_->allocator_, &buffer_info, &alloc_info, &cthis->buffer_, &cthis->alloc_, nullptr);
+    vmaCreateBuffer(cthis->ctx_->allocator_, &buffer_info, &alloc_info, &cthis->buffer_, &cthis->alloc_, fi_nullptr);
 
     VkBufferDeviceAddressInfo address_info = {.sType = VK_STRUCTURE_TYPE_BUFFER_DEVICE_ADDRESS_INFO};
     address_info.buffer = cthis->buffer_;
@@ -92,7 +92,7 @@ void vk_mesh_alloc_device_mem(vk_mesh* cthis, VkCommandPool pool)
 
     VkFence fence = {};
     VkFenceCreateInfo fence_cinfo = {.sType = VK_STRUCTURE_TYPE_FENCE_CREATE_INFO};
-    vkCreateFence(cthis->ctx_->device_, &fence_cinfo, nullptr, &fence);
+    vkCreateFence(cthis->ctx_->device_, &fence_cinfo, fi_nullptr, &fence);
     vkResetFences(cthis->ctx_->device_, 1, &fence);
 
     VkCommandBuffer cmd = {};
@@ -114,7 +114,7 @@ void vk_mesh_alloc_device_mem(vk_mesh* cthis, VkCommandPool pool)
     vkQueueSubmit(cthis->ctx_->queue_, 1, &submit, fence);
     vkWaitForFences(cthis->ctx_->device_, 1, &fence, true, UINT64_MAX);
 
-    vkDestroyFence(cthis->ctx_->device_, fence, nullptr);
+    vkDestroyFence(cthis->ctx_->device_, fence, fi_nullptr);
     vkFreeCommandBuffers(cthis->ctx_->device_, pool, 1, &cmd);
     vk_mesh_free_staging(cthis);
     cthis->prim_limit_ = 0;
@@ -131,7 +131,7 @@ vk_prim* vk_mesh_add_prim(vk_mesh* cthis)
 {
     if (cthis->prim_count_ >= cthis->prim_limit_)
     {
-        return nullptr;
+        return fi_nullptr;
     }
 
     cthis->prim_count_++;
@@ -199,13 +199,13 @@ IMPL_OBJ_DELETE(vk_tex_arr)
 {
     for (size_t i = 0; i < cthis->tex_count_; i++)
     {
-        vkDestroyImageView(cthis->ctx_->device_, cthis->views_[i], nullptr);
+        vkDestroyImageView(cthis->ctx_->device_, cthis->views_[i], fi_nullptr);
         vmaDestroyImage(cthis->ctx_->allocator_, cthis->texs_[i], cthis->allocs_[i]);
     }
 
     for (size_t i = 0; i < cthis->sampler_count_; i++)
     {
-        vkDestroySampler(cthis->ctx_->device_, cthis->samplers_[i], nullptr);
+        vkDestroySampler(cthis->ctx_->device_, cthis->samplers_[i], fi_nullptr);
     }
 
     fi_free(cthis->texs_);
@@ -222,7 +222,7 @@ bool vk_tex_arr_add_sampler(vk_tex_arr* cthis, VkSamplerCreateInfo* sampler_info
         return false;
     }
 
-    vkCreateSampler(cthis->ctx_->device_, sampler_info, nullptr, cthis->samplers_ + cthis->sampler_count_);
+    vkCreateSampler(cthis->ctx_->device_, sampler_info, fi_nullptr, cthis->samplers_ + cthis->sampler_count_);
 
     cthis->sampler_count_++;
     return true;
@@ -252,7 +252,7 @@ bool vk_tex_arr_add_tex(vk_tex_arr* cthis,
     VmaAllocationCreateInfo alloc_info = {};
     alloc_info.usage = VMA_MEMORY_USAGE_AUTO_PREFER_DEVICE;
     vmaCreateImage(cthis->ctx_->allocator_, &tex_info, &alloc_info, //
-                   cthis->texs_ + cthis->tex_count_, cthis->allocs_ + cthis->tex_count_, nullptr);
+                   cthis->texs_ + cthis->tex_count_, cthis->allocs_ + cthis->tex_count_, fi_nullptr);
 
     VkImageViewCreateInfo view_info = {.sType = VK_STRUCTURE_TYPE_IMAGE_VIEW_CREATE_INFO};
     view_info.viewType = VK_IMAGE_VIEW_TYPE_2D;
@@ -261,7 +261,7 @@ bool vk_tex_arr_add_tex(vk_tex_arr* cthis,
     view_info.subresourceRange.aspectMask = sub_res->aspectMask;
     view_info.subresourceRange.layerCount = tex_info.arrayLayers;
     view_info.subresourceRange.levelCount = tex_info.mipLevels;
-    vkCreateImageView(cthis->ctx_->device_, &view_info, nullptr, cthis->views_ + cthis->tex_count_);
+    vkCreateImageView(cthis->ctx_->device_, &view_info, fi_nullptr, cthis->views_ + cthis->tex_count_);
 
     VkBufferCreateInfo buffer_info = {.sType = VK_STRUCTURE_TYPE_BUFFER_CREATE_INFO};
     buffer_info.size = size;
@@ -279,7 +279,7 @@ bool vk_tex_arr_add_tex(vk_tex_arr* cthis,
     // manipulate the imageVkFence fence = {};
     VkFence fence = {};
     VkFenceCreateInfo fence_cinfo = {.sType = VK_STRUCTURE_TYPE_FENCE_CREATE_INFO};
-    vkCreateFence(cthis->ctx_->device_, &fence_cinfo, nullptr, &fence);
+    vkCreateFence(cthis->ctx_->device_, &fence_cinfo, fi_nullptr, &fence);
     vkResetFences(cthis->ctx_->device_, 1, &fence);
 
     VkCommandBuffer cmd = {};
@@ -311,7 +311,7 @@ bool vk_tex_arr_add_tex(vk_tex_arr* cthis,
     begin.flags = VK_COMMAND_BUFFER_USAGE_ONE_TIME_SUBMIT_BIT;
     vkBeginCommandBuffer(cmd, &begin);
     vkCmdPipelineBarrier(cmd, VK_PIPELINE_STAGE_TOP_OF_PIPE_BIT, VK_PIPELINE_STAGE_TRANSFER_BIT, //
-                         0, 0, nullptr, 0, nullptr, 1, &barrier);
+                         0, 0, fi_nullptr, 0, fi_nullptr, 1, &barrier);
     vkCmdCopyBufferToImage(cmd, staging, cthis->texs_[cthis->tex_count_], barrier.newLayout, 1, &region);
 
     uint32_t mip_w = extent->width;
@@ -325,7 +325,7 @@ bool vk_tex_arr_add_tex(vk_tex_arr* cthis,
         barrier.dstAccessMask = VK_ACCESS_TRANSFER_READ_BIT;
         barrier.subresourceRange.baseMipLevel = i - 1;
         vkCmdPipelineBarrier(cmd, VK_PIPELINE_STAGE_TRANSFER_BIT, VK_PIPELINE_STAGE_TRANSFER_BIT, //
-                             0, 0, nullptr, 0, nullptr, 1, &barrier);
+                             0, 0, fi_nullptr, 0, fi_nullptr, 1, &barrier);
 
         VkImageBlit blit = {};
         blit.srcOffsets[1] = (VkOffset3D){mip_w, mip_h, 1};
@@ -351,7 +351,7 @@ bool vk_tex_arr_add_tex(vk_tex_arr* cthis,
         barrier.dstAccessMask = VK_ACCESS_TRANSFER_READ_BIT;
         barrier.subresourceRange.baseMipLevel = i - 1;
         vkCmdPipelineBarrier(cmd, VK_PIPELINE_STAGE_TRANSFER_BIT, VK_PIPELINE_STAGE_TRANSFER_BIT, //
-                             0, 0, nullptr, 0, nullptr, 1, &barrier);
+                             0, 0, fi_nullptr, 0, fi_nullptr, 1, &barrier);
 
         mip_w > 1 ? mip_w /= 2 : mip_w;
         mip_h > 1 ? mip_h /= 2 : mip_h;
@@ -362,7 +362,7 @@ bool vk_tex_arr_add_tex(vk_tex_arr* cthis,
     barrier.dstAccessMask = VK_ACCESS_TRANSFER_READ_BIT;
     barrier.subresourceRange.baseMipLevel = sub_res->mipLevel - 1;
     vkCmdPipelineBarrier(cmd, VK_PIPELINE_STAGE_TRANSFER_BIT, VK_PIPELINE_STAGE_TRANSFER_BIT, //
-                         0, 0, nullptr, 0, nullptr, 1, &barrier);
+                         0, 0, fi_nullptr, 0, fi_nullptr, 1, &barrier);
     vkEndCommandBuffer(cmd);
 
     VkSubmitInfo submit = {.sType = VK_STRUCTURE_TYPE_SUBMIT_INFO};
@@ -371,7 +371,7 @@ bool vk_tex_arr_add_tex(vk_tex_arr* cthis,
     vkQueueSubmit(cthis->ctx_->queue_, 1, &submit, fence);
     vkWaitForFences(cthis->ctx_->device_, 1, &fence, true, UINT64_MAX);
 
-    vkDestroyFence(cthis->ctx_->device_, fence, nullptr);
+    vkDestroyFence(cthis->ctx_->device_, fence, fi_nullptr);
     vkFreeCommandBuffers(cthis->ctx_->device_, cmd_pool, 1, &cmd);
 
     VkDescriptorImageInfo* desc_info = cthis->desc_infos_ + cthis->tex_count_;
@@ -525,7 +525,7 @@ void vk_mesh_skin_alloc_device_mem(vk_mesh_skin* cthis, VkCommandPool cmd_pool)
     alloc_info.usage = VMA_MEMORY_USAGE_AUTO_PREFER_DEVICE;
     alloc_info.flags = 0;
     alloc_info.requiredFlags = 0;
-    vmaCreateBuffer(cthis->ctx_->allocator_, &buffer_info, &alloc_info, &cthis->buffer_, &cthis->alloc_, nullptr);
+    vmaCreateBuffer(cthis->ctx_->allocator_, &buffer_info, &alloc_info, &cthis->buffer_, &cthis->alloc_, fi_nullptr);
 
     VkBufferDeviceAddressInfo address_info = {.sType = VK_STRUCTURE_TYPE_BUFFER_DEVICE_ADDRESS_INFO};
     address_info.buffer = cthis->buffer_;
@@ -533,7 +533,7 @@ void vk_mesh_skin_alloc_device_mem(vk_mesh_skin* cthis, VkCommandPool cmd_pool)
 
     VkFence fence = {};
     VkFenceCreateInfo fence_cinfo = {.sType = VK_STRUCTURE_TYPE_FENCE_CREATE_INFO};
-    vkCreateFence(cthis->ctx_->device_, &fence_cinfo, nullptr, &fence);
+    vkCreateFence(cthis->ctx_->device_, &fence_cinfo, fi_nullptr, &fence);
     vkResetFences(cthis->ctx_->device_, 1, &fence);
 
     VkCommandBuffer cmd = {};
@@ -555,7 +555,7 @@ void vk_mesh_skin_alloc_device_mem(vk_mesh_skin* cthis, VkCommandPool cmd_pool)
     vkQueueSubmit(cthis->ctx_->queue_, 1, &submit, fence);
     vkWaitForFences(cthis->ctx_->device_, 1, &fence, true, UINT64_MAX);
 
-    vkDestroyFence(cthis->ctx_->device_, fence, nullptr);
+    vkDestroyFence(cthis->ctx_->device_, fence, fi_nullptr);
     vkFreeCommandBuffers(cthis->ctx_->device_, cmd_pool, 1, &cmd);
     vmaDestroyBuffer(cthis->ctx_->allocator_, staging, staging_alloc);
 }

@@ -6,17 +6,26 @@
 #include <string.h>
 
 #ifdef __cplusplus
-#define DLL_PREFIX extern "C"
+#include <string>
+#define FI_DLL_PREFIX extern "C"
+
+inline static std::string get_shared_lib_name(const std::string& lib_name)
+{
+#ifdef __linux__
+    std::string file_ext = ".so";
 #else
-#define DLL_PREFIX
+    std::string file_ext = ".dll";
+#endif
+    return lib_name + file_ext;
+}
+#else
+#define FI_DLL_PREFIX
 #endif
 
-#if defined(_MSC_VER)
-#define DLL_EXPORT __declspec(dllexport) DLL_PREFIX
-#define DLL_IMPORT __declspec(dllimport) DLL_PREFIX
-#elif defined(__GNUC__)
-#define DLL_EXPORT __attribute__((visibility("default"))) DLL_PREFIX
-#define DLL_IMPORT DLL_PREFIX
+#if defined(_WIN32) || defined(__WIN32__) || defined(WIN32) || defined(__CYGWIN__)
+#define FI_DLL_EXPORT FI_DLL_PREFIX __declspec(dllexport)
+#else
+#define FI_DLL_EXPORT  FI_DLL_PREFIX __attribute__((__visibility__("default")))
 #endif
 
 typedef void* dll_handle;

@@ -56,7 +56,7 @@ IMPL_OBJ_NEW(gltf_file, const char* file_path)
     if (result != cgltf_result_success)
     {
         cgltf_free(cthis->data_);
-        cthis->data_ = nullptr;
+        cthis->data_ = fi_nullptr;
         printf("Fail to parse gltf file %s", file_path);
         return cthis;
     }
@@ -316,7 +316,7 @@ void build_layer(cgltf_node**** layers, cgltf_node* curr, uint32_t depth)
         stbds_arrsetlen((*layers), depth + 1);
         for (size_t i = layer_count; i < depth + 1; i++)
         {
-            (*layers)[i] = nullptr;
+            (*layers)[i] = fi_nullptr;
         }
     }
 
@@ -347,7 +347,7 @@ IMPL_OBJ_NEW(gltf_desc, gltf_file* file)
     }
     cthis->prim_transform_ = fi_alloc(vk_prim_transform*, file->prim_count_);
 
-    cgltf_node*** layers = nullptr;
+    cgltf_node*** layers = fi_nullptr;
     for (size_t i = 0; i < file->data_->scene[0].nodes_count; i++)
     {
         build_layer(&layers, file->data_->scene[0].nodes[i], 0);
@@ -513,7 +513,7 @@ IMPL_OBJ_NEW(gltf_anim, gltf_file* file, uint32_t anim_idx)
         cgltf_animation_sampler* sampler = chan->sampler;
         uint32_t node_idx = GET_IDX(chan->target_node, file->data_->nodes);
 
-        if (cthis->mapping_[node_idx] == nullptr)
+        if (cthis->mapping_[node_idx] == fi_nullptr)
         {
             cthis->mapping_[node_idx] = cthis->key_frames_ + key_frame_count;
             key_frame_count++;

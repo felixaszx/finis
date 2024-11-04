@@ -6,16 +6,16 @@ IMPL_OBJ_NEW(gbuffer_renderer, vk_ctx* ctx, dll_handle ext_dll, VkExtent3D atchm
 
     VkFenceCreateInfo fence_cinfo = {.sType = VK_STRUCTURE_TYPE_FENCE_CREATE_INFO};
     fence_cinfo.flags = VK_FENCE_CREATE_SIGNALED_BIT;
-    vkCreateFence(ctx->device_, &fence_cinfo, nullptr, cthis->frame_fences_);
+    vkCreateFence(ctx->device_, &fence_cinfo, fi_nullptr, cthis->frame_fences_);
 
     VkSemaphoreCreateInfo sem_cinfo = {.sType = VK_STRUCTURE_TYPE_SEMAPHORE_CREATE_INFO};
-    vkCreateSemaphore(ctx->device_, &sem_cinfo, nullptr, &cthis->submitted_);
+    vkCreateSemaphore(ctx->device_, &sem_cinfo, fi_nullptr, &cthis->submitted_);
     cthis->sem_submits_[1] = vk_get_sem_info(cthis->submitted_, VK_PIPELINE_STAGE_2_BOTTOM_OF_PIPE_BIT);
 
     VkCommandPoolCreateInfo pool_cinfo = {.sType = VK_STRUCTURE_TYPE_COMMAND_POOL_CREATE_INFO};
     pool_cinfo.flags = VK_COMMAND_POOL_CREATE_RESET_COMMAND_BUFFER_BIT;
     pool_cinfo.queueFamilyIndex = ctx->queue_idx_;
-    vkCreateCommandPool(ctx->device_, &pool_cinfo, nullptr, &cthis->cmd_pool_);
+    vkCreateCommandPool(ctx->device_, &pool_cinfo, fi_nullptr, &cthis->cmd_pool_);
 
     VkCommandBufferAllocateInfo cmd_alloc = {.sType = VK_STRUCTURE_TYPE_COMMAND_BUFFER_ALLOCATE_INFO};
     cmd_alloc.commandPool = cthis->cmd_pool_;
@@ -61,20 +61,20 @@ IMPL_OBJ_NEW(gbuffer_renderer, vk_ctx* ctx, dll_handle ext_dll, VkExtent3D atchm
     for (size_t i = 0; i < 4; i++)
     {
         vmaCreateImage(ctx->allocator_, &atchm_cinfo, &alloc_info, //
-                       cthis->images_ + i, cthis->image_allocs_ + i, nullptr);
+                       cthis->images_ + i, cthis->image_allocs_ + i, fi_nullptr);
     }
 
     atchm_cinfo.format = VK_FORMAT_D24_UNORM_S8_UINT;
     atchm_cinfo.usage = VK_IMAGE_USAGE_DEPTH_STENCIL_ATTACHMENT_BIT | //
                         VK_IMAGE_USAGE_TRANSFER_SRC_BIT;
     vmaCreateImage(ctx->allocator_, &atchm_cinfo, &alloc_info, //
-                   cthis->images_ + DEPTH_STENCIL_ATCHM, cthis->image_allocs_ + DEPTH_STENCIL_ATCHM, nullptr);
+                   cthis->images_ + DEPTH_STENCIL_ATCHM, cthis->image_allocs_ + DEPTH_STENCIL_ATCHM, fi_nullptr);
 
     atchm_cinfo.format = VK_FORMAT_R32G32B32A32_SFLOAT;
     atchm_cinfo.usage = VK_IMAGE_USAGE_STORAGE_BIT | //
                         VK_IMAGE_USAGE_TRANSFER_SRC_BIT;
     vmaCreateImage(ctx->allocator_, &atchm_cinfo, &alloc_info, //
-                   cthis->images_ + LIGHT_ATCHM, cthis->image_allocs_ + LIGHT_ATCHM, nullptr);
+                   cthis->images_ + LIGHT_ATCHM, cthis->image_allocs_ + LIGHT_ATCHM, fi_nullptr);
 
     VkImageViewCreateInfo view_info = {.sType = VK_STRUCTURE_TYPE_IMAGE_VIEW_CREATE_INFO};
     view_info.viewType = VK_IMAGE_VIEW_TYPE_2D;
@@ -86,18 +86,18 @@ IMPL_OBJ_NEW(gbuffer_renderer, vk_ctx* ctx, dll_handle ext_dll, VkExtent3D atchm
         view_info.image = cthis->images_[i];
         view_info.format = VK_FORMAT_R32G32B32A32_SFLOAT;
         view_info.subresourceRange.aspectMask = VK_IMAGE_ASPECT_COLOR_BIT;
-        vkCreateImageView(ctx->device_, &view_info, nullptr, cthis->image_views_ + i);
+        vkCreateImageView(ctx->device_, &view_info, fi_nullptr, cthis->image_views_ + i);
     }
 
     view_info.image = cthis->images_[DEPTH_STENCIL_ATCHM];
     view_info.format = VK_FORMAT_D24_UNORM_S8_UINT;
     view_info.subresourceRange.aspectMask = VK_IMAGE_ASPECT_DEPTH_BIT | VK_IMAGE_ASPECT_STENCIL_BIT;
-    vkCreateImageView(ctx->device_, &view_info, nullptr, cthis->image_views_ + DEPTH_STENCIL_ATCHM);
+    vkCreateImageView(ctx->device_, &view_info, fi_nullptr, cthis->image_views_ + DEPTH_STENCIL_ATCHM);
 
     view_info.image = cthis->images_[LIGHT_ATCHM];
     view_info.format = VK_FORMAT_R32G32B32A32_SFLOAT;
     view_info.subresourceRange.aspectMask = VK_IMAGE_ASPECT_COLOR_BIT;
-    vkCreateImageView(ctx->device_, &view_info, nullptr, cthis->image_views_ + LIGHT_ATCHM);
+    vkCreateImageView(ctx->device_, &view_info, fi_nullptr, cthis->image_views_ + LIGHT_ATCHM);
 
     for (size_t i = 0; i < 4; i++)
     {
@@ -118,7 +118,7 @@ IMPL_OBJ_NEW(gbuffer_renderer, vk_ctx* ctx, dll_handle ext_dll, VkExtent3D atchm
 
     cthis->image_infos_[0].imageView = cthis->image_views_[LIGHT_ATCHM];
     cthis->image_infos_[0].imageLayout = VK_IMAGE_LAYOUT_GENERAL;
-    cthis->image_infos_[0].sampler = nullptr;
+    cthis->image_infos_[0].sampler = fi_nullptr;
 
     cthis->rendering_infos_[0] = (VkRenderingInfo){.sType = VK_STRUCTURE_TYPE_RENDERING_INFO};
     cthis->rendering_infos_[0].colorAttachmentCount = 4;
@@ -156,20 +156,20 @@ IMPL_OBJ_NEW(gbuffer_renderer, vk_ctx* ctx, dll_handle ext_dll, VkExtent3D atchm
         barrier.newLayout = VK_IMAGE_LAYOUT_COLOR_ATTACHMENT_OPTIMAL;
         barrier.subresourceRange.aspectMask = VK_IMAGE_ASPECT_COLOR_BIT;
         vkCmdPipelineBarrier(cthis->main_cmd_, VK_PIPELINE_STAGE_TOP_OF_PIPE_BIT, VK_PIPELINE_STAGE_TRANSFER_BIT, //
-                             0, 0, nullptr, 0, nullptr, 1, &barrier);
+                             0, 0, fi_nullptr, 0, fi_nullptr, 1, &barrier);
     }
 
     barrier.image = cthis->images_[DEPTH_STENCIL_ATCHM];
     barrier.newLayout = VK_IMAGE_LAYOUT_DEPTH_STENCIL_ATTACHMENT_OPTIMAL;
     barrier.subresourceRange.aspectMask = VK_IMAGE_ASPECT_DEPTH_BIT | VK_IMAGE_ASPECT_STENCIL_BIT;
     vkCmdPipelineBarrier(cthis->main_cmd_, VK_PIPELINE_STAGE_TOP_OF_PIPE_BIT, VK_PIPELINE_STAGE_TRANSFER_BIT, //
-                         0, 0, nullptr, 0, nullptr, 1, &barrier);
+                         0, 0, fi_nullptr, 0, fi_nullptr, 1, &barrier);
 
     barrier.image = cthis->images_[LIGHT_ATCHM];
     barrier.newLayout = VK_IMAGE_LAYOUT_GENERAL;
     barrier.subresourceRange.aspectMask = VK_IMAGE_ASPECT_COLOR_BIT;
     vkCmdPipelineBarrier(cthis->main_cmd_, VK_PIPELINE_STAGE_TOP_OF_PIPE_BIT, VK_PIPELINE_STAGE_TRANSFER_BIT, //
-                         0, 0, nullptr, 0, nullptr, 1, &barrier);
+                         0, 0, fi_nullptr, 0, fi_nullptr, 1, &barrier);
 
     vkEndCommandBuffer(cthis->main_cmd_);
 
@@ -186,28 +186,28 @@ IMPL_OBJ_DELETE(gbuffer_renderer)
 {
     for (size_t i = 0; i < sizeof(cthis->desc_set_bases_) / sizeof(cthis->desc_set_bases_[0]); i++)
     {
-        vkDestroyDescriptorSetLayout(cthis->ctx_->device_, cthis->desc_set_bases_[i].layout_, nullptr);
+        vkDestroyDescriptorSetLayout(cthis->ctx_->device_, cthis->desc_set_bases_[i].layout_, fi_nullptr);
         fi_free(cthis->desc_set_bases_[i].bindings_);
     }
 
     for (size_t i = 0; i < sizeof(cthis->frame_fences_) / sizeof(cthis->frame_fences_[0]); i++)
     {
-        vkDestroyFence(cthis->ctx_->device_, cthis->frame_fences_[i], nullptr);
+        vkDestroyFence(cthis->ctx_->device_, cthis->frame_fences_[i], fi_nullptr);
     }
 
     for (size_t i = 0; i < sizeof(cthis->pls_) / sizeof(cthis->pls_[0]); i++)
     {
-        vkDestroyPipeline(cthis->ctx_->device_, cthis->pls_[i], nullptr);
-        vkDestroyPipelineLayout(cthis->ctx_->device_, cthis->pl_layouts_[i], nullptr);
+        vkDestroyPipeline(cthis->ctx_->device_, cthis->pls_[i], fi_nullptr);
+        vkDestroyPipelineLayout(cthis->ctx_->device_, cthis->pl_layouts_[i], fi_nullptr);
     }
 
-    vkDestroySemaphore(cthis->ctx_->device_, cthis->submitted_, nullptr);
-    vkDestroyCommandPool(cthis->ctx_->device_, cthis->cmd_pool_, nullptr);
+    vkDestroySemaphore(cthis->ctx_->device_, cthis->submitted_, fi_nullptr);
+    vkDestroyCommandPool(cthis->ctx_->device_, cthis->cmd_pool_, fi_nullptr);
 
     for (size_t i = 0; i < sizeof(cthis->images_) / sizeof(cthis->images_[0]); i++)
     {
         vmaDestroyImage(cthis->ctx_->allocator_, cthis->images_[i], cthis->image_allocs_[i]);
-        vkDestroyImageView(cthis->ctx_->device_, cthis->image_views_[i], nullptr);
+        vkDestroyImageView(cthis->ctx_->device_, cthis->image_views_[i], fi_nullptr);
     }
 }
 

@@ -1,7 +1,7 @@
 #include "fi_ext.h"
 #include "gfx/gfx.h"
 
-DLL_EXPORT VkPipelineLayout configurator(vk_ctx* ctx, vk_gfx_pl_desc* pl_desc)
+FI_DLL_EXPORT VkPipelineLayout configurator(vk_ctx* ctx, vk_gfx_pl_desc* pl_desc)
 {
     static VkFormat formats[4] = {VK_FORMAT_R32G32B32A32_SFLOAT, VK_FORMAT_R32G32B32A32_SFLOAT,
                                   VK_FORMAT_R32G32B32A32_SFLOAT, VK_FORMAT_R32G32B32A32_SFLOAT};
@@ -40,7 +40,7 @@ DLL_EXPORT VkPipelineLayout configurator(vk_ctx* ctx, vk_gfx_pl_desc* pl_desc)
     layout_cinfo.pPushConstantRanges = pl_desc->push_range_;
     layout_cinfo.setLayoutCount = pl_desc->set_layout_count_;
     layout_cinfo.pSetLayouts = pl_desc->set_layouts_;
-    vkCreatePipelineLayout(ctx->device_, &layout_cinfo, nullptr, &pl_layout);
+    vkCreatePipelineLayout(ctx->device_, &layout_cinfo, fi_nullptr, &pl_layout);
 
     construct_vk_shader(pl_desc->shaders_ + 0, ctx, "res/shaders/0.vert.spv", VK_SHADER_STAGE_VERTEX_BIT);
     construct_vk_shader(pl_desc->shaders_ + 1, ctx, "res/shaders/0.frag.spv", VK_SHADER_STAGE_FRAGMENT_BIT);
@@ -49,7 +49,7 @@ DLL_EXPORT VkPipelineLayout configurator(vk_ctx* ctx, vk_gfx_pl_desc* pl_desc)
     return pl_layout;
 }
 
-DLL_EXPORT void cleaner(vk_ctx* ctx, vk_gfx_pl_desc* pl_desc)
+FI_DLL_EXPORT void cleaner(vk_ctx* ctx, vk_gfx_pl_desc* pl_desc)
 {
     for (size_t i = 0; i < pl_desc->cinfo_.stageCount; i++)
     {

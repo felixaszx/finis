@@ -10,7 +10,7 @@
 #include <pthread.h>
 #include <semaphore.h>
 
-#define nullptr NULL
+#define fi_nullptr NULL
 
 #define GET_FI_ALLOC(_0, _1, ALLOC, ...) ALLOC
 #define FI_ALLOC_0(type)                 (type*)malloc_zero(sizeof(type))

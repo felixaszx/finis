@@ -25,11 +25,11 @@ IMPL_OBJ_NEW(vk_ctx, uint32_t width, uint32_t height, bool full_screen)
     glfwWindowHint(GLFW_RESIZABLE, GLFW_TRUE);
     if (full_screen)
     {
-        cthis->win_ = glfwCreateWindow(width, height, "", glfwGetPrimaryMonitor(), nullptr);
+        cthis->win_ = glfwCreateWindow(width, height, "", glfwGetPrimaryMonitor(), fi_nullptr);
     }
     else
     {
-        cthis->win_ = glfwCreateWindow(width, height, "", nullptr, nullptr);
+        cthis->win_ = glfwCreateWindow(width, height, "", fi_nullptr, fi_nullptr);
     }
     glfwSetWindowUserPointer(cthis->win_, cthis);
     glfwSetFramebufferSizeCallback(cthis->win_, resize_callback);
@@ -46,12 +46,12 @@ IMPL_OBJ_NEW(vk_ctx, uint32_t width, uint32_t height, bool full_screen)
     instance_create_info.pApplicationInfo = &app_info;
     instance_create_info.ppEnabledExtensionNames = glfw_exts;
     instance_create_info.enabledExtensionCount = glfw_ext_count;
-    vkCreateInstance(&instance_create_info, nullptr, &cthis->instance_);
-    glfwCreateWindowSurface(cthis->instance_, cthis->win_, nullptr, &cthis->surface_);
+    vkCreateInstance(&instance_create_info, fi_nullptr, &cthis->instance_);
+    glfwCreateWindowSurface(cthis->instance_, cthis->win_, fi_nullptr, &cthis->surface_);
 
     uint32_t phy_d_count = 0;
-    VkPhysicalDevice* phy_d = nullptr;
-    vkEnumeratePhysicalDevices(cthis->instance_, &phy_d_count, nullptr);
+    VkPhysicalDevice* phy_d = fi_nullptr;
+    vkEnumeratePhysicalDevices(cthis->instance_, &phy_d_count, fi_nullptr);
     phy_d = malloc(phy_d_count * sizeof(VkPhysicalDevice));
     vkEnumeratePhysicalDevices(cthis->instance_, &phy_d_count, phy_d);
     cthis->physical_ = phy_d[0];
@@ -63,7 +63,7 @@ IMPL_OBJ_NEW(vk_ctx, uint32_t width, uint32_t height, bool full_screen)
         cthis->physical_ = properties.deviceType == VK_PHYSICAL_DEVICE_TYPE_DISCRETE_GPU ? phy_d[p] : cthis->physical_;
     }
     free(phy_d);
-    phy_d = nullptr;
+    phy_d = fi_nullptr;
 
     cthis->queue_idx_ = 0;
     float queue_priority = 1.0f;
@@ -119,11 +119,11 @@ IMPL_OBJ_NEW(vk_ctx, uint32_t width, uint32_t height, bool full_screen)
     device_create_info.ppEnabledExtensionNames = device_ext_names;
     device_create_info.enabledExtensionCount = 1;
 
-    vkCreateDevice(cthis->physical_, &device_create_info, nullptr, &cthis->device_);
+    vkCreateDevice(cthis->physical_, &device_create_info, fi_nullptr, &cthis->device_);
     vkGetDeviceQueue(cthis->device_, cthis->queue_idx_, 0, &cthis->queue_);
 
     VkPipelineCacheCreateInfo pl_cache = {.sType = VK_STRUCTURE_TYPE_PIPELINE_CACHE_CREATE_INFO};
-    vkCreatePipelineCache(cthis->device_, &pl_cache, nullptr, &cthis->pipeline_cache_);
+    vkCreatePipelineCache(cthis->device_, &pl_cache, fi_nullptr, &cthis->pipeline_cache_);
 
     VmaVulkanFunctions vma_funcs = {};
     vma_funcs.vkAllocateMemory = vkAllocateMemory;
@@ -167,10 +167,10 @@ IMPL_OBJ_DELETE(vk_ctx)
     vkDeviceWaitIdle(cthis->device_);
 
     vmaDestroyAllocator(cthis->allocator_);
-    vkDestroyPipelineCache(cthis->device_, cthis->pipeline_cache_, nullptr);
-    vkDestroyDevice(cthis->device_, nullptr);
-    vkDestroySurfaceKHR(cthis->instance_, cthis->surface_, nullptr);
-    vkDestroyInstance(cthis->instance_, nullptr);
+    vkDestroyPipelineCache(cthis->device_, cthis->pipeline_cache_, fi_nullptr);
+    vkDestroyDevice(cthis->device_, fi_nullptr);
+    vkDestroySurfaceKHR(cthis->instance_, cthis->surface_, fi_nullptr);
+    vkDestroyInstance(cthis->instance_, fi_nullptr);
     glfwDestroyWindow(cthis->win_);
     glfwTerminate();
 
@@ -191,14 +191,14 @@ IMPL_OBJ_NEW(vk_swapchain, vk_ctx* ctx)
 
     VkFenceCreateInfo fence_cinfo = {.sType = VK_STRUCTURE_TYPE_FENCE_CREATE_INFO};
     fence_cinfo.flags = 0;
-    vkCreateFence(ctx->device_, &fence_cinfo, nullptr, &cthis->recreate_fence_);
+    vkCreateFence(ctx->device_, &fence_cinfo, fi_nullptr, &cthis->recreate_fence_);
 
     VkSurfaceCapabilitiesKHR capabilities = {};
     vkGetPhysicalDeviceSurfaceCapabilitiesKHR(ctx->physical_, ctx->surface_, &capabilities);
 
     uint32_t format_count = 0;
-    VkSurfaceFormatKHR* formats = nullptr;
-    vkGetPhysicalDeviceSurfaceFormatsKHR(ctx->physical_, ctx->surface_, &format_count, nullptr);
+    VkSurfaceFormatKHR* formats = fi_nullptr;
+    vkGetPhysicalDeviceSurfaceFormatsKHR(ctx->physical_, ctx->surface_, &format_count, fi_nullptr);
     formats = malloc(format_count * sizeof(VkSurfaceFormatKHR));
     vkGetPhysicalDeviceSurfaceFormatsKHR(ctx->physical_, ctx->surface_, &format_count, formats);
 
@@ -214,7 +214,7 @@ IMPL_OBJ_NEW(vk_swapchain, vk_ctx* ctx)
     swapchain_cinfo.compositeAlpha = VK_COMPOSITE_ALPHA_OPAQUE_BIT_KHR;
     swapchain_cinfo.presentMode = VK_PRESENT_MODE_IMMEDIATE_KHR;
     swapchain_cinfo.clipped = true;
-    swapchain_cinfo.oldSwapchain = nullptr;
+    swapchain_cinfo.oldSwapchain = fi_nullptr;
 
     for (uint32_t i = 0; i < format_count; i++)
     {
@@ -233,9 +233,9 @@ IMPL_OBJ_NEW(vk_swapchain, vk_ctx* ctx)
     }
     cthis->surface_format_.format = swapchain_cinfo.imageFormat;
     cthis->surface_format_.colorSpace = swapchain_cinfo.imageColorSpace;
-    vkCreateSwapchainKHR(ctx->device_, &swapchain_cinfo, nullptr, &cthis->swapchain_);
+    vkCreateSwapchainKHR(ctx->device_, &swapchain_cinfo, fi_nullptr, &cthis->swapchain_);
     free(formats);
-    formats = nullptr;
+    formats = fi_nullptr;
 
     cthis->image_count_ = swapchain_cinfo.minImageCount;
     cthis->images_ = fi_alloc(VkImage, cthis->image_count_);
@@ -244,7 +244,7 @@ IMPL_OBJ_NEW(vk_swapchain, vk_ctx* ctx)
     VkCommandPool cmd_pool = {};
     VkCommandPoolCreateInfo pool_cinfo = {.sType = VK_STRUCTURE_TYPE_COMMAND_POOL_CREATE_INFO};
     pool_cinfo.queueFamilyIndex = ctx->queue_idx_;
-    vkCreateCommandPool(ctx->device_, &pool_cinfo, nullptr, &cmd_pool);
+    vkCreateCommandPool(ctx->device_, &pool_cinfo, fi_nullptr, &cmd_pool);
 
     VkCommandBuffer cmd = {};
     VkCommandBufferAllocateInfo alloc_info = {.sType = VK_STRUCTURE_TYPE_COMMAND_BUFFER_ALLOCATE_INFO};
@@ -266,7 +266,7 @@ IMPL_OBJ_NEW(vk_swapchain, vk_ctx* ctx)
         barrier.subresourceRange.baseArrayLayer = 0;
         barrier.subresourceRange.layerCount = 1;
         vkCmdPipelineBarrier(cmd, VK_PIPELINE_STAGE_TOP_OF_PIPE_BIT, VK_PIPELINE_STAGE_TOP_OF_PIPE_BIT, //
-                             0, 0, nullptr, 0, nullptr, 1, &barrier);
+                             0, 0, fi_nullptr, 0, fi_nullptr, 1, &barrier);
     }
     vkEndCommandBuffer(cmd);
 
@@ -277,7 +277,7 @@ IMPL_OBJ_NEW(vk_swapchain, vk_ctx* ctx)
     vkWaitForFences(ctx->device_, 1, &cthis->recreate_fence_, true, UINT64_MAX);
     vkResetFences(cthis->ctx_->device_, 1, &cthis->recreate_fence_);
 
-    vkDestroyCommandPool(ctx->device_, cmd_pool, nullptr);
+    vkDestroyCommandPool(ctx->device_, cmd_pool, fi_nullptr);
     cthis->extent_ = swapchain_cinfo.imageExtent;
     return cthis;
 }
@@ -285,8 +285,8 @@ IMPL_OBJ_NEW(vk_swapchain, vk_ctx* ctx)
 IMPL_OBJ_DELETE(vk_swapchain)
 {
     fi_free(cthis->images_);
-    vkDestroySwapchainKHR(cthis->ctx_->device_, cthis->swapchain_, nullptr);
-    vkDestroyFence(cthis->ctx_->device_, cthis->recreate_fence_, nullptr);
+    vkDestroySwapchainKHR(cthis->ctx_->device_, cthis->swapchain_, fi_nullptr);
+    vkDestroyFence(cthis->ctx_->device_, cthis->recreate_fence_, fi_nullptr);
 }
 
 bool vk_swapchain_recreate(vk_swapchain* cthis, VkCommandPool cmd_pool)
@@ -298,7 +298,7 @@ bool vk_swapchain_recreate(vk_swapchain* cthis, VkCommandPool cmd_pool)
         return false;
     }
 
-    vkDestroySwapchainKHR(cthis->ctx_->device_, cthis->swapchain_, nullptr);
+    vkDestroySwapchainKHR(cthis->ctx_->device_, cthis->swapchain_, fi_nullptr);
     VkSwapchainCreateInfoKHR swapchain_cinfo = {.sType = VK_STRUCTURE_TYPE_SWAPCHAIN_CREATE_INFO_KHR};
     swapchain_cinfo.surface = cthis->ctx_->surface_;
     swapchain_cinfo.minImageCount = cthis->image_count_;
@@ -313,8 +313,8 @@ bool vk_swapchain_recreate(vk_swapchain* cthis, VkCommandPool cmd_pool)
     swapchain_cinfo.compositeAlpha = VK_COMPOSITE_ALPHA_OPAQUE_BIT_KHR;
     swapchain_cinfo.presentMode = cthis->vsync_ ? VK_PRESENT_MODE_FIFO_KHR : VK_PRESENT_MODE_IMMEDIATE_KHR;
     swapchain_cinfo.clipped = true;
-    swapchain_cinfo.oldSwapchain = nullptr;
-    vkCreateSwapchainKHR(cthis->ctx_->device_, &swapchain_cinfo, nullptr, &cthis->swapchain_);
+    swapchain_cinfo.oldSwapchain = fi_nullptr;
+    vkCreateSwapchainKHR(cthis->ctx_->device_, &swapchain_cinfo, fi_nullptr, &cthis->swapchain_);
     vkGetSwapchainImagesKHR(cthis->ctx_->device_, cthis->swapchain_, &cthis->image_count_, cthis->images_);
 
     VkCommandBuffer cmd = {};
@@ -337,7 +337,7 @@ bool vk_swapchain_recreate(vk_swapchain* cthis, VkCommandPool cmd_pool)
         barrier.subresourceRange.baseArrayLayer = 0;
         barrier.subresourceRange.layerCount = 1;
         vkCmdPipelineBarrier(cmd, VK_PIPELINE_STAGE_TOP_OF_PIPE_BIT, VK_PIPELINE_STAGE_TOP_OF_PIPE_BIT, //
-                             0, 0, nullptr, 0, nullptr, 1, &barrier);
+                             0, 0, fi_nullptr, 0, fi_nullptr, 1, &barrier);
     }
     vkEndCommandBuffer(cmd);
 

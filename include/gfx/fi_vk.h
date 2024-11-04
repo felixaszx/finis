@@ -19,7 +19,7 @@
 
 #define QUICK_ENUMERATE(type, func, target, count, ptr) \
     type* ptr;                                          \
-    func(target, count, nullptr);                       \
+    func(target, count, fi_nullptr);                       \
     ptr = fi_alloc(type, *count);                          \
     func(target, count, ptr)
 #define QUICK_GET(type, func, target, count, ptr) QUICK_ENUMERATE(type, func, target, count, ptr);

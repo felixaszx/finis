@@ -20,7 +20,7 @@ IMPL_OBJ_NEW(vk_shader, vk_ctx* ctx, const char* file_path, VkShaderStageFlags s
     VkShaderModuleCreateInfo module_info = {.sType = VK_STRUCTURE_TYPE_SHADER_MODULE_CREATE_INFO};
     module_info.codeSize = size;
     module_info.pCode = (uint32_t*)spv;
-    vkCreateShaderModule(ctx->device_, &module_info, nullptr, &cthis->module_);
+    vkCreateShaderModule(ctx->device_, &module_info, fi_nullptr, &cthis->module_);
 
     cthis->stage_info_.sType = VK_STRUCTURE_TYPE_PIPELINE_SHADER_STAGE_CREATE_INFO;
     cthis->stage_info_.module = cthis->module_;
@@ -35,7 +35,7 @@ IMPL_OBJ_DELETE(vk_shader)
 {
     if (cthis->module_)
     {
-        vkDestroyShaderModule(cthis->ctx_->device_, cthis->module_, nullptr);
+        vkDestroyShaderModule(cthis->ctx_->device_, cthis->module_, fi_nullptr);
     }
 }
 
@@ -82,7 +82,7 @@ VkPipeline vk_gfx_pl_desc_build(vk_gfx_pl_desc* cthis, vk_ctx* ctx, VkPipelineLa
     }
 
     VkPipeline pl = {};
-    vkCreateGraphicsPipelines(ctx->device_, ctx->pipeline_cache_, 1, &cthis->cinfo_, nullptr, &pl);
+    vkCreateGraphicsPipelines(ctx->device_, ctx->pipeline_cache_, 1, &cthis->cinfo_, fi_nullptr, &pl);
     cthis->cleaner_(ctx, cthis);
     return pl;
 }
@@ -104,7 +104,7 @@ VkPipeline vk_comp_pl_desc_build(vk_comp_pl_desc* cthis, vk_ctx* ctx, VkPipeline
 
     VkPipeline pl = {};
     cthis->cinfo_.stage = cthis->shader_[0].stage_info_;
-    vkCreateComputePipelines(ctx->device_, ctx->pipeline_cache_, 1, &cthis->cinfo_, nullptr, &pl);
+    vkCreateComputePipelines(ctx->device_, ctx->pipeline_cache_, 1, &cthis->cinfo_, fi_nullptr, &pl);
     cthis->cleaner_(ctx, cthis);
     return pl;
 }

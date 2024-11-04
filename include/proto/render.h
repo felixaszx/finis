@@ -38,7 +38,7 @@ extern "C"
 #define EMPTY_FI_PASS_STATE (fi_pass_state){};
 
     typedef void (*fi_pass_draw_func_t)(fi_mesh_pkg* pkgs);
-    typedef void (*fi_pass_setup_func_t)(fi_pass_state* state, vk_ctx* ctx, vk_swapchain* sc);
+    typedef void (*fi_pass_setup_func_t)(fi_pass_state* state, vk_ctx* ctx, vk_swapchain* sc, VkExtent3D atchm_size);
 
 #ifdef __cplusplus
 }
