@@ -89,7 +89,6 @@ struct deffer
         construct_vk_gfx_pl_desc(pl_descs_.data(), //
                                  (vk_gfx_pl_configurator)dlsym(pl_dll, "configurator"),
                                  (vk_gfx_pl_cleaner)dlsym(pl_dll, "cleaner"));
-        dlclose(pl_dll);
 
         pl_descs_[0].push_range_ = pushed_.data();
         pl_descs_[0].push_range_count_ = sizeof(pushed_) / sizeof(pushed_[0]);
@@ -97,6 +96,7 @@ struct deffer
         pl_descs_[0].set_layout_count_ = 1;
         pl_descs_[0].set_layouts_ = desc_set_layouts_.data();
         pls_[0] = vk_gfx_pl_desc_build(pl_descs_.data(), ctx, pl_layouts_.data());
+        dlclose(pl_dll);
 
         VkImageCreateInfo atchm_cinfo = {VK_STRUCTURE_TYPE_IMAGE_CREATE_INFO};
         atchm_cinfo.imageType = VK_IMAGE_TYPE_2D;

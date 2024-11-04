@@ -97,10 +97,10 @@ T* render_thr_func(T* arg)
     dlclose(default_pl_dll);
 
     char* pl_dll_name2 = get_shared_lib_name("./ext_dlls/deffer");
-    default_pl_dll = dlopen(pl_dll_name, RTLD_NOW);
+    default_pl_dll = dlopen(pl_dll_name2, RTLD_NOW);
     fi_free(pl_dll_name2);
     fi_pass_setup_func_t gbuffer_setup2 = dlsym(default_pl_dll, "setup");
-    gbuffer_setup2(fi_nullptr, ctx, sc, (VkExtent3D){});
+    gbuffer_setup2(fi_nullptr, ctx, sc, (VkExtent3D){WIDTH, HEIGHT, 1});
 
     gltf_file* sparta = fi_new(gltf_file, "res/models/sparta.glb");
     gltf_desc* sparta_desc = fi_new(gltf_desc, sparta);

@@ -25,7 +25,7 @@ inline static std::string get_shared_lib_name(const std::string& lib_name)
 #if defined(_WIN32) || defined(__WIN32__) || defined(WIN32) || defined(__CYGWIN__)
 #define FI_DLL_EXPORT FI_DLL_PREFIX __declspec(dllexport)
 #else
-#define FI_DLL_EXPORT  FI_DLL_PREFIX __attribute__((__visibility__("default")))
+#define FI_DLL_EXPORT FI_DLL_PREFIX __attribute__((__visibility__("default")))
 #endif
 
 typedef void* dll_handle;
