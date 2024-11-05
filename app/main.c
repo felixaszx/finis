@@ -202,6 +202,7 @@ T* render_thr_func(T* arg)
     vkDestroyCommandPool(ctx->device_, cmd_pool, fi_nullptr);
     vkDestroyDescriptorPool(ctx->device_, desc_pool.pool_, fi_nullptr);
 
+    dlclose(default_pl_dll);
     fi_free(sparta_prims);
     fi_free(prim_transforms);
     fi_delete(vk_tex_arr, sparta_tex_arr);
