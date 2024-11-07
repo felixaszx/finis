@@ -62,7 +62,7 @@ void gbuffer_draw(gbuffer_renderer* renderer, T* data)
                        sizeof(pushed_data), &pushed_data);
     vk_mesh_draw_prims(args->sparta_mesh_, renderer->main_cmd_);
 }
-
+ 
 T* render_thr_func(T* arg)
 {
     render_thr_arg* ctx_combo = arg;
