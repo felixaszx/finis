@@ -33,7 +33,6 @@ finis
 
 # folder
 .vs/
-.vscode/
 .cache/
 build/
 res/models/
