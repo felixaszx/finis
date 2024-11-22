@@ -1,0 +1,118 @@
+{
+    // See https://go.microsoft.com/fwlink/?LinkId=733558
+    // for the documentation about the tasks.json format
+    "version": "2.0.0",
+    "tasks": [
+        {
+            "type": "cmake",
+            "label": "CMake: configure",
+            "command": "configure",
+            "problemMatcher": [],
+            "detail": "CMake template configure task",
+            "presentation": {
+                "echo": true,
+                "reveal": "silent",
+                "focus": false,
+                "panel": "shared",
+                "showReuseMessage": false,
+                "clear": false
+            }
+        },
+        {
+            "type": "cmake",
+            "label": "CMake: build",
+            "command": "build",
+            "targets": [
+                "all"
+            ],
+            "group": "build",
+            "problemMatcher": "$gcc",
+            "detail": "CMake template build task",
+            "presentation": {
+                "echo": true,
+                "reveal": "silent",
+                "focus": false,
+                "panel": "shared",
+                "showReuseMessage": false,
+                "clear": false
+            }
+        },
+        {
+            "type": "shell",
+            "label": "add dlls info",
+            "detail": "add dlls info",
+            "command": "echo ldd \"${command:cmake.getLaunchTargetPath}\" ^| grep ucrt64 ^| awk '{print $3}' ^| xargs -i cp {} \"${command:cmake.getLaunchTargetDirectory}\" > ${command:cmake.getLaunchTargetDirectory}/dlls_info.txt",
+            "problemMatcher": [],
+            "presentation": {
+                "echo": true,
+                "reveal": "silent",
+                "focus": false,
+                "panel": "shared",
+                "showReuseMessage": false,
+                "clear": false
+            }
+        },
+        {
+            "type": "shell",
+            "label": "copy dlls",
+            "detail": "copy dlls",
+            "command": "msys2 -ucrt64 < ${command:cmake.getLaunchTargetDirectory}/dlls_info.txt",
+            "problemMatcher": [],
+            "dependsOn": [
+                "add dlls info"
+            ],
+            "presentation": {
+                "echo": true,
+                "reveal": "silent",
+                "focus": false,
+                "panel": "shared",
+                "showReuseMessage": false,
+                "clear": false
+            }
+        },
+        {
+            "type": "shell",
+            "label": "compile shaders",
+            "detail": "compile slang shaders",
+            "options": {
+                "cwd": "${workspaceFolder}/res/shaders"
+            },
+            "command": "${workspaceFolder}/res/shaders/compile_to_spv.bat",
+            "problemMatcher": [],
+            "presentation": {
+                "echo": true,
+                "reveal": "silent",
+                "focus": false,
+                "panel": "shared",
+                "showReuseMessage": false,
+                "clear": true
+            }
+        },
+        {
+            "type": "shell",
+            "label": "Build",
+            "detail": "Build and copy",
+            "command": "",
+            "dependsOrder": "sequence",
+            "presentation": {
+                "echo": true,
+                "reveal": "silent",
+                "focus": false,
+                "panel": "shared",
+                "showReuseMessage": true,
+                "clear": false
+            },
+            "dependsOn": [
+                "compile shaders",
+                "CMake: configure",
+                "CMake: build"
+                //"copy dlls"
+            ],
+            "problemMatcher": [],
+            "group": {
+                "kind": "build",
+                "isDefault": true
+            }
+        }
+    ]
+}
