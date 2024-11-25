@@ -35,4 +35,4 @@ finis
 .vs/
 .cache/
 build/
-res/models/
+res/models/*
